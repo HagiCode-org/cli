@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getAllowedPublishEntries,
   getRequiredPublishFiles,
+  isAllowedBundledFile,
   inspectPackedFiles,
 } from '../../scripts/verify-package.mjs';
 
@@ -21,7 +22,7 @@ describe('verify-package', () => {
       'README.md',
       'dist/main.js',
       'dist/cli.js',
-      'dist',
+      'dist/chunks/*.js',
     ]);
   });
 
@@ -32,12 +33,19 @@ describe('verify-package', () => {
         'README.md',
         'dist/cli.js',
         'dist/main.js',
-        'dist/runtime/apiRuntime.js',
+        'dist/chunks/shared-runtime.js',
       ]),
     ).toMatchObject({
       missingFiles: [],
       unexpectedFiles: [],
     });
+  });
+
+  it('accepts only required entrypoints and approved shared chunks', () => {
+    expect(isAllowedBundledFile('dist/cli.js', manifest)).toBe(true);
+    expect(isAllowedBundledFile('dist/main.js', manifest)).toBe(true);
+    expect(isAllowedBundledFile('dist/chunks/runtime-abc123.js', manifest)).toBe(true);
+    expect(isAllowedBundledFile('dist/chunks/runtime-abc123.js.map', manifest)).toBe(false);
   });
 
   it('reports missing entrypoints and unexpected files', () => {
@@ -46,11 +54,12 @@ describe('verify-package', () => {
         'package.json',
         'README.md',
         'dist/cli.js',
-        'src/cli.ts',
+        'dist/runtime/apiRuntime.js',
+        'dist/chunks/runtime-abc123.js.map',
       ]),
     ).toMatchObject({
       missingFiles: ['dist/main.js'],
-      unexpectedFiles: ['src/cli.ts'],
+      unexpectedFiles: ['dist/chunks/runtime-abc123.js.map', 'dist/runtime/apiRuntime.js'],
     });
   });
 });

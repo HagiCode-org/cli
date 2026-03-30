@@ -12,6 +12,14 @@ const IMPLICIT_FILE_PATTERNS = [
   /^(?:license|licence|notice)(?:\..+)?$/i,
 ];
 
+const ALLOWED_SHARED_CHUNK_PATTERN = /^dist\/chunks\/[^/]+\.js$/i;
+const FORBIDDEN_PUBLISH_PATTERNS = [
+  /\.map$/i,
+  /^dist\/commands\//i,
+  /^dist\/runtime\//i,
+  /^dist\/generated\/api\/models\//i,
+];
+
 export function normalizePublishPath(filePath) {
   return String(filePath).replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/$/, "");
 }
@@ -39,14 +47,27 @@ export function getRequiredPublishFiles(packageJson) {
 
 export function getAllowedPublishEntries(packageJson) {
   const allowedEntries = new Set(getRequiredPublishFiles(packageJson));
-
-  for (const filePath of packageJson.files ?? []) {
-    if (typeof filePath === "string" && filePath.length > 0) {
-      allowedEntries.add(normalizePublishPath(filePath));
-    }
-  }
+  allowedEntries.add('dist/chunks/*.js');
 
   return [...allowedEntries];
+}
+
+export function isAllowedBundledFile(filePath, packageJson) {
+  const normalizedPath = normalizePublishPath(filePath);
+
+  if (isImplicitPackedFile(normalizedPath)) {
+    return true;
+  }
+
+  if (FORBIDDEN_PUBLISH_PATTERNS.some(pattern => pattern.test(normalizedPath))) {
+    return false;
+  }
+
+  if (getRequiredPublishFiles(packageJson).includes(normalizedPath)) {
+    return true;
+  }
+
+  return ALLOWED_SHARED_CHUNK_PATTERN.test(normalizedPath);
 }
 
 export function isImplicitPackedFile(filePath) {
@@ -61,15 +82,9 @@ export function inspectPackedFiles(packageJson, packedFiles) {
   const allowedEntries = getAllowedPublishEntries(packageJson);
 
   const missingFiles = requiredFiles.filter(filePath => !normalizedPackedFiles.includes(filePath));
-  const unexpectedFiles = normalizedPackedFiles.filter(filePath => {
-    if (isImplicitPackedFile(filePath)) {
-      return false;
-    }
-
-    return !allowedEntries.some(allowedPath => {
-      return filePath === allowedPath || filePath.startsWith(`${allowedPath}/`);
-    });
-  });
+  const unexpectedFiles = normalizedPackedFiles.filter(
+    filePath => !isAllowedBundledFile(filePath, packageJson),
+  );
 
   return {
     allowedEntries,
