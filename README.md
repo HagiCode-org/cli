@@ -41,7 +41,7 @@ npm run dev -- proposal list --json
 `repos/cli/.github/workflows/npm-publish.yml` now publishes two channels with GitHub Actions OIDC plus provenance:
 
 - pushes to `main` publish a unique development prerelease under the npm `dev` dist-tag
-- only strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
+- only published GitHub Releases for strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
 
 ### Draft release flow
 
@@ -57,7 +57,7 @@ npm run dev -- proposal list --json
 5. Let Release Drafter refresh the GitHub draft release name, tag, and categorized notes.
 6. Review the draft release in GitHub before creating the next stable tag.
 
-Release Drafter manages draft release metadata only. It does not publish the package, change the stable tag verification commands, or replace the existing npm publish path.
+Release Drafter manages draft release metadata only. Draft review and publish remain native GitHub Release operations.
 
 ### Current label coverage
 
@@ -87,29 +87,29 @@ The workflow requests `contents: read` and `id-token: write`. It does not use a 
 
 ### Local release verification
 
-Run the same stable release gates locally before pushing a stable tag:
+Run the same stable release gates locally before publishing a GitHub Release:
 
 ```bash
 cd repos/cli
-npm run publish:verify-release -- v0.1.0
+version="$(npm run --silent publish:verify-release -- v0.1.0)"
+npm version --no-git-tag-version "$version"
 npm run build
 npm run typecheck
 npm test
 npm run pack:check
 ```
 
-`publish:verify-release` fails unless the supplied tag exactly matches `package.json#version`.
+`publish:verify-release` validates the strict stable tag format and resolves the stable package version that CI will stamp into `package.json` immediately before build and publish.
 `pack:check` runs `npm pack --dry-run --json` and rejects missing bundled entrypoints, `.map` files, and legacy source-mirrored output such as `dist/runtime/**` or `dist/generated/api/models/**`.
 `publish:resolve-dev-version` derives the CI-only prerelease version used for `main` branch publishes, for example `0.1.0-dev.<run>.<attempt>.<sha>`.
 
-### Stable tag flow
+### Stable release flow
 
-1. Update `package.json` to the intended stable version such as `0.1.0`.
-2. Make sure the draft release maintained by Release Drafter already reflects the intended tag such as `v0.1.0`.
-3. Run the local verification commands above.
-4. Commit the release-ready source tree.
-5. Push a strict stable tag such as `v0.1.0`.
-6. Confirm the GitHub Actions summary shows build, typecheck, test, package inspection, and `npm publish --tag latest --provenance --access public`.
+1. Make sure the draft release maintained by Release Drafter already reflects the intended tag such as `v0.1.0`.
+2. Run the local verification commands above.
+3. Commit and push the release-ready source tree.
+4. Publish the matching GitHub draft release for the stable tag.
+5. Confirm the GitHub Actions summary shows build, typecheck, test, package inspection, version stamping, and `npm publish --tag latest --provenance --access public`.
 
 ## Environment Variables
 
