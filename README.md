@@ -1,5 +1,7 @@
 # HagiCode CLI
 
+[![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm)](https://www.npmjs.com/package/@hagicode/cli)
+
 `repos/cli` contains the npm-based `hagi` command for proposal session management.
 
 ## Requirements
