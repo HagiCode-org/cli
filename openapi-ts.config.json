@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/openapi-typescript-codegen/schema.json",
+  "swaggerUrl": "http://127.0.0.1:35168/swagger/v1/swagger.json",
+  "outputDir": "./src/generated/api",
+  "httpClient": "fetch",
+  "useOptions": true,
+  "useUnionTypes": false,
+  "exportCore": true,
+  "exportServices": true,
+  "exportModels": true,
+  "exportSchemas": false,
+  "indent": "2",
+  "postfixServices": "Service",
+  "postfixModels": ""
+}
