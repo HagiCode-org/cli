@@ -18,6 +18,9 @@ npm install
 npm run build
 ```
 
+`npm run build` now performs a Vite 8 production bundle for Node 20+ and emits the publish contract at `dist/cli.js`, `dist/main.js`, plus any runtime-required shared chunks under `dist/chunks/`.
+Release builds are minified, tree-shaken, and exclude `.map` files.
+
 Run the built CLI with:
 
 ```bash
@@ -35,7 +38,10 @@ npm run dev -- proposal list --json
 ## Release automation
 
 `repos/cli/.github/workflows/release-drafter.yml` maintains the next GitHub draft release for `@hagicode/cli`.
-`repos/cli/.github/workflows/npm-publish.yml` remains the stable publish entrypoint, and only strict `vX.Y.Z` tags publish to npm with GitHub Actions OIDC plus provenance.
+`repos/cli/.github/workflows/npm-publish.yml` now publishes two channels with GitHub Actions OIDC plus provenance:
+
+- pushes to `main` publish a unique development prerelease under the npm `dev` dist-tag
+- only strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
 
 ### Draft release flow
 
@@ -93,7 +99,8 @@ npm run pack:check
 ```
 
 `publish:verify-release` fails unless the supplied tag exactly matches `package.json#version`.
-`pack:check` runs `npm pack --dry-run --json` and rejects missing entrypoints or unexpected published files.
+`pack:check` runs `npm pack --dry-run --json` and rejects missing bundled entrypoints, `.map` files, and legacy source-mirrored output such as `dist/runtime/**` or `dist/generated/api/models/**`.
+`publish:resolve-dev-version` derives the CI-only prerelease version used for `main` branch publishes, for example `0.1.0-dev.<run>.<attempt>.<sha>`.
 
 ### Stable tag flow
 
