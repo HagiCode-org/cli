@@ -4,127 +4,149 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: npm-publish-${{ github.ref_name }}
+  group: npm-publish-${{ github.event_name }}-${{ github.ref || github.event.release.tag_name || github.run_id }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  publish-dev:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Classify publish target
-        id: target
-        env:
-          REF_NAME: ${{ github.ref_name }}
-          REF_TYPE: ${{ github.ref_type }}
-        run: |
-          if [[ "$REF_TYPE" == "tag" && "$REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-            echo "mode=stable" >> "$GITHUB_OUTPUT"
-            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
-            echo "version=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}" >> "$GITHUB_OUTPUT"
-          elif [[ "$REF_TYPE" == "branch" && "$REF_NAME" == "main" ]]; then
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-            echo "mode=development" >> "$GITHUB_OUTPUT"
-            echo "dist_tag=dev" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "mode=skip" >> "$GITHUB_OUTPUT"
-            echo "dist_tag=n/a" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout source
-        if: steps.target.outputs.publish == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: steps.target.outputs.publish == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: package-lock.json
           registry-url: https://registry.npmjs.org
 
-      - name: Verify release tag matches package version
-        if: steps.target.outputs.mode == 'stable'
-        id: version
-        run: |
-          version="$(npm run --silent publish:verify-release -- "${{ github.ref_name }}")"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
       - name: Resolve development version
-        if: steps.target.outputs.mode == 'development'
         id: dev_version
         run: |
           version="$(npm run --silent publish:resolve-dev-version)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
-        if: steps.target.outputs.publish == 'true'
         run: npm ci
 
       - name: Stamp development package version
-        if: steps.target.outputs.mode == 'development'
         env:
           DEV_VERSION: ${{ steps.dev_version.outputs.version }}
         run: npm version --no-git-tag-version "$DEV_VERSION"
 
       - name: Build package
-        if: steps.target.outputs.publish == 'true'
         run: npm run build
 
       - name: Typecheck package
-        if: steps.target.outputs.publish == 'true'
         run: npm run typecheck
 
       - name: Run tests
-        if: steps.target.outputs.publish == 'true'
         run: npm test
 
       - name: Verify packed files
-        if: steps.target.outputs.publish == 'true'
         run: npm run pack:check
 
-      - name: Publish to npm latest dist-tag
-        if: steps.target.outputs.mode == 'stable'
-        run: npm publish --tag latest --provenance --access public
-
       - name: Publish to npm dev dist-tag
-        if: steps.target.outputs.mode == 'development'
         run: npm publish --tag dev --provenance --access public
 
       - name: Summarize publish result
         if: always()
         env:
-          SHOULD_PUBLISH: ${{ steps.target.outputs.publish || 'false' }}
-          PUBLISH_MODE: ${{ steps.target.outputs.mode || 'skip' }}
-          RESOLVED_VERSION: ${{ steps.version.outputs.version || steps.dev_version.outputs.version || steps.target.outputs.version || 'n/a' }}
+          RESOLVED_VERSION: ${{ steps.dev_version.outputs.version || 'n/a' }}
           JOB_STATUS: ${{ job.status }}
-          REF_NAME: ${{ github.ref_name }}
-          DIST_TAG: ${{ steps.target.outputs.dist_tag || 'n/a' }}
         run: |
           {
-            echo "## npm publish"
+            echo "## npm dev publish"
             echo
-            echo "- Ref: $REF_NAME"
-            echo "- Mode: $PUBLISH_MODE"
-            echo "- Publish enabled: $SHOULD_PUBLISH"
-            echo "- Resolved version: $RESOLVED_VERSION"
-            echo "- Dist-tag: $DIST_TAG"
+            echo "- Version: $RESOLVED_VERSION"
+            echo "- Dist-tag: dev"
             echo "- Registry: npmjs.org"
 
-            if [ "$SHOULD_PUBLISH" != "true" ]; then
-              echo "- Result: skipped because the ref is neither main nor a strict vX.Y.Z tag."
-            elif [ "$JOB_STATUS" = "success" ]; then
+            if [ "$JOB_STATUS" = "success" ]; then
+              echo "- Result: published with provenance enabled."
+            else
+              echo "- Result: failed before publish completed. Check the failed gate above."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish-release:
+    if: github.event_name == 'release' && github.event.action == 'published' && !github.event.release.prerelease && !github.event.release.draft
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify release tag and resolve stable version
+        id: version
+        run: |
+          version="$(npm run --silent publish:verify-release -- "${{ github.event.release.tag_name }}")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stamp stable package version
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: npm version --no-git-tag-version "$RELEASE_VERSION"
+
+      - name: Build package
+        run: npm run build
+
+      - name: Typecheck package
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Verify packed files
+        run: npm run pack:check
+
+      - name: Publish to npm latest dist-tag
+        run: npm publish --tag latest --provenance --access public
+
+      - name: Summarize publish result
+        if: always()
+        env:
+          RESOLVED_VERSION: ${{ steps.version.outputs.version || 'n/a' }}
+          JOB_STATUS: ${{ job.status }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          {
+            echo "## npm stable publish"
+            echo
+            echo "- Version: $RESOLVED_VERSION"
+            echo "- Dist-tag: latest"
+            echo "- Release: $RELEASE_URL"
+            echo "- Tag: $TAG_NAME"
+            echo "- Registry: npmjs.org"
+
+            if [ "$JOB_STATUS" = "success" ]; then
               echo "- Result: published with provenance enabled."
             else
               echo "- Result: failed before publish completed. Check the failed gate above."
