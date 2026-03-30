@@ -24,11 +24,12 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "npm run clean && vite build",
     "dev": "tsx ./src/cli.ts",
     "generate:api": "node ./buildTools/generate-api.cjs",
     "generate:api:once": "node ./buildTools/generate-api-once.cjs",
     "pack:check": "node ./scripts/verify-package.mjs",
+    "publish:resolve-dev-version": "node ./scripts/resolve-dev-version.mjs",
     "publish:verify-release": "node ./scripts/verify-release-version.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -56,6 +57,7 @@
     "rimraf": "^6.1.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
+    "vite": "^8.0.3",
     "vitest": "^4.1.1"
   }
 }
