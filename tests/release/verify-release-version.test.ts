@@ -47,19 +47,8 @@ describe('verify-release-version', () => {
     expect(resolveReleaseTag({ env: {}, eventPath })).toBe('v2.0.0');
   });
 
-  it('fails when the stable tag does not match package.json', () => {
-    const tempDir = createPackageJson('1.2.4');
-
-    expect(() =>
-      verifyReleaseVersion({
-        tagName: 'v1.2.3',
-        packageJsonPath: path.join(tempDir, 'package.json'),
-      }),
-    ).toThrow('Tag v1.2.3 does not match package.json version 1.2.4.');
-  });
-
-  it('returns the resolved version for matching tags', () => {
-    const tempDir = createPackageJson('1.2.3');
+  it('returns the resolved stable version even when package.json is behind the release tag', () => {
+    const tempDir = createPackageJson('1.2.2');
 
     expect(
       verifyReleaseVersion({
@@ -67,6 +56,24 @@ describe('verify-release-version', () => {
         packageJsonPath: path.join(tempDir, 'package.json'),
       }),
     ).toMatchObject({
+      packageBaseVersion: '1.2.2',
+      packageVersion: '1.2.2',
+      tagName: 'v1.2.3',
+      version: '1.2.3',
+    });
+  });
+
+  it('keeps package metadata available for prerelease package versions', () => {
+    const tempDir = createPackageJson('1.2.3-dev.7');
+
+    expect(
+      verifyReleaseVersion({
+        tagName: 'v1.2.3',
+        packageJsonPath: path.join(tempDir, 'package.json'),
+      }),
+    ).toMatchObject({
+      packageBaseVersion: '1.2.3',
+      packageVersion: '1.2.3-dev.7',
       tagName: 'v1.2.3',
       version: '1.2.3',
     });

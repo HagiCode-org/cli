@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { parseBaseVersion, readPackageVersion } from "./resolve-dev-version.mjs";
 
 export const STABLE_TAG_PATTERN = /^v(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)$/;
 
@@ -48,14 +49,13 @@ export function verifyReleaseVersion({
 
   const expectedVersion = parseStableTag(tagName);
   const resolvedPackageJsonPath = path.resolve(packageJsonPath);
-  const packageJson = JSON.parse(fs.readFileSync(resolvedPackageJsonPath, "utf8"));
-
-  if (packageJson.version !== expectedVersion) {
-    throw new Error(`Tag ${tagName} does not match package.json version ${packageJson.version}.`);
-  }
+  const packageVersion = readPackageVersion(resolvedPackageJsonPath);
+  const packageBaseVersion = parseBaseVersion(packageVersion);
 
   return {
     packageJsonPath: resolvedPackageJsonPath,
+    packageVersion,
+    packageBaseVersion,
     tagName,
     version: expectedVersion,
   };
