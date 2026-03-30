@@ -1,21 +1,19 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "lib": [
       "ES2022",
       "DOM"
     ],
-    "rootDir": "./src",
-    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "declaration": false,
-    "sourceMap": true,
+    "noEmit": true,
     "types": [
       "node",
       "vitest/globals"
@@ -29,7 +27,8 @@
     "src/formatters/**/*.ts",
     "src/generated/api/core/**/*.ts",
     "src/generated/api/models/**/*.ts",
-    "src/generated/api/services/SessionsService.ts"
+    "src/generated/api/services/SessionsService.ts",
+    "vite.config.ts"
   ],
   "exclude": [
     "dist",
