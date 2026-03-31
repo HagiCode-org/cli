@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { formatJson } from '../../src/formatters/json';
 import {
-  formatProposalSessionListHuman,
-  formatProposalSessionSummaryHuman,
-  toProposalSessionListPayload,
-  toProposalSessionView,
-} from '../../src/formatters/proposal';
+  formatProjectListHuman,
+  formatProjectListPayload,
+  formatProjectSummaryHuman,
+  toProjectView,
+} from '../../src/formatters/project';
+import {
+  formatSessionListHuman,
+  formatSessionSummaryHuman,
+  toSessionListPayload,
+  toSessionView,
+} from '../../src/formatters/session';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 
@@ -39,9 +45,39 @@ const sampleSession = {
   stageHeroSelectionMap: null,
 };
 
-describe('proposal formatters', () => {
+const sampleProject = {
+  id: 'project-1',
+  name: 'Project',
+  path: '/tmp/project',
+  description: 'desc',
+  isMonoSpecs: false,
+  monoSpecsVersion: null,
+  monoSpecsRepoDirectory: null,
+  monoSpecsCommitWhenArchive: null,
+  hasError: false,
+  error: null,
+};
+
+describe('shared formatters', () => {
+  it('accepts string identifiers from live session responses', () => {
+    const payload = toSessionListPayload({
+      sessions: [
+        {
+          ...sampleSession,
+          sessionId: 'session-string-1',
+          projectId: 'project-string-1',
+        } as typeof sampleSession,
+      ],
+    });
+
+    expect(payload.sessions[0]).toMatchObject({
+      sessionId: 'session-string-1',
+      projectId: 'project-string-1',
+    });
+  });
+
   it('formats deterministic json payloads from normalized session data', () => {
-    const payload = toProposalSessionListPayload({
+    const payload = toSessionListPayload({
       sessions: [sampleSession],
     });
 
@@ -58,6 +94,8 @@ describe('proposal formatters', () => {
           lastActiveAt: '2026-03-30T00:00:00Z',
           enableIndependentWorkspace: true,
           baseBranch: 'main',
+          metadata: undefined,
+          chatExecutorType: undefined,
         },
       ],
     });
@@ -66,11 +104,32 @@ describe('proposal formatters', () => {
   });
 
   it('renders readable human output for session lists and summaries', () => {
-    const view = toProposalSessionView(sampleSession);
+    const view = toSessionView(sampleSession);
 
-    expect(formatProposalSessionListHuman([view])).toContain('Proposal sessions (1)');
-    expect(formatProposalSessionListHuman([view])).toContain('CLI proposal management');
-    expect(formatProposalSessionSummaryHuman(view, [['next', 'hagi proposal generate-name --session-id session-1']]))
+    expect(formatSessionListHuman('Proposal sessions', [view])).toContain('Proposal sessions (1)');
+    expect(formatSessionListHuman('Proposal sessions', [view])).toContain('CLI proposal management');
+    expect(formatSessionSummaryHuman(view, [['next', 'hagi proposal generate-name --session-id session-1']]))
       .toContain('next');
+  });
+
+  it('formats project payloads and summaries consistently', () => {
+    const payload = formatProjectListPayload([sampleProject]);
+    const view = toProjectView(sampleProject);
+
+    expect(payload.projects[0]).toEqual({
+      id: 'project-1',
+      name: 'Project',
+      path: '/tmp/project',
+      description: 'desc',
+      isMonoSpecs: false,
+      monoSpecsVersion: undefined,
+      monoSpecsRepoDirectory: undefined,
+      monoSpecsCommitWhenArchive: undefined,
+      hasError: false,
+      error: undefined,
+    });
+
+    expect(formatProjectListHuman(payload.projects)).toContain('Projects (1)');
+    expect(formatProjectSummaryHuman(view)).toContain('project-1');
   });
 });
