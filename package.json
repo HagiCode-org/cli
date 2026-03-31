@@ -1,7 +1,7 @@
 {
   "name": "@hagicode/cli",
   "version": "0.1.0",
-  "description": "HagiCode CLI for proposal session management.",
+  "description": "HagiCode CLI for project, proposal, chat, and AutoTask management.",
   "homepage": "https://github.com/HagiCode-org/cli#readme",
   "bugs": {
     "url": "https://github.com/HagiCode-org/cli/issues"
