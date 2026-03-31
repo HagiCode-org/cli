@@ -1,9 +1,10 @@
 import type { Command } from 'commander';
 import { configureApiRuntime, type ResolvedApiRuntimeConfig } from './apiRuntime';
+import { CliUsageError } from './errors';
 import {
-  createGeneratedProposalApi,
-  type ProposalApi,
-} from './proposalApi';
+  createGeneratedHagiApi,
+  type HagiApi,
+} from './hagiApi';
 
 export type CliIo = {
   stdout: (value: string) => void;
@@ -11,7 +12,7 @@ export type CliIo = {
 };
 
 export type AppDependencies = {
-  api: ProposalApi;
+  api: HagiApi;
   env: NodeJS.ProcessEnv;
   io: CliIo;
 };
@@ -24,7 +25,7 @@ export type GlobalCommandOptions = {
 };
 
 export type CommandContext = {
-  api: ProposalApi;
+  api: HagiApi;
   env: NodeJS.ProcessEnv;
   io: CliIo;
   outputJson: boolean;
@@ -34,6 +35,20 @@ export type CommandContext = {
 export function normalizeOptionalString(value?: string | null): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+export function requireOptionValue(value: string | undefined | null, label: string): string {
+  const normalized = normalizeOptionalString(value);
+  if (!normalized) {
+    throw new CliUsageError(`${label} is required.`);
+  }
+
+  return normalized;
+}
+
+export function normalizeOptionalStringArray(values?: Array<string | null | undefined>): string[] | undefined {
+  const normalized = values?.map(value => normalizeOptionalString(value)).filter(Boolean) as string[] | undefined;
+  return normalized && normalized.length > 0 ? normalized : undefined;
 }
 
 export function createDefaultDependencies(
@@ -48,7 +63,7 @@ export function createDefaultDependencies(
   },
 ): AppDependencies {
   return {
-    api: createGeneratedProposalApi(),
+    api: createGeneratedHagiApi(),
     env,
     io,
   };

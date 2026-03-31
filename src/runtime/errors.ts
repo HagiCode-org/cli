@@ -29,6 +29,18 @@ export class CliUsageError extends Error {
   }
 }
 
+export class CliHttpError extends Error {
+  status: number;
+  details?: unknown;
+
+  constructor(status: number, message: string, details?: unknown) {
+    super(message);
+    this.name = 'CliHttpError';
+    this.status = status;
+    this.details = details;
+  }
+}
+
 function asErrorObject(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
@@ -82,6 +94,15 @@ export function normalizeCliError(error: unknown): CliErrorPayload {
     return {
       exitCode: EXIT_CODES.USAGE,
       message: error.message,
+    };
+  }
+
+  if (error instanceof CliHttpError) {
+    return {
+      exitCode: mapExitCodeFromStatus(error.status),
+      status: error.status,
+      message: error.message,
+      details: error.details,
     };
   }
 
