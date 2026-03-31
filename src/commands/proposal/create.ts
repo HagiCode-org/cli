@@ -58,7 +58,7 @@ export function registerProposalCreateCommand(parent: Command, dependencies: App
       const context = createCommandContext(this, dependencies);
       const title = resolveCreateTitle(options);
 
-      const session = await context.api.createSession({
+      const session = await context.api.createProposalSession({
         title,
         chiefComplaint: options.chiefComplaint.trim(),
         originalChiefComplaint: normalizeOptionalString(options.originalChiefComplaint),
