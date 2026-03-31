@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm)](https://www.npmjs.com/package/@hagicode/cli)
 
 `@hagicode/cli` provides the published `hagi` command for project, proposal, chat, and AutoTask management against a HagiCode backend API.
+The same repository also carries the canonical embedded Hagi skill under [`skills/`](skills/), so package usage and AI-oriented guidance live in one writable source.
 
 ## Requirements
 
@@ -46,6 +47,19 @@ hagi proposal list --json
 hagi chat list --json
 hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
 ```
+
+## Embedded Skills
+
+If you are integrating Hagi CLI into an agent workflow, start from the embedded skill package in this repository:
+
+- [`skills/README.md`](skills/README.md) - repository-level discovery entrypoint
+- [`skills/hagi/SKILL.md`](skills/hagi/SKILL.md) - canonical Hagi skill contract
+- [`skills/hagi/references/`](skills/hagi/references/) - focused package usage, proposal flow, maintainer, and validation guidance
+
+`repos/cli/skills/**` is the canonical writable source for future Hagi skill updates.
+`repos/skills/**` remains a historical/reference-only mirror during this consolidation.
+
+Repository-local `npm run dev -- ...` and `node ./dist/cli.js ...` commands stay in the maintainer section below.
 
 ## Shared Runtime Flags
 
@@ -226,6 +240,7 @@ hagi autotask send --session-id <session-id> --content "Retry with a smaller dif
 ## Maintainer Workflow (`repos/cli` only)
 
 Use the commands in this section only when you are editing or validating the CLI source tree inside this repository.
+Package consumers and automation should stay on `npx @hagicode/cli ...` or an installed `hagi ...` unless they are working on `repos/cli` itself.
 
 Build the local repository output:
 
