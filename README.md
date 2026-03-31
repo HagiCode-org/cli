@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm)](https://www.npmjs.com/package/@hagicode/cli)
 
-`repos/cli` contains the npm-based `hagi` command for proposal session management.
+`@hagicode/cli` provides the published `hagi` command for project, proposal, chat, and AutoTask management against a HagiCode backend API.
 
 ## Requirements
 
@@ -12,19 +12,227 @@
 
 ## Installation
 
+Use the published npm package for normal CLI usage. You do not need to clone `repos/cli` to run `hagi`.
+
+### Zero-install usage
+
+```bash
+npx @hagicode/cli --help
+npx @hagicode/cli project list --json
+```
+
+### Project-local install
+
+```bash
+npm install @hagicode/cli
+npx @hagicode/cli proposal list --json
+```
+
+### Optional global install
+
+```bash
+npm install -g @hagicode/cli
+hagi --help
+```
+
+## Quick Start
+
+The examples below use `hagi ...` after the package is available on your `PATH`. For one-off execution, replace `hagi` with `npx @hagicode/cli`.
+
+```bash
+hagi --help
+hagi project list --json
+hagi proposal list --json
+hagi chat list --json
+hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
+```
+
+## Shared Runtime Flags
+
+Every command family supports the same global runtime flags:
+
+- `--base-url <url>`
+- `--token <token>`
+- `--lang <lang>`
+- `--json`
+
+Example:
+
+```bash
+hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
+```
+
+## Command Overview
+
+```text
+hagi
+|-- project   list | create | update | delete
+|-- proposal  list | create | generate-name | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- chat      list | create | archive | delete | send
+`-- autotask  create | send
+```
+
+## Project Commands
+
+List projects through the aggregation endpoint:
+
+```bash
+hagi project list
+hagi project list --json
+```
+
+Create a project:
+
+```bash
+hagi project create \
+  --name "CLI Demo" \
+  --path /workspace/cli-demo \
+  --description "Automation sandbox"
+```
+
+Update only part of a project record. The CLI resolves current project data first so omitted fields are preserved:
+
+```bash
+hagi project update --id <project-id> --description "Updated description"
+hagi project update --id <project-id> --name "Renamed project" --path /workspace/new-path
+```
+
+Delete a project:
+
+```bash
+hagi project delete --id <project-id>
+```
+
+## Proposal Commands
+
+List proposal sessions:
+
+```bash
+hagi proposal list --project-id <project-id>
+hagi proposal list --include-archived --json
+```
+
+Create a proposal session only:
+
+```bash
+hagi proposal create \
+  --project-id <project-id> \
+  --chief-complaint "Add CLI completion for session workflows" \
+  --default-title
+```
+
+Generate a proposal name explicitly:
+
+```bash
+hagi proposal generate-name --session-id <session-id>
+```
+
+Optimize the description explicitly:
+
+```bash
+hagi proposal optimize-description \
+  --session-id <session-id> \
+  --description "Improve the proposal framing" \
+  --optimization-direction "Focus on implementation risk"
+```
+
+Generate and execute the proposal as separate steps:
+
+```bash
+hagi proposal generate --session-id <session-id> --enable-explore-mode
+hagi proposal execute --session-id <session-id>
+```
+
+Submit structured annotation payloads from a file or stdin:
+
+```bash
+hagi proposal annotate --session-id <session-id> --input annotations.json
+cat annotations.json | hagi proposal annotate --session-id <session-id> --input - --json
+```
+
+Archive, update status, complete, or send a follow-up message:
+
+```bash
+hagi proposal archive --session-id <session-id> --hero-id <hero-id>
+hagi proposal status --session-id <session-id> --status Reviewing
+hagi proposal complete --session-id <session-id>
+hagi proposal send --session-id <session-id> --content "Please continue"
+```
+
+### Explicit Lifecycle Sequence
+
+The CLI keeps proposal lifecycle actions explicit and non-interactive:
+
+1. `hagi proposal list`
+2. `hagi proposal create`
+3. `hagi proposal generate-name`
+4. `hagi proposal optimize-description` (optional)
+5. `hagi proposal generate`
+6. `hagi proposal annotate` (optional review loop)
+7. `hagi proposal execute`
+8. `hagi proposal archive`
+9. `hagi proposal complete`
+
+Each command maps to one backend action. The CLI may suggest a next command, but it never chains later lifecycle APIs automatically.
+
+## Chat Commands
+
+List chat sessions:
+
+```bash
+hagi chat list --active-only
+hagi chat list --include-archived --json
+```
+
+Create a chat session:
+
+```bash
+hagi chat create \
+  --title "Repository Q&A" \
+  --project-id <project-id> \
+  --executor-type CodexCli
+```
+
+Archive, delete, or send a message:
+
+```bash
+hagi chat archive --session-id <session-id>
+hagi chat delete --session-id <session-id>
+hagi chat send --session-id <session-id> --content "Summarize the current diff"
+```
+
+## AutoTask Commands
+
+Create an AutoTask session with package-first automation flags:
+
+```bash
+hagi autotask create \
+  --title "Auto compose commit" \
+  --project-id <project-id> \
+  --prompt-id auto-compose-commit.en-US \
+  --repository-path repos/cli \
+  --need-push \
+  --target-branch-mode new-custom \
+  --target-branch-name feature/cli-completion \
+  --script-key autotask.auto-compose-commit
+```
+
+Send a follow-up message to an AutoTask session:
+
+```bash
+hagi autotask send --session-id <session-id> --content "Retry with a smaller diff"
+```
+
+## Maintainer Workflow (`repos/cli` only)
+
+Use the commands in this section only when you are editing or validating the CLI source tree inside this repository.
+
+Build the local repository output:
+
 ```bash
 cd repos/cli
 npm install
 npm run build
-```
-
-`npm run build` now performs a Vite 8 production bundle for Node 20+ and emits the publish contract at `dist/cli.js`, `dist/main.js`, plus any runtime-required shared chunks under `dist/chunks/`.
-Release builds are minified, tree-shaken, and exclude `.map` files.
-
-Run the built CLI with:
-
-```bash
-npx hagi --help
 node ./dist/cli.js --help
 ```
 
@@ -33,61 +241,20 @@ For local development without building:
 ```bash
 cd repos/cli
 npm run dev -- proposal list --json
+npm run dev -- chat list --json
 ```
 
-## Release automation
+## Release Automation
 
 `repos/cli/.github/workflows/release-drafter.yml` maintains the next GitHub draft release for `@hagicode/cli`.
-`repos/cli/.github/workflows/npm-publish.yml` now publishes two channels with GitHub Actions OIDC plus provenance:
+`repos/cli/.github/workflows/npm-publish.yml` publishes two channels with GitHub Actions OIDC plus provenance:
 
 - pushes to `main` publish a unique development prerelease under the npm `dev` dist-tag
-- only published GitHub Releases for strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
+- published GitHub Releases for strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
 
-### Draft release flow
+### Local Release Verification
 
-1. Label each PR with one semantic version label: `major`, `minor`, or `patch`.
-2. Add at least one release note category label:
-   - `breaking-change` for breaking release note callouts
-   - `feature` or `enhancement` for the `Features` section
-   - `bug` for the `Fixes` section
-   - `docs` or `documentation` for the `Documentation` section
-   - `chore` or `dependencies` for the `Maintenance` section
-3. Add `skip-changelog` only when the PR should stay out of the draft notes entirely, such as pure CI noise or internal housekeeping.
-4. Merge the labeled PR into `main`, or update the PR while it is open.
-5. Let Release Drafter refresh the GitHub draft release name, tag, and categorized notes.
-6. Review the draft release in GitHub before creating the next stable tag.
-
-Release Drafter manages draft release metadata only. Draft review and publish remain native GitHub Release operations.
-
-### Current label coverage
-
-At implementation time, the public `HagiCode-org/cli` label set already included `bug`, `documentation`, and `enhancement`.
-The following planned release labels were still missing and should be created before maintainers rely on the full contract:
-
-- `major`
-- `minor`
-- `patch`
-- `breaking-change`
-- `feature`
-- `docs`
-- `chore`
-- `dependencies`
-- `skip-changelog`
-
-### Trusted Publisher prerequisites
-
-Before the first automated release, an npm package owner must bind the package to the repository workflow:
-
-1. Open the npm package settings for `@hagicode/cli`.
-2. Add a Trusted Publisher for the GitHub repository `HagiCode-org/cli`.
-3. Set the workflow file to `.github/workflows/npm-publish.yml`.
-4. Keep the package access level public so `npm publish --access public` can succeed.
-
-The workflow requests `contents: read` and `id-token: write`. It does not use a long-lived `NPM_TOKEN`.
-
-### Local release verification
-
-Run the same stable release gates locally before publishing a GitHub Release:
+Run the stable release gates locally before publishing a GitHub Release:
 
 ```bash
 cd repos/cli
@@ -99,18 +266,6 @@ npm test
 npm run pack:check
 ```
 
-`publish:verify-release` validates the strict stable tag format and resolves the stable package version that CI will stamp into `package.json` immediately before build and publish.
-`pack:check` runs `npm pack --dry-run --json` and rejects missing bundled entrypoints, `.map` files, and legacy source-mirrored output such as `dist/runtime/**` or `dist/generated/api/models/**`.
-`publish:resolve-dev-version` derives the CI-only prerelease version used for `main` branch publishes, for example `0.1.0-dev.<run>.<attempt>.<sha>`.
-
-### Stable release flow
-
-1. Make sure the draft release maintained by Release Drafter already reflects the intended tag such as `v0.1.0`.
-2. Run the local verification commands above.
-3. Commit and push the release-ready source tree.
-4. Publish the matching GitHub draft release for the stable tag.
-5. Confirm the GitHub Actions summary shows build, typecheck, test, package inspection, version stamping, and `npm publish --tag latest --provenance --access public`.
-
 ## Environment Variables
 
 The CLI resolves runtime settings centrally before every command. Explicit flags always override environment variables.
@@ -120,13 +275,6 @@ The CLI resolves runtime settings centrally before every command. Explicit flags
 | `HAGI_API_BASE_URL` | Backend base URL. Defaults to `http://127.0.0.1:35168` when unset. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
-
-Global flags:
-
-- `--base-url <url>`
-- `--token <token>`
-- `--lang <lang>`
-- `--json`
 
 ## Generate the API Client
 
@@ -141,59 +289,6 @@ npm run generate:api:once
 Default Swagger source:
 
 - `http://127.0.0.1:35168/swagger/v1/swagger.json`
-
-When the backend cannot export Swagger in the current environment, keep `src/generated/api/**` aligned with the same controller contract used by `repos/web`, then regenerate when Swagger becomes available again.
-
-`generate:api:once` matches the frontend workflow: it reuses an existing Swagger host when one is already up, otherwise it starts `repos/hagicode-core/src/PCode.SwaggerHost/PCode.SwaggerHost.csproj`, waits for Swagger readiness, runs the normal generator once, then stops the temporary host.
-
-## Proposal Commands
-
-`proposal list` queries proposal sessions through `GET /api/Sessions` with `type=Proposal`.
-
-```bash
-hagi proposal list --project-id <project-id>
-hagi proposal list --include-archived --json
-```
-
-`proposal create` only creates the proposal session. It does not trigger any later lifecycle API.
-
-```bash
-hagi proposal create \
-  --project-id <project-id> \
-  --chief-complaint "Add npm commands for proposal APIs" \
-  --default-title
-```
-
-`proposal generate-name` only generates the proposal name for an existing session.
-
-```bash
-hagi proposal generate-name --session-id <session-id>
-```
-
-`proposal generate` only starts proposal generation.
-
-```bash
-hagi proposal generate --session-id <session-id> --enable-explore-mode
-hagi proposal generate --session-id <session-id> --hero-id <hero-id>
-```
-
-`proposal execute` only starts proposal execution.
-
-```bash
-hagi proposal execute --session-id <session-id>
-```
-
-## Explicit Lifecycle Sequence
-
-The CLI keeps proposal lifecycle actions explicit and non-interactive:
-
-1. `hagi proposal list`
-2. `hagi proposal create`
-3. `hagi proposal generate-name`
-4. `hagi proposal generate`
-5. `hagi proposal execute`
-
-Each command maps to one backend action. The CLI prints the suggested next command, but it never chains later lifecycle APIs automatically.
 
 ## Exit Codes
 
