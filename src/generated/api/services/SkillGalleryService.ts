@@ -10,6 +10,7 @@ import type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from '../
 import type { PCode_Application_Contracts_Dto_InstallSkillResultDto } from '../models/PCode_Application_Contracts_Dto_InstallSkillResultDto';
 import type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from '../models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
 import type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryDetailDto';
+import type { PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto';
 import type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
 import type { PCode_Application_Contracts_Dto_SkillRecommendationConfigDto } from '../models/PCode_Application_Contracts_Dto_SkillRecommendationConfigDto';
 import type { PCode_Application_Contracts_Dto_SkillRecommendationResponseDto } from '../models/PCode_Application_Contracts_Dto_SkillRecommendationResponseDto';
@@ -50,7 +51,8 @@ export class SkillGalleryService {
     });
   }
   /**
-   * Returns a normalized catalog sourced from `HagiCode.Libs.Skills`.
+   * Returns a normalized gallery response for either keyword catalog search or a public GitHub repository URL query.
+   * The same endpoint also surfaces structured repository-discovery outcomes for unsupported, empty, or unavailable repositories.
    * @returns PCode_Application_Contracts_Dto_SkillGalleryResponseDto OK
    * @throws ApiError
    */
@@ -81,6 +83,26 @@ export class SkillGalleryService {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/skills/gallery/detail',
+      query: {
+        'id': id,
+        'source': source,
+      },
+    });
+  }
+  /**
+   * @returns PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto OK
+   * @throws ApiError
+   */
+  public static getApiSkillsGalleryInstallContext({
+    id,
+    source,
+  }: {
+    id?: string,
+    source?: string,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/skills/gallery/install-context',
       query: {
         'id': id,
         'source': source,

@@ -14,4 +14,5 @@ export enum PCode_Models_AIProviderType {
   KIRO_CLI = 'KiroCli',
   KIMI_CLI = 'KimiCli',
   GEMINI_CLI = 'GeminiCli',
+  DEEP_AGENTS_CLI = 'DeepAgentsCli',
 }

@@ -2,13 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Application_Contracts_Dto_AdventureContentCatalogDto } from '../models/PCode_Application_Contracts_Dto_AdventureContentCatalogDto';
 import type { PCode_Application_Contracts_Dto_BatchCreateHeroDto } from '../models/PCode_Application_Contracts_Dto_BatchCreateHeroDto';
 import type { PCode_Application_Contracts_Dto_CreateHeroDto } from '../models/PCode_Application_Contracts_Dto_CreateHeroDto';
 import type { PCode_Application_Contracts_Dto_CreateHeroSecondaryProfessionDto } from '../models/PCode_Application_Contracts_Dto_CreateHeroSecondaryProfessionDto';
+import type { PCode_Application_Contracts_Dto_HagipowerStatusDto } from '../models/PCode_Application_Contracts_Dto_HagipowerStatusDto';
 import type { PCode_Application_Contracts_Dto_HeroAvatarCatalogDto } from '../models/PCode_Application_Contracts_Dto_HeroAvatarCatalogDto';
 import type { PCode_Application_Contracts_Dto_HeroDto } from '../models/PCode_Application_Contracts_Dto_HeroDto';
 import type { PCode_Application_Contracts_Dto_HeroDungeonRosterDto } from '../models/PCode_Application_Contracts_Dto_HeroDungeonRosterDto';
 import type { PCode_Application_Contracts_Dto_HeroDungeonSelectableHeroDto } from '../models/PCode_Application_Contracts_Dto_HeroDungeonSelectableHeroDto';
+import type { PCode_Application_Contracts_Dto_HeroGameSceneSnapshotDto } from '../models/PCode_Application_Contracts_Dto_HeroGameSceneSnapshotDto';
 import type { PCode_Application_Contracts_Dto_HeroHistoryQueryResultDto } from '../models/PCode_Application_Contracts_Dto_HeroHistoryQueryResultDto';
 import type { PCode_Application_Contracts_Dto_HeroRealtimeDashboardDto } from '../models/PCode_Application_Contracts_Dto_HeroRealtimeDashboardDto';
 import type { PCode_Application_Contracts_Dto_HeroSpecialEmergencyTeamDto } from '../models/PCode_Application_Contracts_Dto_HeroSpecialEmergencyTeamDto';
@@ -62,6 +65,16 @@ export class HeroService {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/Hero/avatar-catalog',
+    });
+  }
+  /**
+   * @returns PCode_Application_Contracts_Dto_AdventureContentCatalogDto OK
+   * @throws ApiError
+   */
+  public static getApiHeroAdventureCatalog(): CancelablePromise<PCode_Application_Contracts_Dto_AdventureContentCatalogDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/Hero/adventure-catalog',
     });
   }
   /**
@@ -220,6 +233,26 @@ export class HeroService {
       },
       body: requestBody,
       mediaType: 'application/json',
+    });
+  }
+  /**
+   * @returns PCode_Application_Contracts_Dto_HeroGameSceneSnapshotDto OK
+   * @throws ApiError
+   */
+  public static getApiHeroGameScene(): CancelablePromise<PCode_Application_Contracts_Dto_HeroGameSceneSnapshotDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/Hero/game-scene',
+    });
+  }
+  /**
+   * @returns PCode_Application_Contracts_Dto_HagipowerStatusDto OK
+   * @throws ApiError
+   */
+  public static getApiHeroHagipowerStatus(): CancelablePromise<PCode_Application_Contracts_Dto_HagipowerStatusDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/Hero/hagipower-status',
     });
   }
   /**

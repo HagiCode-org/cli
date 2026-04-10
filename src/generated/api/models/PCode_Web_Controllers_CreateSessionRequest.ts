@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { PCode_Application_DTOs_SessionMessageImageRefDto } from './PCode_Application_DTOs_SessionMessageImageRefDto';
 import type { PCode_Models_AIProviderType } from './PCode_Models_AIProviderType';
+import type { PCode_Models_TargetProjectReferenceDto } from './PCode_Models_TargetProjectReferenceDto';
 import type { PCode_Models_TargetRepositoryDto } from './PCode_Models_TargetRepositoryDto';
 import type { PCode_Web_Controllers_GitHubIssueMetadata } from './PCode_Web_Controllers_GitHubIssueMetadata';
 export type PCode_Web_Controllers_CreateSessionRequest = {
@@ -26,6 +27,11 @@ export type PCode_Web_Controllers_CreateSessionRequest = {
    * When specified, AI should limit modifications to only these repositories.
    */
   targetRepositories?: Array<PCode_Models_TargetRepositoryDto> | null;
+  /**
+   * Target project references for proposal scope expansion.
+   * When specified, AI may read or edit those projects according to accessType.
+   */
+  targetProjects?: Array<PCode_Models_TargetProjectReferenceDto> | null;
   /**
    * Whether title is default placeholder "新建主意" (New Proposal)
    * When true, system will automatically generate a meaningful title after description optimization

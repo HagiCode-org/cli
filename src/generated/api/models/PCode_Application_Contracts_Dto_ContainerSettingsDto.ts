@@ -7,6 +7,10 @@
  */
 export type PCode_Application_Contracts_Dto_ContainerSettingsDto = {
   /**
+   * The configured absolute data directory used for runtime-managed content.
+   */
+  dataDir?: string | null;
+  /**
    * The configured container mount path for project discovery
    */
   mountPath?: string | null;

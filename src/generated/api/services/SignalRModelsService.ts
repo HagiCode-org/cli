@@ -2,8 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Models_AdventureRunCompletedDto } from '../models/PCode_Models_AdventureRunCompletedDto';
+import type { PCode_Models_AdventureRunSnapshotUpdatedDto } from '../models/PCode_Models_AdventureRunSnapshotUpdatedDto';
+import type { PCode_Models_AdventureRunStepUpdatedDto } from '../models/PCode_Models_AdventureRunStepUpdatedDto';
 import type { PCode_Models_AutoComposeCommitCompletedDto } from '../models/PCode_Models_AutoComposeCommitCompletedDto';
 import type { PCode_Models_ErrorResponse } from '../models/PCode_Models_ErrorResponse';
+import type { PCode_Models_HagipowerAdventureProbeRequestedDto } from '../models/PCode_Models_HagipowerAdventureProbeRequestedDto';
+import type { PCode_Models_HagipowerGameProbeRequestedDto } from '../models/PCode_Models_HagipowerGameProbeRequestedDto';
+import type { PCode_Models_HagipowerSnapshotUpdatedDto } from '../models/PCode_Models_HagipowerSnapshotUpdatedDto';
 import type { PCode_Models_HeroStatusBarHistoryUpdatedDto } from '../models/PCode_Models_HeroStatusBarHistoryUpdatedDto';
 import type { PCode_Models_MessageCompletedDto } from '../models/PCode_Models_MessageCompletedDto';
 import type { PCode_Models_MessageStreamingDto } from '../models/PCode_Models_MessageStreamingDto';
@@ -24,7 +30,7 @@ export class SignalRModelsService {
    * @returns any OK
    * @throws ApiError
    */
-  public static getApiModelsMessageTypes(): CancelablePromise<(PCode_Models_MessageStreamingDto | PCode_Models_MessageCompletedDto | PCode_Models_SubscriptionConfirmedResponse | PCode_Models_UnsubscriptionConfirmedResponse | PCode_Models_ErrorResponse | PCode_Models_SessionQueueUpdatedDto | PCode_Models_SessionCancelledDto | PCode_Models_TokenThroughputUpdatedDto | PCode_Models_HeroStatusBarHistoryUpdatedDto | PCode_Models_AutoComposeCommitCompletedDto)> {
+  public static getApiModelsMessageTypes(): CancelablePromise<(PCode_Models_MessageStreamingDto | PCode_Models_MessageCompletedDto | PCode_Models_SubscriptionConfirmedResponse | PCode_Models_UnsubscriptionConfirmedResponse | PCode_Models_ErrorResponse | PCode_Models_SessionQueueUpdatedDto | PCode_Models_SessionCancelledDto | PCode_Models_TokenThroughputUpdatedDto | PCode_Models_HagipowerSnapshotUpdatedDto | PCode_Models_HagipowerGameProbeRequestedDto | PCode_Models_HagipowerAdventureProbeRequestedDto | PCode_Models_AdventureRunSnapshotUpdatedDto | PCode_Models_AdventureRunStepUpdatedDto | PCode_Models_AdventureRunCompletedDto | PCode_Models_HeroStatusBarHistoryUpdatedDto | PCode_Models_AutoComposeCommitCompletedDto)> {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/models/message-types',

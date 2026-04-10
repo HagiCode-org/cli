@@ -24,6 +24,6 @@ export type PCode_Models_RepositoryInfoDto = {
   aheadCount?: number;
   behindCount?: number;
   syncState?: string | null;
-  tags?: Array<string> | null;
+  collapseToMore?: boolean;
 };
 

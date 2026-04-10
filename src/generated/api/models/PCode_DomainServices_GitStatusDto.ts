@@ -8,5 +8,8 @@ export type PCode_DomainServices_GitStatusDto = {
   files?: Array<PCode_DomainServices_GitFileStatusDto> | null;
   unstagedCount?: number;
   stagedCount?: number;
+  remoteUrl?: string | null;
+  remoteHost?: string | null;
+  isGitHubRemote?: boolean | null;
 };
 

@@ -9,7 +9,11 @@ export type PCode_Application_DTOs_ImageUploadResponseDto = {
   previewUrl?: string | null;
   fileName?: string | null;
   fileSize?: number;
+  originalFileSize?: number;
   contentType?: string | null;
+  compressionAttempted?: boolean;
+  compressionApplied?: boolean;
+  compressionTool?: string | null;
   uploadedAt?: string;
 };
 

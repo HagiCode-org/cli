@@ -16,7 +16,7 @@ export type PCode_Web_Controllers_CreateAutoTaskSessionRequest = {
   projectId: string;
   /**
    * The prompt template ID to use for the initial message (required)
-   * Should be in format "scenario.locale" (e.g., "auto-compose-commit.en-US")
+   * Should be in format "scenario.locale" (e.g., "auto-compose-commit.en-US" or "github-about-optimization.zh-CN")
    * For user presets, use format "user-preset.{locale}" (e.g., "user-preset.zh-CN")
    */
   promptId: string;
@@ -39,6 +39,16 @@ export type PCode_Web_Controllers_CreateAutoTaskSessionRequest = {
    * The working directory will be resolved from project.Path plus repositoryPath when applicable.
    */
   repositoryPath?: string | null;
+  /**
+   * Explicit target type for auto-task execution.
+   * Use "repository" for project-root or sub-repository flows, and "vault" for registered Vault targets.
+   */
+  targetType?: string | null;
+  /**
+   * Registered Vault ID for vault-targeted auto-task execution.
+   * Required when TargetType is "vault".
+   */
+  vaultId?: string | null;
   /**
    * Multiple project IDs for hotword generation scenarios (optional)
    * Each entry is a project ID (GUID)

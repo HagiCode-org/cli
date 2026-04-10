@@ -184,44 +184,6 @@ export class GitService {
     });
   }
   /**
-   * 撤销单个文件的工作区修改
-   * 该接口只回退目标文件的工作区内容，不会影响同仓库中的其他文件，也不会清除该文件已暂存的内容。
-   * 当前前端仅对未暂存文件暴露此入口。
-   * @returns any 成功处理单文件工作区撤销请求
-   * @throws ApiError
-   */
-  public static deleteApiGitDiscard({
-    projectId,
-    repositoryPath,
-    filePath,
-  }: {
-    /**
-     * 项目 ID（可选）
-     */
-    projectId?: string,
-    /**
-     * 仓库路径（可选）
-     */
-    repositoryPath?: string,
-    /**
-     * 文件路径
-     */
-    filePath?: string,
-  }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: 'DELETE',
-      url: '/api/git/discard',
-      query: {
-        'projectId': projectId,
-        'repositoryPath': repositoryPath,
-        'filePath': filePath,
-      },
-      errors: {
-        400: `projectId、repositoryPath 或 filePath 无效`,
-      },
-    });
-  }
-  /**
    * 暂存所有变更
    * @returns any 成功暂存所有变更
    * @throws ApiError
@@ -355,8 +317,8 @@ export class GitService {
     });
   }
   /**
-   * 将当前分支 rebase 到远程同名分支。
-   * 当前版本不支持选择目标分支；若发生冲突会自动 abort 并恢复仓库状态。
+   * 将当前分支 rebase 到已配置的 upstream。
+   * 当前版本不支持选择目标分支；后端会执行 git pull --rebase，若发生冲突会自动 abort 并恢复仓库状态。
    * @returns PCode_DomainServices_Contracts_GitRebaseResponseDto OK
    * @throws ApiError
    */

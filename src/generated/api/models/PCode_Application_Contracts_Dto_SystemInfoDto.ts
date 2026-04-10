@@ -14,11 +14,6 @@ export type PCode_Application_Contracts_Dto_SystemInfoDto = {
    */
   isContainer?: boolean;
   /**
-   * GitHub OAuth Client ID from backend configuration.
-   * Null when GitHub OAuth is not configured.
-   */
-  gitHubClientId?: string | null;
-  /**
    * Official Discord community invite link from backend configuration.
    * Null when the community link is not configured.
    */

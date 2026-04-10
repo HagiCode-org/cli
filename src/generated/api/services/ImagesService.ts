@@ -24,6 +24,10 @@ export class ImagesService {
        * Session identifier or draft owner key that owns the uploaded image.
        */
       SessionId?: string;
+      /**
+       * Whether the backend should attempt automatic lossless compression after persisting the original file.
+       */
+      Compress?: boolean;
     },
   }): CancelablePromise<PCode_Application_DTOs_ImageUploadResponseDto> {
     return __request(OpenAPI, {

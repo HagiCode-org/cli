@@ -6,5 +6,6 @@ import type { PCode_Models_SessionId } from './PCode_Models_SessionId';
 import type { PCode_Models_SignalRReqBase } from './PCode_Models_SignalRReqBase';
 export type PCode_Models_UnsubscribeFromSessionRequest = (PCode_Models_SignalRReqBase & {
   sessionId: PCode_Models_SessionId;
+  mode?: string | null;
 });
 

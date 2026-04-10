@@ -9,6 +9,7 @@ export type PCode_ClaudeHelper_Prompts_Models_PromptDungeonConfiguration = {
   sortOrder?: number | null;
   displayNameKey?: string | null;
   displayName?: string | null;
+  descriptionKey?: string | null;
   description?: string | null;
 };
 

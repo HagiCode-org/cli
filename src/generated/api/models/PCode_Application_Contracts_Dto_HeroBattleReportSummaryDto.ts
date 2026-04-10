@@ -10,6 +10,7 @@ export type PCode_Application_Contracts_Dto_HeroBattleReportSummaryDto = {
   totalToolCalls?: number;
   totalTokens?: number;
   totalDurationMs?: number;
+  highestLevel?: number;
   mvp?: PCode_Application_Contracts_Dto_HeroBattleReportMvpDto;
 };
 

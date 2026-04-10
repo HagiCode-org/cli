@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto } from '../models/PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto';
 import type { PCode_Application_Contracts_Dto_BasicHealthStatusDto } from '../models/PCode_Application_Contracts_Dto_BasicHealthStatusDto';
 import type { PCode_Application_Contracts_Dto_DualMonitoringHealthDto } from '../models/PCode_Application_Contracts_Dto_DualMonitoringHealthDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -33,6 +34,30 @@ export class HealthService {
       url: '/api/health/dual-monitoring',
       query: {
         'executorIds': executorIds,
+      },
+    });
+  }
+  /**
+   * Gets the monitoring health status for a single Agent CLI channel.
+   * @returns PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto OK
+   * @throws ApiError
+   */
+  public static getApiHealthAgentCli({
+    cliId,
+  }: {
+    /**
+     * Stable Agent CLI identifier, such as claude-code or codex.
+     */
+    cliId: string,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/health/agent-cli/{cliId}',
+      path: {
+        'cliId': cliId,
+      },
+      errors: {
+        400: `Bad Request`,
       },
     });
   }

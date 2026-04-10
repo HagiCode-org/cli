@@ -13,8 +13,7 @@ export class SystemService {
   /**
    * Gets system information about the current runtime environment.
    * This endpoint returns environment information such as whether the application
-   * is running in a containerized environment (Docker, etc.) and the GitHub OAuth Client ID
-   * from backend configuration.
+   * is running in a containerized environment (Docker, etc.).
    * The environment detection is performed once at application startup and cached.
    * @returns PCode_Application_Contracts_Dto_SystemInfoDto System information retrieved successfully.
    * @throws ApiError

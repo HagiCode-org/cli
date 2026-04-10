@@ -10,13 +10,12 @@ import type { PCode_Application_Contracts_Dto_CessionIdResponseDto } from '../mo
 import type { PCode_Application_Contracts_Dto_CorrectProposalNameRequestDto } from '../models/PCode_Application_Contracts_Dto_CorrectProposalNameRequestDto';
 import type { PCode_Application_Contracts_Dto_CorrectProposalNameResponseDto } from '../models/PCode_Application_Contracts_Dto_CorrectProposalNameResponseDto';
 import type { PCode_Application_Contracts_Dto_DataManagement_ValidationResultDto } from '../models/PCode_Application_Contracts_Dto_DataManagement_ValidationResultDto';
-import type { PCode_Application_Contracts_Dto_DescriptionOptimization_OptimizationTaskResponseDto } from '../models/PCode_Application_Contracts_Dto_DescriptionOptimization_OptimizationTaskResponseDto';
 import type { PCode_Application_Contracts_Dto_ExecuteProposalRequestDto } from '../models/PCode_Application_Contracts_Dto_ExecuteProposalRequestDto';
 import type { PCode_Application_Contracts_Dto_GenerateProposalRequestDto } from '../models/PCode_Application_Contracts_Dto_GenerateProposalRequestDto';
-import type { PCode_Application_Contracts_Dto_OptimizedTitleResponseDto } from '../models/PCode_Application_Contracts_Dto_OptimizedTitleResponseDto';
+import type { PCode_Application_Contracts_Dto_MessageListResponseDto } from '../models/PCode_Application_Contracts_Dto_MessageListResponseDto';
 import type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from '../models/PCode_Application_Contracts_Dto_PostMessageResponseDto';
 import type { PCode_Application_Contracts_Dto_ProcessingStatusDto } from '../models/PCode_Application_Contracts_Dto_ProcessingStatusDto';
-import type { PCode_Application_Contracts_Dto_ProposalNameResponseDto } from '../models/PCode_Application_Contracts_Dto_ProposalNameResponseDto';
+import type { PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto } from '../models/PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto';
 import type { PCode_Application_Contracts_Dto_SessionListResponseDto } from '../models/PCode_Application_Contracts_Dto_SessionListResponseDto';
 import type { PCode_Application_Contracts_Dto_SimpleMessageResponseDto } from '../models/PCode_Application_Contracts_Dto_SimpleMessageResponseDto';
 import type { PCode_Application_Contracts_Dto_WorkspaceDeletionResponseDto } from '../models/PCode_Application_Contracts_Dto_WorkspaceDeletionResponseDto';
@@ -28,7 +27,7 @@ import type { PCode_Web_Controllers_CreateAutoTaskSessionRequest } from '../mode
 import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../models/PCode_Web_Controllers_CreateChatSessionRequest';
 import type { PCode_Web_Controllers_CreateSessionRequest } from '../models/PCode_Web_Controllers_CreateSessionRequest';
 import type { PCode_Web_Controllers_OpenInVsCodeResponseDto } from '../models/PCode_Web_Controllers_OpenInVsCodeResponseDto';
-import type { PCode_Web_Controllers_OptimizeDescriptionRequest } from '../models/PCode_Web_Controllers_OptimizeDescriptionRequest';
+import type { PCode_Web_Controllers_OptimizeProposalRequest } from '../models/PCode_Web_Controllers_OptimizeProposalRequest';
 import type { PCode_Web_Controllers_PostMessageRequest } from '../models/PCode_Web_Controllers_PostMessageRequest';
 import type { PCode_Web_Controllers_UpdateSessionRequest } from '../models/PCode_Web_Controllers_UpdateSessionRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -275,6 +274,62 @@ export class SessionsService {
     });
   }
   /**
+   * @returns PCode_Application_Contracts_Dto_MessageListResponseDto OK
+   * @throws ApiError
+   */
+  public static getApiSessionsMessages({
+    sessionId,
+    page = 1,
+    pageSize = 50,
+    historyScope,
+    order = 'desc',
+  }: {
+    sessionId: string,
+    page?: number,
+    pageSize?: number,
+    historyScope?: string,
+    order?: string,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_MessageListResponseDto> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/Sessions/{sessionId}/messages',
+      path: {
+        'sessionId': sessionId,
+      },
+      query: {
+        'page': page,
+        'pageSize': pageSize,
+        'historyScope': historyScope,
+        'order': order,
+      },
+      errors: {
+        404: `Not Found`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * @returns PCode_Application_Contracts_Dto_PostMessageResponseDto OK
+   * @throws ApiError
+   */
+  public static postApiSessionsMessages({
+    sessionId,
+    requestBody,
+  }: {
+    sessionId: string,
+    requestBody?: PCode_Web_Controllers_PostMessageRequest,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_PostMessageResponseDto> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/Sessions/{sessionId}/messages',
+      path: {
+        'sessionId': sessionId,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
+    });
+  }
+  /**
    * Cancels a running session operation
    * @returns PCode_Web_Controllers_CancelSessionResponseDto Session cancelled successfully
    * @throws ApiError
@@ -359,27 +414,6 @@ export class SessionsService {
     });
   }
   /**
-   * @returns PCode_Application_Contracts_Dto_PostMessageResponseDto OK
-   * @throws ApiError
-   */
-  public static postApiSessionsMessages({
-    sessionId,
-    requestBody,
-  }: {
-    sessionId: string,
-    requestBody?: PCode_Web_Controllers_PostMessageRequest,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_PostMessageResponseDto> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/Sessions/{sessionId}/messages',
-      path: {
-        'sessionId': sessionId,
-      },
-      body: requestBody,
-      mediaType: 'application/json',
-    });
-  }
-  /**
    * Submit annotations for proposal files to be processed by AI
    * This endpoint allows users to submit annotations across multiple proposal files.
    * The annotations will be processed by AI systems to automatically modify files.
@@ -415,90 +449,29 @@ export class SessionsService {
     });
   }
   /**
-   * Generates a proposal name for a proposal session using AI
-   * @returns PCode_Application_Contracts_Dto_ProposalNameResponseDto Proposal name generated successfully
+   * Optimizes a proposal bundle in one pass and returns structured diagnostics.
+   * @returns PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto OK
    * @throws ApiError
    */
-  public static postApiSessionsGenerateProposalName({
-    sessionId,
-  }: {
-    /**
-     * The unique identifier of the session
-     */
-    sessionId: string,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_ProposalNameResponseDto> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/Sessions/{sessionId}/generate-proposal-name',
-      path: {
-        'sessionId': sessionId,
-      },
-      errors: {
-        400: `Session is not a proposal session or proposal name already exists`,
-        404: `Session not found`,
-        409: `Proposal name already exists for this session`,
-        500: `Failed to generate proposal name`,
-      },
-    });
-  }
-  /**
-   * Optimizes a proposal description using AI to improve structure and clarity (async fire-and-forget)
-   * @returns PCode_Application_Contracts_Dto_DescriptionOptimization_OptimizationTaskResponseDto Optimization task started successfully
-   * @throws ApiError
-   */
-  public static postApiSessionsOptimizeDescription({
+  public static postApiSessionsOptimizeProposal({
     sessionId,
     requestBody,
   }: {
-    /**
-     * The unique identifier of the session
-     */
     sessionId: string,
-    /**
-     * The request containing the description to optimize
-     */
-    requestBody?: PCode_Web_Controllers_OptimizeDescriptionRequest,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_DescriptionOptimization_OptimizationTaskResponseDto> {
+    requestBody?: PCode_Web_Controllers_OptimizeProposalRequest,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto> {
     return __request(OpenAPI, {
       method: 'POST',
-      url: '/api/Sessions/{sessionId}/optimize-description',
+      url: '/api/Sessions/{sessionId}/optimize-proposal',
       path: {
         'sessionId': sessionId,
       },
       body: requestBody,
       mediaType: 'application/json',
       errors: {
-        400: `Invalid request or empty description`,
-        404: `Session not found`,
-        500: `Failed to start optimization task`,
-      },
-    });
-  }
-  /**
-   * Optimizes a proposal title using AI to generate a human-readable title based on the current description
-   * This endpoint generates a title based on the current session's description.
-   * No request body is needed - the title is generated from the session's existing description.
-   * @returns PCode_Application_Contracts_Dto_OptimizedTitleResponseDto Title optimized successfully
-   * @throws ApiError
-   */
-  public static postApiSessionsOptimizeTitle({
-    sessionId,
-  }: {
-    /**
-     * The unique identifier of the session
-     */
-    sessionId: string,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_OptimizedTitleResponseDto> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/Sessions/{sessionId}/optimize-title',
-      path: {
-        'sessionId': sessionId,
-      },
-      errors: {
-        400: `Invalid request or session has no description`,
-        404: `Session not found`,
-        500: `Failed to optimize title`,
+        400: `Bad Request`,
+        404: `Not Found`,
+        500: `Internal Server Error`,
       },
     });
   }

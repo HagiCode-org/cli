@@ -35,9 +35,9 @@ export type PCode_Application_Contracts_Dto_RepositoryAggregationDto = {
    */
   url?: string | null;
   /**
-   * Repository classification tags from monospecs.yaml
+   * Whether the repository should be collapsed into the More disclosure by default.
    */
-  tags?: Array<string> | null;
+  collapseToMore?: boolean;
   /**
    * Whether this is a valid Git repository
    */

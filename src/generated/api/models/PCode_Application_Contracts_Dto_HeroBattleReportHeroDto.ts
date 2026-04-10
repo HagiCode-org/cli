@@ -32,5 +32,8 @@ export type PCode_Application_Contracts_Dto_HeroBattleReportHeroDto = {
   didLevelUpToday?: boolean;
   levelsGainedToday?: number;
   previousLevel?: number;
+  currentHagipowerBalance?: number;
+  hagipowerDeltaToday?: number;
+  lastHagipowerUpdatedAtUtc?: string | null;
 };
 

@@ -9,5 +9,11 @@ export type PCode_Application_Contracts_Dto_HeroAvatarStylePackDto = {
   variantType?: string | null;
   assetKey?: string | null;
   assetBasePath?: string | null;
+  pluginId?: string | null;
+  pluginDisplayName?: string | null;
+  pluginVersion?: string | null;
+  pluginStatus?: string | null;
+  isSelectable?: boolean;
+  isFeatured?: boolean;
 };
 

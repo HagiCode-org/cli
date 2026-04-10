@@ -6,6 +6,7 @@ import type { PCode_Application_Contracts_Dto_HealthStatus } from './PCode_Appli
 import type { PCode_Models_AIProviderType } from './PCode_Models_AIProviderType';
 /**
  * Normalized health status for a single Agent CLI monitoring channel.
+ * Used by both the aggregate monitoring payload and the per-channel monitoring endpoint.
  */
 export type PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto = {
   status?: PCode_Application_Contracts_Dto_HealthStatus;

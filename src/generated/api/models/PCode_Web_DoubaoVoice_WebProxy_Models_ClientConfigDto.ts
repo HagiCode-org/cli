@@ -15,6 +15,7 @@ export type PCode_Web_DoubaoVoice_WebProxy_Models_ClientConfigDto = {
   channels?: number | null;
   enableDebugLogging?: boolean | null;
   debugAudioRetentionDays?: number | null;
+  projectId?: string | null;
   /**
    * Timeout for voice recognition in seconds (default: 300 seconds / 5 minutes).
    * Valid range: 10-600 seconds. When not provided, defaults to 300 seconds.

@@ -3,13 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Request DTO for executing a quick action command
- * Simplified: client sends the command directly to execute
+ * Request DTO for executing a quick action command.
+ * The backend preserves the configured command text, resolves placeholders,
+ * and executes it through a platform-native temporary script.
  */
 export type PCode_Application_Contracts_Dto_QuickActionCommandDto = {
   /**
-   * The command to execute (e.g., "npm run dev", "git status", "code .")
-   * Direct shell command from the user's quick action configuration
+   * The configured command text to execute (for example, "npm run dev" or "git status").
+   * The text is stored as-is and wrapped into a temporary script at execution time.
    */
   command: string;
   /**
@@ -17,8 +18,9 @@ export type PCode_Application_Contracts_Dto_QuickActionCommandDto = {
    */
   projectId: string;
   /**
-   * Optional sub-path for sub-repository operations (e.g., "repos/web")
-   * Used for MonoSpecs repositories to target specific sub-repositories
+   * Optional repository-relative sub-path (for example, "repos/web").
+   * The backend resolves it to the target working directory and also exposes the
+   * resolved directory to the `{subPath}` placeholder.
    */
   subPath?: string | null;
   /**
@@ -27,8 +29,9 @@ export type PCode_Application_Contracts_Dto_QuickActionCommandDto = {
    */
   correlationId: string;
   /**
-   * Optional parameters to pass to the command
-   * Command-specific key-value pairs
+   * Optional values for `{param:name}` placeholders.
+   * Lifecycle placeholders such as `{workingDir}` and `{subPath}`
+   * are resolved by the backend without requiring extra fields.
    */
   parameters?: Record<string, string> | null;
 };

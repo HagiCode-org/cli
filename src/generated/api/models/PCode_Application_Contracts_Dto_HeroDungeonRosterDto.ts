@@ -11,6 +11,7 @@ export type PCode_Application_Contracts_Dto_HeroDungeonRosterDto = {
   groupKey: string;
   sortOrder?: number;
   displayNameKey?: string | null;
+  descriptionKey?: string | null;
   icon?: string | null;
   promptStageStyleKey?: string | null;
   promptStageStyleLabel?: string | null;
