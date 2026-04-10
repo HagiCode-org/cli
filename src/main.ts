@@ -3,6 +3,7 @@ import { registerAutoTaskCommands } from './commands/autotask';
 import { registerChatCommands } from './commands/chat';
 import { registerProjectCommands } from './commands/project';
 import { registerProposalCommands } from './commands/proposal';
+import { registerVaultCommands } from './commands/vault';
 import {
   createDefaultDependencies,
   addGlobalApiOptions,
@@ -22,7 +23,7 @@ export function createCliApp(
 
   program
     .name('hagi')
-    .description('HagiCode CLI for project, proposal, chat, and AutoTask management.')
+    .description('HagiCode CLI for project, proposal, vault, chat, and AutoTask management.')
     .showHelpAfterError()
     .exitOverride();
 
@@ -42,6 +43,7 @@ export function createCliApp(
   addGlobalApiOptions(program);
   registerProjectCommands(program, dependencies);
   registerProposalCommands(program, dependencies);
+  registerVaultCommands(program, dependencies);
   registerChatCommands(program, dependencies);
   registerAutoTaskCommands(program, dependencies);
 
