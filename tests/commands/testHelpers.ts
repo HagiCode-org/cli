@@ -73,6 +73,123 @@ export function createProject(id: string) {
   };
 }
 
+export function createVault(
+  id: string,
+  overrides: Partial<{
+    name: string;
+    type: string;
+    physicalPath: string;
+    gitUrl: string | null;
+    createdAtUtc: string;
+    updatedAtUtc: string;
+    bootstrapDiagnostics: Array<{
+      severity?: string | null;
+      code?: string | null;
+      message?: string | null;
+      relativePath?: string | null;
+    }> | null;
+  }> = {},
+) {
+  return {
+    id,
+    name: overrides.name ?? 'Main Vault',
+    type: overrides.type ?? 'obsidian',
+    physicalPath: overrides.physicalPath ?? '/vaults/main',
+    gitUrl: overrides.gitUrl ?? null,
+    createdAtUtc: overrides.createdAtUtc ?? '2026-04-01T00:00:00Z',
+    updatedAtUtc: overrides.updatedAtUtc ?? '2026-04-02T00:00:00Z',
+    bootstrapDiagnostics: overrides.bootstrapDiagnostics ?? [],
+  };
+}
+
+export function createVaultFileEntry(
+  relativePath: string,
+  overrides: Partial<{
+    fileName: string;
+    isDirectory: boolean;
+    extension: string;
+    sizeBytes: number;
+    lastModifiedUtc: string;
+    previewSupported: boolean;
+  }> = {},
+) {
+  const fileName = relativePath.split('/').filter(Boolean).at(-1) ?? relativePath;
+
+  return {
+    relativePath,
+    fileName: overrides.fileName ?? fileName,
+    isDirectory: overrides.isDirectory ?? false,
+    extension: overrides.extension ?? '.md',
+    sizeBytes: overrides.sizeBytes ?? 128,
+    lastModifiedUtc: overrides.lastModifiedUtc ?? '2026-04-03T00:00:00Z',
+    previewSupported: overrides.previewSupported ?? true,
+  };
+}
+
+export function createVaultFileListResponse(
+  overrides: Partial<{
+    vaultId: string;
+    vaultName: string;
+    physicalPath: string;
+    status: string;
+    errorCode: string | null;
+    message: string | null;
+    isTruncated: boolean;
+    totalFileCount: number;
+    items: Array<ReturnType<typeof createVaultFileEntry>> | null;
+  }> = {},
+) {
+  const items = overrides.items ?? [createVaultFileEntry('docs/readme.md')];
+
+  return {
+    vaultId: overrides.vaultId ?? 'vault-1',
+    vaultName: overrides.vaultName ?? 'Main Vault',
+    physicalPath: overrides.physicalPath ?? '/vaults/main',
+    status: overrides.status ?? 'ready',
+    errorCode: overrides.errorCode ?? null,
+    message: overrides.message ?? null,
+    isTruncated: overrides.isTruncated ?? false,
+    totalFileCount: overrides.totalFileCount ?? items.length,
+    items,
+  };
+}
+
+export function createVaultFilePreview(
+  overrides: Partial<{
+    vaultId: string;
+    vaultName: string;
+    physicalPath: string;
+    relativePath: string;
+    fileName: string;
+    extension: string;
+    sizeBytes: number;
+    lastModifiedUtc: string | null;
+    status: string;
+    errorCode: string | null;
+    message: string | null;
+    previewSupported: boolean;
+    contentTruncated: boolean;
+    content: string | null;
+  }> = {},
+) {
+  return {
+    vaultId: overrides.vaultId ?? 'vault-1',
+    vaultName: overrides.vaultName ?? 'Main Vault',
+    physicalPath: overrides.physicalPath ?? '/vaults/main',
+    relativePath: overrides.relativePath ?? 'docs/readme.md',
+    fileName: overrides.fileName ?? 'readme.md',
+    extension: overrides.extension ?? '.md',
+    sizeBytes: overrides.sizeBytes ?? 128,
+    lastModifiedUtc: overrides.lastModifiedUtc ?? '2026-04-03T00:00:00Z',
+    status: overrides.status ?? 'ready',
+    errorCode: overrides.errorCode ?? null,
+    message: overrides.message ?? null,
+    previewSupported: overrides.previewSupported ?? true,
+    contentTruncated: overrides.contentTruncated ?? false,
+    content: overrides.content ?? '# Preview content',
+  };
+}
+
 export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
   const stdout: string[] = [];
   const stderr: string[] = [];
@@ -105,6 +222,18 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     createProject: vi.fn().mockResolvedValue(createProject('project-2')),
     updateProject: vi.fn().mockResolvedValue({ ...createProject('project-1'), description: 'updated' }),
     deleteProject: vi.fn().mockResolvedValue(undefined),
+    listVaults: vi.fn().mockResolvedValue({ generatedAtUtc: '2026-04-05T00:00:00Z', items: [createVault('vault-1')] }),
+    createVault: vi.fn().mockResolvedValue(createVault('vault-2')),
+    updateVault: vi.fn().mockResolvedValue({ ...createVault('vault-1'), name: 'Updated Vault' }),
+    deleteVault: vi.fn().mockResolvedValue({
+      id: 'vault-1',
+      deleted: true,
+      deleteLocalFilesRequested: false,
+      localFilesDeletionStatus: 'not-requested',
+      localFilesDeleted: false,
+    }),
+    listVaultFiles: vi.fn().mockResolvedValue(createVaultFileListResponse()),
+    previewVaultFile: vi.fn().mockResolvedValue(createVaultFilePreview()),
     archiveChat: vi.fn().mockResolvedValue({ message: 'Archived' }),
     ...apiOverrides,
   };
