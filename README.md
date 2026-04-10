@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm)](https://www.npmjs.com/package/@hagicode/cli)
 
-`@hagicode/cli` provides the published `hagi` command for project, proposal, chat, and AutoTask management against a HagiCode backend API.
+`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, and AutoTask management against a HagiCode backend API.
 The same repository also carries the canonical embedded Hagi skill under [`skills/`](skills/), so package usage and AI-oriented guidance live in one writable source.
 
 ## Requirements
@@ -44,6 +44,7 @@ The examples below use `hagi ...` after the package is available on your `PATH`.
 hagi --help
 hagi project list --json
 hagi proposal list --json
+hagi vault list --json
 hagi chat list --json
 hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
 ```
@@ -82,6 +83,8 @@ hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --jso
 hagi
 |-- project   list | create | update | delete
 |-- proposal  list | create | generate-name | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- vault     list | create | update | delete
+|   `-- files list | preview
 |-- chat      list | create | archive | delete | send
 `-- autotask  create | send
 ```
@@ -188,6 +191,47 @@ The CLI keeps proposal lifecycle actions explicit and non-interactive:
 9. `hagi proposal complete`
 
 Each command maps to one backend action. The CLI may suggest a next command, but it never chains later lifecycle APIs automatically.
+
+## Vault Commands
+
+List registered vaults:
+
+```bash
+hagi vault list
+hagi vault list --json
+```
+
+Create a vault with typed options:
+
+```bash
+hagi vault create \
+  --name "Main Notes" \
+  --type obsidian \
+  --physical-path /vaults/main \
+  --git-url https://github.com/acme/notes.git
+```
+
+Update only part of a vault record. The CLI resolves the current vault snapshot first so omitted fields are preserved:
+
+```bash
+hagi vault update --id <vault-id> --name "Renamed Vault"
+hagi vault update --id <vault-id> --physical-path /vaults/new-home --git-url https://github.com/acme/notes.git
+```
+
+Delete a vault and optionally request backend cleanup of local files:
+
+```bash
+hagi vault delete --id <vault-id>
+hagi vault delete --id <vault-id> --delete-local-files --json
+```
+
+Browse vault files and preview supported content:
+
+```bash
+hagi vault files list --id <vault-id>
+hagi vault files list --id <vault-id> --path docs --json
+hagi vault files preview --id <vault-id> --path docs/readme.md
+```
 
 ## Chat Commands
 
