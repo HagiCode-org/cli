@@ -44,17 +44,22 @@ export class HealthService {
    */
   public static getApiHealthAgentCli({
     cliId,
+    model,
   }: {
     /**
      * Stable Agent CLI identifier, such as claude-code or codex.
      */
     cliId: string,
+    model?: string,
   }): CancelablePromise<PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto> {
     return __request(OpenAPI, {
       method: 'GET',
       url: '/api/health/agent-cli/{cliId}',
       path: {
         'cliId': cliId,
+      },
+      query: {
+        'model': model,
       },
       errors: {
         400: `Bad Request`,

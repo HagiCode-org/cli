@@ -24,5 +24,10 @@ export type PCode_Application_Contracts_Dto_HealthStatusDto = {
    * Version string for the underlying provider or CLI runtime, when available.
    */
   version?: string | null;
+  validationMode?: string | null;
+  checkedModel?: string | null;
+  validationPassed?: boolean | null;
+  expectedResponse?: string | null;
+  actualResponse?: string | null;
+  normalizedResponse?: string | null;
 };
-

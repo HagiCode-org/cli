@@ -26,6 +26,12 @@ export type PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto = {
    * Version string for the underlying provider or CLI runtime, when available.
    */
   version?: string | null;
+  validationMode?: string | null;
+  checkedModel?: string | null;
+  validationPassed?: boolean | null;
+  expectedResponse?: string | null;
+  actualResponse?: string | null;
+  normalizedResponse?: string | null;
   /**
    * Stable Agent CLI identifier used by frontend rendering and caching.
    */
@@ -40,4 +46,3 @@ export type PCode_Application_Contracts_Dto_AgentCliMonitoringChannelDto = {
    */
   displayOrder?: number;
 };
-
