@@ -305,7 +305,7 @@ npm run dev -- chat list --json
 
 ## Release Automation
 
-`repos/cli/.github/workflows/release-drafter.yml` maintains the next GitHub draft release for `@hagicode/cli`.
+`repos/cli/.github/workflows/release-drafter.yml` maintains the next GitHub draft release for `@hagicode/cli`, built from Conventional Commit messages since the latest `vX.Y.Z` tag (`repos/cli/.github/scripts/release-notes.mjs`).
 `repos/cli/.github/workflows/npm-publish.yml` publishes two channels with GitHub Actions OIDC plus provenance:
 
 - pushes to `main` publish a unique development prerelease under the npm `dev` dist-tag
