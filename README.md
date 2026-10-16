@@ -7,7 +7,7 @@ The same repository also carries the canonical embedded Hagi skill under [`skill
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 24+
 - npm compatible with `10.9.2`
 - Access to a HagiCode backend API
 
