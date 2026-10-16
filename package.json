@@ -20,7 +20,7 @@
   ],
   "packageManager": "npm@10.9.2",
   "engines": {
-    "node": ">=20"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "clean": "rimraf dist",
