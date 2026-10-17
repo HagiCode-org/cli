@@ -27,6 +27,8 @@ type AutoTaskCreateOptions = {
   targetBranchName?: string;
   scriptKey?: string;
   heroId?: string;
+  targetType?: string;
+  vaultId?: string;
   json?: boolean;
 };
 
@@ -48,6 +50,8 @@ export function registerAutoTaskCreateCommand(parent: Command, dependencies: App
     .option('--target-branch-name <name>', 'Optional custom target branch name.')
     .option('--script-key <key>', 'Optional stable dungeon script key.')
     .option('--hero-id <id>', 'Optional preferred hero id.')
+    .option('--target-type <type>', 'Optional target type for the AutoTask session.')
+    .option('--vault-id <id>', 'Optional vault id for the AutoTask session.')
     .action(async function autoTaskCreateAction(this: Command, options: AutoTaskCreateOptions) {
       if (options.targetBranchName && options.targetBranchMode !== 'new-custom') {
         throw new CliUsageError('--target-branch-name requires --target-branch-mode new-custom.');
@@ -71,6 +75,8 @@ export function registerAutoTaskCreateCommand(parent: Command, dependencies: App
         targetBranchName: normalizeOptionalString(options.targetBranchName),
         scriptKey: normalizeOptionalString(options.scriptKey),
         heroId: normalizeOptionalString(options.heroId),
+        targetType: normalizeOptionalString(options.targetType),
+        vaultId: normalizeOptionalString(options.vaultId),
       };
 
       const session = await context.api.createAutoTaskSession(request);
