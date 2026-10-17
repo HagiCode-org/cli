@@ -108,7 +108,7 @@ describe('shared formatters', () => {
 
     expect(formatSessionListHuman('Proposal sessions', [view])).toContain('Proposal sessions (1)');
     expect(formatSessionListHuman('Proposal sessions', [view])).toContain('CLI proposal management');
-    expect(formatSessionSummaryHuman(view, [['next', 'hagi proposal generate-name --session-id session-1']]))
+    expect(formatSessionSummaryHuman(view, [['next', 'hagi proposal optimize-description --session-id session-1']]))
       .toContain('next');
   });
 

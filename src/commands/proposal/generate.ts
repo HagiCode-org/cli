@@ -8,8 +8,23 @@ import {
 } from '../../runtime/commandContext';
 import { CliUsageError } from '../../runtime/errors';
 
+/** Content languages the backend accepts for generated proposals. "Follow the interface" is resolved by the caller. */
+export const PROPOSAL_CONTENT_LANGUAGES = [
+  'zh-CN',
+  'zh-Hant',
+  'en-US',
+  'ja-JP',
+  'ko-KR',
+  'de-DE',
+  'fr-FR',
+  'es-ES',
+  'pt-BR',
+  'ru-RU',
+] as const;
+
 type ProposalGenerateOptions = {
   sessionId: string;
+  proposalContentLanguage: string;
   enableExploreMode?: boolean;
   disableExploreMode?: boolean;
   heroId?: string;
@@ -32,6 +47,17 @@ function resolveExploreMode(options: ProposalGenerateOptions): boolean | undefin
   return undefined;
 }
 
+function resolveContentLanguage(value: string): string {
+  const normalized = value.trim();
+  if (!(PROPOSAL_CONTENT_LANGUAGES as readonly string[]).includes(normalized)) {
+    throw new CliUsageError(
+      `--proposal-content-language must be one of: ${PROPOSAL_CONTENT_LANGUAGES.join(', ')}.`,
+    );
+  }
+
+  return normalized;
+}
+
 export function registerProposalGenerateCommand(parent: Command, dependencies: AppDependencies): void {
   const command = addJsonOption(
     parent
@@ -41,6 +67,10 @@ export function registerProposalGenerateCommand(parent: Command, dependencies: A
 
   command
     .requiredOption('--session-id <id>', 'Proposal session id to generate.')
+    .requiredOption(
+      '--proposal-content-language <language>',
+      `Language of the generated proposal content (${PROPOSAL_CONTENT_LANGUAGES.join(', ')}).`,
+    )
     .option('--enable-explore-mode', 'Explicitly enable explore mode for proposal generation.')
     .option('--disable-explore-mode', 'Explicitly disable explore mode for proposal generation.')
     .option('--hero-id <id>', 'Optional hero override for the generate stage.')
@@ -48,10 +78,12 @@ export function registerProposalGenerateCommand(parent: Command, dependencies: A
       const context = createCommandContext(this, dependencies);
       const sessionId = options.sessionId.trim();
       const enableExploreMode = resolveExploreMode(options);
+      const proposalContentLanguage = resolveContentLanguage(options.proposalContentLanguage);
 
       const result = await context.api.generateProposal(sessionId, {
         enableExploreMode,
         heroId: normalizeOptionalString(options.heroId),
+        proposalContentLanguage,
       });
 
       const nextCommand = `hagi proposal execute --session-id ${sessionId}`;
@@ -63,6 +95,7 @@ export function registerProposalGenerateCommand(parent: Command, dependencies: A
           requested: {
             enableExploreMode,
             heroId: normalizeOptionalString(options.heroId),
+            proposalContentLanguage,
           },
           nextCommand,
         }));

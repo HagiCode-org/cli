@@ -5,7 +5,6 @@ import { registerProposalCompleteCommand } from './proposal/complete';
 import { registerProposalCreateCommand } from './proposal/create';
 import { registerProposalExecuteCommand } from './proposal/execute';
 import { registerProposalGenerateCommand } from './proposal/generate';
-import { registerProposalGenerateNameCommand } from './proposal/generate-name';
 import { registerProposalListCommand } from './proposal/list';
 import { registerProposalOptimizeDescriptionCommand } from './proposal/optimize-description';
 import { registerProposalSendCommand } from './proposal/send';
@@ -19,7 +18,6 @@ export function registerProposalCommands(program: Command, dependencies: AppDepe
 
   registerProposalListCommand(proposal, dependencies);
   registerProposalCreateCommand(proposal, dependencies);
-  registerProposalGenerateNameCommand(proposal, dependencies);
   registerProposalOptimizeDescriptionCommand(proposal, dependencies);
   registerProposalGenerateCommand(proposal, dependencies);
   registerProposalAnnotateCommand(proposal, dependencies);

@@ -23,13 +23,23 @@ import type { PCode_Models_SessionType } from '../generated/api/models/PCode_Mod
 import type { PCode_Web_Controllers_CreateAutoTaskSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateAutoTaskSessionRequest';
 import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateChatSessionRequest';
 import type { PCode_Web_Controllers_CreateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateSessionRequest';
+import type { PCode_Web_Controllers_OptimizeProposalRequest } from '../generated/api/models/PCode_Web_Controllers_OptimizeProposalRequest';
 import type { PCode_Web_Controllers_PostMessageRequest } from '../generated/api/models/PCode_Web_Controllers_PostMessageRequest';
 import type { PCode_Web_Controllers_UpdateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_UpdateSessionRequest';
-import { OpenAPI } from '../generated/api/core/OpenAPI';
-import { request as apiRequest } from '../generated/api/core/request';
+import type { PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto';
+import type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_InstallSkillRequestDto';
+import type { PCode_Application_Contracts_Dto_InstallSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_InstallSkillResultDto';
+import type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
+import type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SkillGalleryDetailDto';
+import type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
+import type { PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto';
+import type { PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto';
+import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
+import type { PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto';
 import { DataAggregationService } from '../generated/api/services/DataAggregationService';
 import { ProjectService } from '../generated/api/services/ProjectService';
 import { SessionsService } from '../generated/api/services/SessionsService';
+import { SkillGalleryService } from '../generated/api/services/SkillGalleryService';
 import { VaultService } from '../generated/api/services/VaultService';
 
 export type ListSessionsInput = {
@@ -40,20 +50,12 @@ export type ListSessionsInput = {
   projectIds?: string[];
 };
 
-export type ProposalNameResponse = {
-  proposalName?: string | null;
-};
-
-export type ProposalOptimizeDescriptionRequest = {
-  description: string;
-  optimizationDirection?: string | null;
-  enableMemoryOptimization?: boolean;
-  isDefaultTitle?: boolean;
-};
-
-export type ProposalOptimizeDescriptionResponse = PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto & {
-  taskId?: string | null;
-  status?: string | null;
+/**
+ * Generate request. `proposalContentLanguage` is required by the backend but missing from the generated
+ * model, so it is declared here until the client is regenerated.
+ */
+export type GenerateProposalInput = PCode_Application_Contracts_Dto_GenerateProposalRequestDto & {
+  proposalContentLanguage: string;
 };
 
 export interface HagiApi {
@@ -65,14 +67,14 @@ export interface HagiApi {
   updateSession(sessionId: string, requestBody: PCode_Web_Controllers_UpdateSessionRequest): Promise<unknown>;
   deleteSession(sessionId: string, deleteFiles?: boolean): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   sendMessage(sessionId: string, requestBody: PCode_Web_Controllers_PostMessageRequest): Promise<PCode_Application_Contracts_Dto_PostMessageResponseDto>;
-  generateProposalName(sessionId: string): Promise<ProposalNameResponse>;
-  optimizeDescription(
+  /** Optimizes the proposal description and, in the same backend step, the proposal title and name. */
+  optimizeProposal(
     sessionId: string,
-    requestBody: ProposalOptimizeDescriptionRequest,
-  ): Promise<ProposalOptimizeDescriptionResponse>;
+    requestBody: PCode_Web_Controllers_OptimizeProposalRequest,
+  ): Promise<PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto>;
   generateProposal(
     sessionId: string,
-    requestBody?: PCode_Application_Contracts_Dto_GenerateProposalRequestDto,
+    requestBody: GenerateProposalInput,
   ): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   executeProposal(
     sessionId: string,
@@ -98,22 +100,15 @@ export interface HagiApi {
   listVaultFiles(id: string, path?: string): Promise<PCode_Application_Contracts_Dto_VaultFileListResponseDto>;
   previewVaultFile(id: string, path: string): Promise<PCode_Application_Contracts_Dto_VaultFilePreviewResponseDto>;
   archiveChat(sessionId: string): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
-}
-
-function callLegacySessionAction<T>(sessionId: string, action: string, requestBody?: unknown): Promise<T> {
-  return apiRequest<T>(OpenAPI, {
-    method: 'POST',
-    url: `/api/Sessions/{sessionId}/${action}`,
-    path: { sessionId },
-    body: requestBody,
-    mediaType: 'application/json',
-    errors: {
-      400: 'Bad Request',
-      404: 'Not Found',
-      409: 'Conflict',
-      500: 'Internal Server Error',
-    },
-  });
+  listLocalSkills(): Promise<PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto>;
+  uninstallLocalSkill(requestBody: PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto): Promise<PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto>;
+  searchSkillGallery(query?: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryResponseDto>;
+  getSkillGalleryDetail(id: string, source: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryDetailDto>;
+  installGallerySkill(requestBody: PCode_Application_Contracts_Dto_InstallSkillRequestDto): Promise<PCode_Application_Contracts_Dto_InstallSkillResultDto>;
+  listTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
+  upsertTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
+  deleteTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
+  resetTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
 }
 
 export function createGeneratedHagiApi(): HagiApi {
@@ -126,11 +121,8 @@ export function createGeneratedHagiApi(): HagiApi {
     updateSession: (sessionId, requestBody) => SessionsService.putApiSessions({ sessionId, requestBody }),
     deleteSession: (sessionId, deleteFiles) => SessionsService.deleteApiSessions({ sessionId, deleteFiles }),
     sendMessage: (sessionId, requestBody) => SessionsService.postApiSessionsMessages({ sessionId, requestBody }),
-    // These proposal helpers are still part of the CLI contract even when the regenerated session
-    // service no longer includes dedicated bindings for them.
-    generateProposalName: sessionId => callLegacySessionAction<ProposalNameResponse>(sessionId, 'generate-proposal-name'),
-    optimizeDescription: (sessionId, requestBody) =>
-      callLegacySessionAction<ProposalOptimizeDescriptionResponse>(sessionId, 'optimize-description', requestBody),
+    optimizeProposal: (sessionId, requestBody) =>
+      SessionsService.postApiSessionsOptimizeProposal({ sessionId, requestBody }),
     generateProposal: (sessionId, requestBody) =>
       SessionsService.postApiSessionsGenerateProposal({ sessionId, requestBody }),
     executeProposal: (sessionId, requestBody) =>
@@ -150,5 +142,14 @@ export function createGeneratedHagiApi(): HagiApi {
     listVaultFiles: (id, path) => VaultService.getApiVaultsFiles({ id, path }),
     previewVaultFile: (id, path) => VaultService.getApiVaultsFilesContent({ id, path }),
     archiveChat: sessionId => SessionsService.postApiSessionsArchiveChat({ sessionId }),
+    listLocalSkills: () => SkillGalleryService.getApiSkillsLocal(),
+    uninstallLocalSkill: requestBody => SkillGalleryService.postApiSkillsLocalUninstall({ requestBody }),
+    searchSkillGallery: query => SkillGalleryService.getApiSkillsGallery({ query }),
+    getSkillGalleryDetail: (id, source) => SkillGalleryService.getApiSkillsGalleryDetail({ id, source }),
+    installGallerySkill: requestBody => SkillGalleryService.postApiSkillsGalleryInstall({ requestBody }),
+    listTrustedSkillProviders: () => SkillGalleryService.getApiSkillsProvidersTrusted(),
+    upsertTrustedSkillProvider: requestBody => SkillGalleryService.postApiSkillsProvidersTrusted({ requestBody }),
+    deleteTrustedSkillProvider: requestBody => SkillGalleryService.deleteApiSkillsProvidersTrusted({ requestBody }),
+    resetTrustedSkillProviders: () => SkillGalleryService.postApiSkillsProvidersTrustedReset(),
   };
 }

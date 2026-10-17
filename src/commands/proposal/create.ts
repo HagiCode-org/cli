@@ -70,7 +70,7 @@ export function registerProposalCreateCommand(parent: Command, dependencies: App
       });
 
       const view = toProposalSessionView(session);
-      const nextCommand = `hagi proposal generate-name --session-id ${view.sessionId}`;
+      const nextCommand = `hagi proposal optimize-description --session-id ${view.sessionId} --description "<description>"`;
 
       if (context.outputJson) {
         context.io.stdout(formatJson({

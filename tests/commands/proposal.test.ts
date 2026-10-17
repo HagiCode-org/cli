@@ -6,6 +6,7 @@ import { runCli } from '../../src/main';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import { EXIT_CODES } from '../../src/runtime/errors';
+import { createProposalOptimizationBundle } from './testHelpers';
 import { createApiError, createDependencies, createSession } from './testHelpers';
 
 describe('proposal commands', () => {
@@ -55,7 +56,7 @@ describe('proposal commands', () => {
         isDefaultTitle: true,
       }),
     );
-    expect(stdout.join('')).toContain('"nextCommand": "hagi proposal generate-name --session-id session-2"');
+    expect(stdout.join('')).toContain('"nextCommand": "hagi proposal optimize-description --session-id session-2');
   });
 
   it('supports optimize-description, archive, complete, and send in json mode', async () => {
@@ -74,7 +75,8 @@ describe('proposal commands', () => {
       ['node', 'hagi', 'proposal', 'optimize-description', '--session-id', 'session-1', '--description', 'Refine this', '--json'],
       dependencies,
     )).toBe(0);
-    expect(api.optimizeDescription).toHaveBeenCalledWith('session-1', expect.objectContaining({ description: 'Refine this' }));
+    expect(api.optimizeProposal).toHaveBeenCalledWith('session-1', { description: 'Refine this' });
+    expect(stdout.join('')).toContain('"optimizedProposalName": "cli-proposal-management"');
 
     expect(await runCli(
       ['node', 'hagi', 'proposal', 'archive', '--session-id', 'session-1', '--hero-id', 'hero-1', '--json'],
@@ -94,7 +96,7 @@ describe('proposal commands', () => {
     )).toBe(0);
     expect(api.sendMessage).toHaveBeenCalledWith('session-1', expect.objectContaining({ content: 'continue' }));
 
-    expect(stdout.join('')).toContain('"taskId": "task-1"');
+    expect(stdout.join('')).toContain('"optimizedProposalName": "cli-proposal-management"');
     expect(stdout.join('')).toContain('"message": "Queued"');
   });
 
@@ -170,8 +172,8 @@ describe('proposal commands', () => {
       generateProposal: vi.fn().mockRejectedValue(createApiError(404, { error: 'Session not found' })),
     });
     const conflict = createDependencies({
-      generateProposalName: vi.fn().mockRejectedValue(
-        createApiError(409, { error: 'Proposal name already exists for this session' }),
+      optimizeProposal: vi.fn().mockRejectedValue(
+        createApiError(409, { error: 'Session is already being optimized' }),
       ),
     });
 
@@ -196,7 +198,7 @@ describe('proposal commands', () => {
 
     await expect(
       runCli(
-        ['node', 'hagi', 'proposal', 'generate', '--session-id', 'missing-session', '--json'],
+        ['node', 'hagi', 'proposal', 'generate', '--session-id', 'missing-session', '--proposal-content-language', 'en-US', '--json'],
         notFound.dependencies,
       ),
     ).resolves.toBe(EXIT_CODES.HTTP_NOT_FOUND);
@@ -204,10 +206,91 @@ describe('proposal commands', () => {
 
     await expect(
       runCli(
-        ['node', 'hagi', 'proposal', 'generate-name', '--session-id', 'session-7', '--json'],
+        ['node', 'hagi', 'proposal', 'optimize-description', '--session-id', 'session-7', '--description', 'Refine', '--json'],
         conflict.dependencies,
       ),
     ).resolves.toBe(EXIT_CODES.HTTP_CONFLICT);
     expect(conflict.stderr.join('')).toContain('"status": 409');
+  });
+
+  it('sends the content language with generate and rejects unsupported languages before transport', async () => {
+    const { dependencies, api, stderr } = createDependencies();
+
+    expect(await runCli(
+      ['node', 'hagi', 'proposal', 'generate', '--session-id', 'session-1', '--proposal-content-language', 'zh-CN'],
+      dependencies,
+    )).toBe(0);
+    expect(api.generateProposal).toHaveBeenCalledWith('session-1', expect.objectContaining({ proposalContentLanguage: 'zh-CN' }));
+
+    expect(await runCli(
+      ['node', 'hagi', 'proposal', 'generate', '--session-id', 'session-1', '--proposal-content-language', 'klingon'],
+      dependencies,
+    )).toBe(EXIT_CODES.USAGE);
+    expect(api.generateProposal).toHaveBeenCalledTimes(1);
+    expect(stderr.join('')).toContain('--proposal-content-language must be one of');
+  });
+
+  it('prints the applied title, proposal name, and next step after optimize-description', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+
+    expect(await runCli(
+      ['node', 'hagi', 'proposal', 'optimize-description', '--session-id', 'session-1', '--description', 'Refine this'],
+      dependencies,
+    )).toBe(0);
+
+    expect(api.optimizeProposal).toHaveBeenCalledWith('session-1', { description: 'Refine this' });
+    const output = stdout.join('');
+    expect(output).toContain('Proposal optimized');
+    expect(output).toContain('proposalName   cli-proposal-management');
+    expect(output).toContain('title          Login fix');
+    expect(output).toContain('valid          yes');
+    expect(output).toContain('next           hagi proposal generate --session-id session-1');
+  });
+
+  it('reports validation diagnostics and omits the generate step when the bundle is invalid', async () => {
+    const { dependencies, stdout } = createDependencies({
+      optimizeProposal: vi.fn().mockResolvedValue(
+        createProposalOptimizationBundle({
+          isValid: false,
+          diagnostics: [{ code: 'MISSING_SECTION', message: 'Scope section is empty' }],
+        }),
+      ),
+    });
+
+    expect(await runCli(
+      ['node', 'hagi', 'proposal', 'optimize-description', '--session-id', 'session-1', '--description', 'Refine this'],
+      dependencies,
+    )).toBe(0);
+
+    const output = stdout.join('');
+    expect(output).toContain('returned diagnostics');
+    expect(output).toContain('valid          no');
+    expect(output).toContain('diagnostic     MISSING_SECTION: Scope section is empty');
+    expect(output).not.toContain('hagi proposal generate');
+  });
+
+  it('forwards title, default-title, direction, and original complaint in the optimize request', async () => {
+    const { dependencies, api } = createDependencies();
+
+    expect(await runCli(
+      [
+        'node', 'hagi', 'proposal', 'optimize-description',
+        '--session-id', 'session-1',
+        '--description', 'Refine this',
+        '--title', 'New Proposal',
+        '--default-title',
+        '--optimization-direction', 'Focus on risk',
+        '--original-chief-complaint', 'Login is slow',
+      ],
+      dependencies,
+    )).toBe(0);
+
+    expect(api.optimizeProposal).toHaveBeenCalledWith('session-1', {
+      description: 'Refine this',
+      title: 'New Proposal',
+      isDefaultTitle: true,
+      optimizationDirection: 'Focus on risk',
+      originalChiefComplaint: 'Login is slow',
+    });
   });
 });

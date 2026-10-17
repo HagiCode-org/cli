@@ -5,6 +5,9 @@ import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_M
 import type { AppDependencies, CliIo } from '../../src/runtime/commandContext';
 import type { HagiApi } from '../../src/runtime/hagiApi';
 
+/** Base URL injected through HAGI_API_BASE_URL so command tests never depend on a real config file. */
+export const TEST_BASE_URL = 'https://backend.test';
+
 export function createApiError(status: number, body: unknown): ApiError {
   return new ApiError(
     {
@@ -190,6 +193,156 @@ export function createVaultFilePreview(
   };
 }
 
+const SKILL_TRUST = {
+  providerId: 'vercel',
+  displayName: 'Vercel',
+  badgeLabel: 'Vercel',
+  matchedRuleType: 'source',
+  matchedRuleValue: 'vercel/skills',
+  isPreset: true,
+};
+
+export function createLocalSkillInventory() {
+  return {
+    generatedAtUtc: '2026-10-16T00:00:00Z',
+    items: [
+      {
+        id: 'demo-skill',
+        name: 'demo-skill',
+        scope: 'global',
+        path: '/home/user/.agents/skills/demo-skill',
+        agents: ['claude-code', 'codex'],
+        managedInstallMetadata: {
+          schemaVersion: 1,
+          skillId: 'demo-skill',
+          source: 'vercel/skills',
+          skillSlug: 'demo-skill',
+          version: '1.2.0',
+          normalizedSkillKey: 'vercel/skills/demo-skill',
+          installReference: 'vercel/skills@demo-skill',
+          recordedAtUtc: '2026-10-01T00:00:00Z',
+        },
+      },
+    ],
+  };
+}
+
+export function createUninstallResult(skillName: string) {
+  return {
+    skillName,
+    status: 'Succeeded',
+    userMessage: 'Skill uninstalled.',
+    diagnosticMessage: null,
+    occurredAt: '2026-10-16T00:00:00Z',
+  };
+}
+
+export function createSkillGallery() {
+  return {
+    generatedAtUtc: '2026-10-16T00:00:00Z',
+    items: [
+      {
+        id: 'react-best-practices',
+        name: 'React Best Practices',
+        source: 'vercel/skills',
+        installs: 1280,
+        isTrustedSource: true,
+        trustedProvider: SKILL_TRUST,
+      },
+      {
+        id: 'react-testing',
+        name: 'React Testing',
+        source: 'community/skills',
+        installs: 14,
+        isTrustedSource: false,
+        trustedProvider: null,
+      },
+    ],
+    repositoryDiscovery: null,
+  };
+}
+
+export function createSkillGalleryDetail() {
+  return {
+    id: 'react-best-practices',
+    source: 'vercel/skills',
+    skillSlug: 'react-best-practices',
+    description: 'Guidance for React components.',
+    repositoryName: 'skills',
+    repositoryFullName: 'vercel/skills',
+    repositoryUrl: 'https://github.com/vercel/skills',
+    repositoryDefaultBranch: 'main',
+    repositoryPrivate: false,
+    isInstallable: true,
+    isTrustedSource: true,
+    trustedProvider: SKILL_TRUST,
+    installReference: 'vercel/skills@react-best-practices',
+    installCommandPreview: 'npx skills add vercel/skills --skill react-best-practices',
+    installVersion: null,
+    installHint: null,
+  };
+}
+
+export function createSkillInstallResult() {
+  return {
+    skillId: 'react-best-practices',
+    source: 'vercel/skills',
+    skillSlug: 'react-best-practices',
+    normalizedSkillKey: 'vercel/skills/react-best-practices',
+    installReference: 'vercel/skills@react-best-practices',
+    commandPreview: 'npx skills add vercel/skills --skill react-best-practices',
+    version: '1.2.0',
+    status: 'Succeeded',
+    userMessage: 'Skill installed.',
+    diagnosticMessage: null,
+    occurredAt: '2026-10-16T00:00:00Z',
+  };
+}
+
+export function createTrustedProviderList() {
+  return {
+    generatedAtUtc: '2026-10-16T00:00:00Z',
+    version: 3,
+    items: [
+      {
+        providerId: 'vercel',
+        displayName: 'Vercel',
+        badgeLabel: 'Vercel',
+        isPreset: true,
+        isEnabled: true,
+        sortOrder: 1,
+        ruleCount: 2,
+        sourceExamples: ['vercel/skills'],
+        matchRules: [{ matchType: 'owner', value: 'vercel' }],
+      },
+    ],
+  };
+}
+
+export function createProposalOptimizationBundle(
+  overrides: Partial<{ isValid: boolean; diagnostics: Array<{ code: string; message: string }> }> = {},
+) {
+  const isValid = overrides.isValid ?? true;
+  const diagnostics = overrides.diagnostics ?? [];
+  return {
+    result: {
+      optimizedTitle: 'Login fix',
+      optimizedProposalName: 'cli-proposal-management',
+      optimizedDescription: 'Refined description',
+      optimizedProposalMarkdown: '# Proposal',
+      validation: { isValid, diagnostics },
+    },
+    summary: {
+      appliedTitle: isValid ? 'Login fix' : '',
+      appliedProposalName: isValid ? 'cli-proposal-management' : '',
+      proposalDraftAvailable: isValid,
+      isValid,
+      diagnostics,
+    },
+    correlationId: 'corr-1',
+  };
+}
+
 export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
   const stdout: string[] = [];
   const stderr: string[] = [];
@@ -211,8 +364,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     updateSession: vi.fn().mockResolvedValue(undefined),
     deleteSession: vi.fn().mockResolvedValue({ message: 'Deleted' }),
     sendMessage: vi.fn().mockResolvedValue({ message: 'Queued' }),
-    generateProposalName: vi.fn().mockResolvedValue({ proposalName: 'cli-proposal-management' }),
-    optimizeDescription: vi.fn().mockResolvedValue({ sessionId: 'session-1', taskId: 'task-1', status: 'Started' }),
+    optimizeProposal: vi.fn().mockResolvedValue(createProposalOptimizationBundle()),
     generateProposal: vi.fn().mockResolvedValue({ message: 'Proposal generation started' }),
     executeProposal: vi.fn().mockResolvedValue({ message: 'Proposal execution started' }),
     archiveProposal: vi.fn().mockResolvedValue(createSession('session-1')),
@@ -235,12 +387,21 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     listVaultFiles: vi.fn().mockResolvedValue(createVaultFileListResponse()),
     previewVaultFile: vi.fn().mockResolvedValue(createVaultFilePreview()),
     archiveChat: vi.fn().mockResolvedValue({ message: 'Archived' }),
+    listLocalSkills: vi.fn().mockResolvedValue(createLocalSkillInventory()),
+    uninstallLocalSkill: vi.fn().mockResolvedValue(createUninstallResult('demo-skill')),
+    searchSkillGallery: vi.fn().mockResolvedValue(createSkillGallery()),
+    getSkillGalleryDetail: vi.fn().mockResolvedValue(createSkillGalleryDetail()),
+    installGallerySkill: vi.fn().mockResolvedValue(createSkillInstallResult()),
+    listTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
+    upsertTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
+    deleteTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
+    resetTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
     ...apiOverrides,
   };
 
   const dependencies: AppDependencies = {
     api,
-    env: {},
+    env: { HAGI_API_BASE_URL: TEST_BASE_URL },
     io,
   };
 
