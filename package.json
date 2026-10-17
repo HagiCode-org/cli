@@ -37,9 +37,14 @@
   },
   "keywords": [
     "hagicode",
+    "hagicode-org",
     "cli",
     "openspec",
-    "proposal"
+    "proposal",
+    "autotask",
+    "vault",
+    "ai-agent",
+    "agentic-coding"
   ],
   "author": "HagiCode",
   "license": "AGPL-3.0-or-later",
