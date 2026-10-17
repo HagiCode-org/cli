@@ -48,7 +48,7 @@ export function registerAutoTaskCreateCommand(parent: Command, dependencies: App
     .option('--need-push', 'Request push after commit creation when supported.')
     .option('--target-branch-mode <mode>', 'Optional target branch mode.')
     .option('--target-branch-name <name>', 'Optional custom target branch name.')
-    .option('--script-key <key>', 'Optional stable dungeon script key.')
+    .option('--script-key <key>', 'Optional stable scenario script key.')
     .option('--hero-id <id>', 'Optional preferred hero id.')
     .option('--target-type <type>', 'Optional target type for the AutoTask session.')
     .option('--vault-id <id>', 'Optional vault id for the AutoTask session.')
