@@ -61,7 +61,7 @@ Explicit flags always override environment variables.
 
 | Variable | Purpose |
 | --- | --- |
-| `HAGI_API_BASE_URL` | Backend base URL. Defaults to `http://127.0.0.1:35168` when unset. |
+| `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. Required when neither is set. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
 

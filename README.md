@@ -80,16 +80,63 @@ Example:
 hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
 ```
 
+## Connection Setup
+
+Every operation command resolves the backend base URL on each invocation, in this order:
+
+1. `--base-url <url>` flag
+2. `HAGI_API_BASE_URL` environment variable
+3. `baseUrl` in the local config file: `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset
+
+```json
+{
+  "baseUrl": "https://hagicode.example.com"
+}
+```
+
+If none of the three is set, the command exits with code `2` and sends no backend request.
+
+Operation commands send requests without a credential by default. Pass `--token` (or set `HAGI_API_TOKEN`) only when your backend requires one.
+
+When the backend cannot be reached, the CLI names the base URL and exits with code `60`. A backend HTTP error is reported differently: it prints the HTTP status and the backend error message, and exits with a status-mapped code.
+
+```text
+$ hagi --base-url http://127.0.0.1:1 project list
+Cannot reach HagiCode backend at http://127.0.0.1:1. Check that the backend is running and the base URL is correct.
+
+$ echo $?
+60
+```
+
 ## Command Overview
 
 ```text
 hagi
 |-- project   list | create | update | delete
-|-- proposal  list | create | generate-name | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-`-- autotask  create | send
+|-- autotask  create | send
+`-- skills    local list | uninstall
+              gallery search | detail | install
+              trusted list | upsert | delete | reset
+```
+
+## Example Setup
+
+The examples in the family sections run in order against a local backend. They assume:
+
+- the backend listens on `http://127.0.0.1:35167`
+- `hagi` is on `PATH`
+- `json_field` reads one field from `--json` output
+
+```bash
+export HAGI_API_BASE_URL=http://127.0.0.1:35167
+json_field() { node -pe "JSON.parse(require('node:fs').readFileSync(0, 'utf8'))$1"; }
+
+mkdir -p /tmp/cli-examples/repos/cli
+PROJECT_ID=$(hagi project create --name "CLI Examples" --path /tmp/cli-examples --json | json_field '.project.id')
 ```
 
 ## Project Commands
@@ -101,101 +148,103 @@ hagi project list
 hagi project list --json
 ```
 
-Create a project:
+Create a project. The backend creates the directory if it does not exist. The new id is read from `project.id`:
 
 ```bash
-hagi project create \
+DEMO_PROJECT_ID=$(hagi project create \
   --name "CLI Demo" \
-  --path /workspace/cli-demo \
-  --description "Automation sandbox"
+  --path /tmp/cli-demo \
+  --description "Automation sandbox" \
+  --json | json_field '.project.id')
 ```
 
 Update only part of a project record. The CLI resolves current project data first so omitted fields are preserved:
 
 ```bash
-hagi project update --id <project-id> --description "Updated description"
-hagi project update --id <project-id> --name "Renamed project" --path /workspace/new-path
+hagi project update --id "$DEMO_PROJECT_ID" --description "Updated description"
+hagi project update --id "$DEMO_PROJECT_ID" --name "CLI Demo renamed"
 ```
 
-Delete a project:
+Delete the demo project:
 
 ```bash
-hagi project delete --id <project-id>
+hagi project delete --id "$DEMO_PROJECT_ID"
 ```
 
 ## Proposal Commands
 
-List proposal sessions:
+List proposal sessions for the example project:
 
 ```bash
-hagi proposal list --project-id <project-id>
+hagi proposal list --project-id "$PROJECT_ID"
 hagi proposal list --include-archived --json
 ```
 
-Create a proposal session only:
+Create a proposal session only. The new id is read from `session.sessionId`:
 
 ```bash
-hagi proposal create \
-  --project-id <project-id> \
+PROPOSAL_ID=$(hagi proposal create \
+  --project-id "$PROJECT_ID" \
   --chief-complaint "Add CLI completion for session workflows" \
-  --default-title
+  --default-title \
+  --json | json_field '.session.sessionId')
 ```
 
-Generate a proposal name explicitly:
+Update status and send a follow-up message:
 
 ```bash
-hagi proposal generate-name --session-id <session-id>
+hagi proposal status --session-id "$PROPOSAL_ID" --status Reviewing
+hagi proposal send --session-id "$PROPOSAL_ID" --content "Please continue"
 ```
 
-Optimize the description explicitly:
+The next steps are AI lifecycle actions and need a backend with an AI executor. `optimize-description` writes the optimized title, description, and proposal name to the session in one backend step, and `generate` needs that name. Without the AI executor, or before the name exists, the backend answers with a 400 that names the missing state:
 
 ```bash
-hagi proposal optimize-description \
-  --session-id <session-id> \
-  --description "Improve the proposal framing" \
-  --optimization-direction "Focus on implementation risk"
-```
+hagi proposal optimize-description --session-id "$PROPOSAL_ID" --description "Add CLI completion for session workflows" --default-title
+hagi proposal generate --session-id "$PROPOSAL_ID" --proposal-content-language en-US --enable-explore-mode
 
-Generate and execute the proposal as separate steps:
+cat > annotations.json <<'EOF'
+{"files":[{"fileName":"proposal.md","filePath":"proposal.md"}]}
+EOF
+hagi proposal annotate --session-id "$PROPOSAL_ID" --input annotations.json
+cat annotations.json | hagi proposal annotate --session-id "$PROPOSAL_ID" --input - --json
 
-```bash
-hagi proposal generate --session-id <session-id> --enable-explore-mode
-hagi proposal execute --session-id <session-id>
-```
-
-Submit structured annotation payloads from a file or stdin:
-
-```bash
-hagi proposal annotate --session-id <session-id> --input annotations.json
-cat annotations.json | hagi proposal annotate --session-id <session-id> --input - --json
-```
-
-Archive, update status, complete, or send a follow-up message:
-
-```bash
-hagi proposal archive --session-id <session-id> --hero-id <hero-id>
-hagi proposal status --session-id <session-id> --status Reviewing
-hagi proposal complete --session-id <session-id>
-hagi proposal send --session-id <session-id> --content "Please continue"
+hagi proposal execute --session-id "$PROPOSAL_ID"
+hagi proposal complete --session-id "$PROPOSAL_ID"
+hagi proposal archive --session-id "$PROPOSAL_ID"
 ```
 
 ### Explicit Lifecycle Sequence
 
-The CLI keeps proposal lifecycle actions explicit and non-interactive:
+The CLI keeps proposal lifecycle actions explicit and non-interactive. Each command maps to one backend action:
 
 1. `hagi proposal list`
 2. `hagi proposal create`
-3. `hagi proposal generate-name`
-4. `hagi proposal optimize-description` (optional)
-5. `hagi proposal generate`
-6. `hagi proposal annotate` (optional review loop)
-7. `hagi proposal execute`
-8. `hagi proposal archive`
-9. `hagi proposal complete`
+3. `hagi proposal optimize-description --session-id <session-id> --description <text>` (sets the title, description, and proposal name)
+4. `hagi proposal generate --session-id <session-id> --proposal-content-language <language>` (optionally `--enable-explore-mode`)
+5. `hagi proposal annotate --session-id <session-id> --input <file>` (optional review loop)
+6. `hagi proposal execute --session-id <session-id>`
+7. `hagi proposal complete --session-id <session-id>`
+8. `hagi proposal archive --session-id <session-id>`
+
+The CLI may suggest a next command, but it never chains later lifecycle APIs automatically.
 
 Each command maps to one backend action. The CLI may suggest a next command, but it never chains later lifecycle APIs automatically.
 
 ## Vault Commands
+
+Create a vault with a local folder to browse. The new id is read from `vault.id`:
+
+```bash
+mkdir -p /tmp/cli-vault-notes/docs
+printf '# Notes\n' > /tmp/cli-vault-notes/docs/readme.md
+
+VAULT_ID=$(hagi vault create \
+  --name "Main Notes" \
+  --type folder \
+  --physical-path /tmp/cli-vault-notes \
+  --json | json_field '.vault.id')
+```
 
 List registered vaults:
 
@@ -204,39 +253,36 @@ hagi vault list
 hagi vault list --json
 ```
 
-Create a vault with typed options:
-
-```bash
-hagi vault create \
-  --name "Main Notes" \
-  --type obsidian \
-  --physical-path /vaults/main \
-  --git-url https://github.com/acme/notes.git
-```
-
 Update only part of a vault record. The CLI resolves the current vault snapshot first so omitted fields are preserved:
 
 ```bash
-hagi vault update --id <vault-id> --name "Renamed Vault"
-hagi vault update --id <vault-id> --physical-path /vaults/new-home --git-url https://github.com/acme/notes.git
-```
-
-Delete a vault and optionally request backend cleanup of local files:
-
-```bash
-hagi vault delete --id <vault-id>
-hagi vault delete --id <vault-id> --delete-local-files --json
+hagi vault update --id "$VAULT_ID" --name "Renamed Vault"
 ```
 
 Browse vault files and preview supported content:
 
 ```bash
-hagi vault files list --id <vault-id>
-hagi vault files list --id <vault-id> --path docs --json
-hagi vault files preview --id <vault-id> --path docs/readme.md
+hagi vault files list --id "$VAULT_ID"
+hagi vault files list --id "$VAULT_ID" --path docs --json
+hagi vault files preview --id "$VAULT_ID" --path docs/readme.md
+```
+
+Delete a vault and request backend cleanup of its local files:
+
+```bash
+hagi vault delete --id "$VAULT_ID" --delete-local-files --json
 ```
 
 ## Chat Commands
+
+Create a chat session. The new id is read from `session.sessionId`:
+
+```bash
+CHAT_ID=$(hagi chat create \
+  --title "Repository Q&A" \
+  --project-id "$PROJECT_ID" \
+  --json | json_field '.session.sessionId')
+```
 
 List chat sessions:
 
@@ -245,43 +291,80 @@ hagi chat list --active-only
 hagi chat list --include-archived --json
 ```
 
-Create a chat session:
+Send a message, archive, and delete:
 
 ```bash
-hagi chat create \
-  --title "Repository Q&A" \
-  --project-id <project-id> \
-  --executor-type CodexCli
-```
-
-Archive, delete, or send a message:
-
-```bash
-hagi chat archive --session-id <session-id>
-hagi chat delete --session-id <session-id>
-hagi chat send --session-id <session-id> --content "Summarize the current diff"
+hagi chat send --session-id "$CHAT_ID" --content "Summarize the current diff"
+hagi chat archive --session-id "$CHAT_ID"
+hagi chat delete --session-id "$CHAT_ID"
 ```
 
 ## AutoTask Commands
 
-Create an AutoTask session with package-first automation flags:
+Create an AutoTask session with package-first automation flags. The new id is read from `session.sessionId`:
 
 ```bash
-hagi autotask create \
+AUTOTASK_ID=$(hagi autotask create \
   --title "Auto compose commit" \
-  --project-id <project-id> \
+  --project-id "$PROJECT_ID" \
   --prompt-id auto-compose-commit.en-US \
   --repository-path repos/cli \
   --need-push \
   --target-branch-mode new-custom \
   --target-branch-name feature/cli-completion \
-  --script-key autotask.auto-compose-commit
+  --script-key autotask.auto-compose-commit \
+  --json | json_field '.session.sessionId')
 ```
 
-Send a follow-up message to an AutoTask session:
+The backend must have a hero available for the prompt's script. Without one, `autotask create` fails with a 400 whose error is `no-executable-hero`.
+
+Send a follow-up message to the AutoTask session:
 
 ```bash
-hagi autotask send --session-id <session-id> --content "Retry with a smaller diff"
+hagi autotask send --session-id "$AUTOTASK_ID" --content "Retry with a smaller diff"
+```
+
+## Skills Commands
+
+List installed local skills and remove one by name:
+
+```bash
+hagi skills local list
+hagi skills local list --json
+SKILL_NAME=demo-skill
+hagi skills local uninstall --skill-name "$SKILL_NAME"
+```
+
+The uninstall result reports a status such as `Succeeded` or `PrerequisiteMissing`, with the backend message.
+
+Search the gallery and read one skill:
+
+```bash
+hagi skills gallery search --query react
+hagi skills gallery search --query react --json
+hagi skills gallery detail --id vercel-react-best-practices --source vercel-labs/agent-skills
+```
+
+Start a managed install of a gallery skill. This writes the skill into your local skill directories, so run it only when you intend to install it:
+
+```bash
+hagi skills gallery install \
+  --id vercel-react-best-practices \
+  --source vercel-labs/agent-skills \
+  --skill-slug vercel-react-best-practices
+```
+
+Manage the trusted provider directory. `upsert` reads a JSON document from `--input <file>` or `--input -`:
+
+```bash
+hagi skills trusted list
+cat > provider.json <<'EOF'
+{"providerId":"example-provider","displayName":"Example","isEnabled":true,"sortOrder":50,"matchRules":[{"matchType":"owner","value":"example"}]}
+EOF
+hagi skills trusted upsert --input provider.json
+cat provider.json | hagi skills trusted upsert --input - --json
+hagi skills trusted delete --provider-id example-provider
+hagi skills trusted reset
 ```
 
 ## Maintainer Workflow (`repos/cli` only)
@@ -334,7 +417,7 @@ The CLI resolves runtime settings centrally before every command. Explicit flags
 
 | Variable | Purpose |
 | --- | --- |
-| `HAGI_API_BASE_URL` | Backend base URL. Defaults to `http://127.0.0.1:35168` when unset. |
+| `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. Required when neither is set. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
 
