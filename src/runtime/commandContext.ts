@@ -71,7 +71,7 @@ export function createDefaultDependencies(
 
 export function addGlobalApiOptions(command: Command): Command {
   return command
-    .option('--base-url <url>', 'Backend API base URL. Defaults to HAGI_API_BASE_URL or the local dev URL.')
+    .option('--base-url <url>', 'Backend API base URL. Overrides HAGI_API_BASE_URL and the "baseUrl" config file entry.')
     .option('--token <token>', 'Bearer token for backend API calls. Overrides HAGI_API_TOKEN.')
     .option('--lang <lang>', 'Accept-Language value for backend API calls. Overrides HAGI_API_LANG.');
 }

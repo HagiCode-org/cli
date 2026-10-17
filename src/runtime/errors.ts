@@ -89,7 +89,12 @@ export function mapExitCodeFromStatus(status?: number): number {
   }
 }
 
-export function normalizeCliError(error: unknown): CliErrorPayload {
+export type CliErrorContext = {
+  /** Base URL the failed invocation resolved to, named in connection failures. */
+  baseUrl?: string;
+};
+
+export function normalizeCliError(error: unknown, context: CliErrorContext = {}): CliErrorPayload {
   if (error instanceof CliUsageError) {
     return {
       exitCode: EXIT_CODES.USAGE,
@@ -123,9 +128,19 @@ export function normalizeCliError(error: unknown): CliErrorPayload {
   }
 
   if (error instanceof Error) {
+    if (!inferTransportError(error.message)) {
+      return {
+        exitCode: EXIT_CODES.UNKNOWN,
+        message: error.message,
+      };
+    }
+
+    const target = context.baseUrl ?? 'the configured backend';
     return {
-      exitCode: inferTransportError(error.message) ? EXIT_CODES.TRANSPORT : EXIT_CODES.UNKNOWN,
-      message: error.message,
+      exitCode: EXIT_CODES.TRANSPORT,
+      message: error.message.includes('Failed to parse URL')
+        ? `Invalid HagiCode backend base URL: ${target}`
+        : `Cannot reach HagiCode backend at ${target}. Check that the backend is running and the base URL is correct.`,
     };
   }
 

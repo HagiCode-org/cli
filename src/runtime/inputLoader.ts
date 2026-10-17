@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { stdin as input } from 'node:process';
 import { CliUsageError } from './errors';
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
 
-  for await (const chunk of input) {
+  // Read process.stdin at call time so tests and callers can substitute the stream.
+  for await (const chunk of process.stdin) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
 
