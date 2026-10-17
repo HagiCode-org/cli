@@ -1,6 +1,9 @@
 # HagiCode CLI
 
-[![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm)](https://www.npmjs.com/package/@hagicode/cli)
+[![npm version](https://img.shields.io/npm/v/%40hagicode%2Fcli?logo=npm&color=cb3837)](https://www.npmjs.com/package/@hagicode/cli)
+[![npm downloads](https://img.shields.io/npm/dm/%40hagicode%2Fcli?logo=npm&color=2d8cf0)](https://www.npmjs.com/package/@hagicode/cli)
+[![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
 `@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, and AutoTask management against a HagiCode backend API.
 The same repository also carries the canonical embedded Hagi skill under [`skills/`](skills/), so package usage and AI-oriented guidance live in one writable source.
