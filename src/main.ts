@@ -3,12 +3,14 @@ import { registerAutoTaskCommands } from './commands/autotask';
 import { registerChatCommands } from './commands/chat';
 import { registerProjectCommands } from './commands/project';
 import { registerProposalCommands } from './commands/proposal';
+import { registerSkillsCommands } from './commands/skills';
 import { registerVaultCommands } from './commands/vault';
 import {
   createDefaultDependencies,
   addGlobalApiOptions,
   type AppDependencies,
 } from './runtime/commandContext';
+import { getActiveBaseUrl } from './runtime/apiRuntime';
 import { EXIT_CODES, normalizeCliError, renderCliError } from './runtime/errors';
 
 function inferJsonMode(argv: readonly string[]): boolean {
@@ -46,6 +48,7 @@ export function createCliApp(
   registerVaultCommands(program, dependencies);
   registerChatCommands(program, dependencies);
   registerAutoTaskCommands(program, dependencies);
+  registerSkillsCommands(program, dependencies);
 
   return program;
 }
@@ -89,7 +92,7 @@ export async function runCli(
       return handleCommanderError(error, dependencies, jsonMode);
     }
 
-    const cliError = normalizeCliError(error);
+    const cliError = normalizeCliError(error, { baseUrl: getActiveBaseUrl() });
     dependencies.io.stderr(renderCliError(cliError, { json: jsonMode }));
     return cliError.exitCode;
   }
