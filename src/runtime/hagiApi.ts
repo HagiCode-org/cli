@@ -25,6 +25,9 @@ import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../generate
 import type { PCode_Web_Controllers_CreateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateSessionRequest';
 import type { PCode_Web_Controllers_OptimizeProposalRequest } from '../generated/api/models/PCode_Web_Controllers_OptimizeProposalRequest';
 import type { PCode_Web_Controllers_PostMessageRequest } from '../generated/api/models/PCode_Web_Controllers_PostMessageRequest';
+import type { PCode_Web_Controllers_ScheduledPlanResponse } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanResponse';
+import type { PCode_Web_Controllers_ScheduledPlanRunAcceptedDto } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanRunAcceptedDto';
+import type { PCode_Web_Controllers_ScheduledPlanSaveRequest } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanSaveRequest';
 import type { PCode_Web_Controllers_UpdateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_UpdateSessionRequest';
 import type { PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto';
 import type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_InstallSkillRequestDto';
@@ -38,6 +41,7 @@ import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } fro
 import type { PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto';
 import { DataAggregationService } from '../generated/api/services/DataAggregationService';
 import { ProjectService } from '../generated/api/services/ProjectService';
+import { ScheduledPlansService } from '../generated/api/services/ScheduledPlansService';
 import { SessionsService } from '../generated/api/services/SessionsService';
 import { SkillGalleryService } from '../generated/api/services/SkillGalleryService';
 import { VaultService } from '../generated/api/services/VaultService';
@@ -93,6 +97,15 @@ export interface HagiApi {
   createProject(requestBody: PCode_Application_Contracts_Dto_CreateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   updateProject(id: string, requestBody: PCode_Application_Contracts_Dto_UpdateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   deleteProject(id: string): Promise<unknown>;
+  listPlans(): Promise<PCode_Web_Controllers_ScheduledPlanResponse[]>;
+  getPlan(id: string): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
+  createPlan(requestBody: PCode_Web_Controllers_ScheduledPlanSaveRequest): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
+  updatePlan(id: string, requestBody: PCode_Web_Controllers_ScheduledPlanSaveRequest): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
+  deletePlan(id: string): Promise<void>;
+  /** Creates a session from the plan's stored inputs now and waits for it. */
+  runPlan(id: string): Promise<PCode_Models_SessionResponseDto>;
+  /** Starts the same run in the background; resolves once the backend accepts it, before the session exists. */
+  startPlan(id: string): Promise<PCode_Web_Controllers_ScheduledPlanRunAcceptedDto>;
   listVaults(): Promise<PCode_Application_Contracts_Dto_VaultListResponseDto>;
   createVault(requestBody: PCode_Application_Contracts_Dto_CreateVaultRequestDto): Promise<PCode_Application_Contracts_Dto_VaultItemDto>;
   updateVault(id: string, requestBody: PCode_Application_Contracts_Dto_UpdateVaultRequestDto): Promise<PCode_Application_Contracts_Dto_VaultItemDto>;
@@ -135,6 +148,13 @@ export function createGeneratedHagiApi(): HagiApi {
     createProject: requestBody => ProjectService.postApiProject({ requestBody }),
     updateProject: (id, requestBody) => ProjectService.putApiProject({ id, requestBody }),
     deleteProject: id => ProjectService.deleteApiProject({ id }),
+    listPlans: () => ScheduledPlansService.getApiScheduledPlans(),
+    getPlan: id => ScheduledPlansService.getApiScheduledPlans1({ id }),
+    createPlan: requestBody => ScheduledPlansService.postApiScheduledPlans({ requestBody }),
+    updatePlan: (id, requestBody) => ScheduledPlansService.putApiScheduledPlans({ id, requestBody }),
+    deletePlan: id => ScheduledPlansService.deleteApiScheduledPlans({ id }),
+    runPlan: id => ScheduledPlansService.postApiScheduledPlansRun({ id }),
+    startPlan: id => ScheduledPlansService.postApiScheduledPlansStart({ id }),
     listVaults: () => VaultService.getApiVaults(),
     createVault: requestBody => VaultService.postApiVaults({ requestBody }),
     updateVault: (id, requestBody) => VaultService.putApiVaults({ id, requestBody }),

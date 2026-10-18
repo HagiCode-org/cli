@@ -150,6 +150,23 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
   };
 }
 
+/**
+ * Field-level problems from a backend validation body (`details.errors[]` with string `field` and `message`).
+ * Entries of any other shape are skipped, and a body without a usable `errors` array yields no lines.
+ */
+function readValidationLines(details: unknown): string[] {
+  const errors = asErrorObject(details)?.errors;
+  if (!Array.isArray(errors)) {
+    return [];
+  }
+
+  return errors.flatMap(entry => {
+    const field = readStringProperty(entry, 'field');
+    const message = readStringProperty(entry, 'message');
+    return field && message ? [`  - ${field}: ${message}`] : [];
+  });
+}
+
 export function renderCliError(
   payload: CliErrorPayload,
   options: { json?: boolean } = {},
@@ -178,5 +195,5 @@ export function renderCliError(
   ].filter(Boolean);
 
   const suffix = metadata.length > 0 ? ` (${metadata.join(', ')})` : '';
-  return `${payload.message}${suffix}\n`;
+  return [`${payload.message}${suffix}`, ...readValidationLines(payload.details)].join('\n') + '\n';
 }

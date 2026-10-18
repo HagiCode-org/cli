@@ -5,7 +5,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runCli } from '../../src/main';
+import { configureApiRuntime } from '../../src/runtime/apiRuntime';
 import { createDefaultDependencies, type CliIo } from '../../src/runtime/commandContext';
+import { createGeneratedHagiApi } from '../../src/runtime/hagiApi';
 
 /**
  * Request-path checks: every command runs through the real generated client against a local
@@ -373,5 +375,51 @@ describe('request paths for skills commands', () => {
   it('skills trusted reset posts to the reset endpoint', async () => {
     await run(['skills', 'trusted', 'reset']);
     expect(recorded.map(requestLine)).toEqual(['POST /api/skills/providers/trusted/reset']);
+  });
+});
+
+// Scheduled plan facade methods (1.2): the plan commands are not wired yet, so each method is called directly.
+describe('request paths for scheduled plan facade methods', () => {
+  const PLAN_SAVE_BODY = { type: 'hagitask', name: 'Nightly review', enabled: true };
+
+  beforeEach(() => {
+    configureApiRuntime({ baseUrl });
+  });
+
+  it('listPlans requests the plan collection', async () => {
+    await createGeneratedHagiApi().listPlans();
+    expect(recorded.map(requestLine)).toEqual(['GET /api/ScheduledPlans']);
+  });
+
+  it('getPlan requests the plan by id', async () => {
+    await createGeneratedHagiApi().getPlan('plan-1');
+    expect(recorded.map(requestLine)).toEqual(['GET /api/ScheduledPlans/plan-1']);
+  });
+
+  it('createPlan posts the save body to the plan collection', async () => {
+    await createGeneratedHagiApi().createPlan(PLAN_SAVE_BODY);
+    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans']);
+    expect(recorded[0].body).toEqual(PLAN_SAVE_BODY);
+  });
+
+  it('updatePlan puts the save body to the plan by id', async () => {
+    await createGeneratedHagiApi().updatePlan('plan-1', PLAN_SAVE_BODY);
+    expect(recorded.map(requestLine)).toEqual(['PUT /api/ScheduledPlans/plan-1']);
+    expect(recorded[0].body).toEqual(PLAN_SAVE_BODY);
+  });
+
+  it('deletePlan deletes the plan by id', async () => {
+    await createGeneratedHagiApi().deletePlan('plan-1');
+    expect(recorded.map(requestLine)).toEqual(['DELETE /api/ScheduledPlans/plan-1']);
+  });
+
+  it('runPlan posts to the run endpoint', async () => {
+    await createGeneratedHagiApi().runPlan('plan-1');
+    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans/plan-1/run']);
+  });
+
+  it('startPlan posts to the start endpoint', async () => {
+    await createGeneratedHagiApi().startPlan('plan-1');
+    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans/plan-1/start']);
   });
 });

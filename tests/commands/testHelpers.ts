@@ -193,6 +193,43 @@ export function createVaultFilePreview(
   };
 }
 
+/** Recurring HagiTask plan in the backend response shape, enabled and scheduled unless overridden. */
+export function createPlan(
+  id: string,
+  overrides: Partial<{
+    type: string;
+    name: string;
+    enabled: boolean;
+    state: string | null;
+    nextRunAt: string | null;
+    schedule: unknown;
+    agentPool: unknown;
+    payload: unknown;
+  }> = {},
+) {
+  return {
+    id,
+    type: overrides.type ?? 'hagitask',
+    name: overrides.name ?? 'Nightly review',
+    enabled: overrides.enabled ?? true,
+    createdAt: '2026-04-01T00:00:00Z',
+    updatedAt: '2026-04-02T00:00:00Z',
+    schedule: overrides.schedule ?? {
+      mode: 'recurring',
+      runAt: null,
+      timeZone: 'Asia/Shanghai',
+      startDate: '2026-04-01',
+      endDate: null,
+      timeOfDay: '02:00',
+      repeat: { rule: 'daily', weekdays: null },
+    },
+    agentPool: overrides.agentPool ?? { strategy: 'random', agents: [{ heroId: 'hero-1' }] },
+    payload: overrides.payload ?? { title: 'Nightly review', message: 'Review the day', projectId: 'project-1' },
+    state: overrides.state === undefined ? 'scheduled' : overrides.state,
+    nextRunAt: overrides.nextRunAt === undefined ? '2026-05-01T18:00:00Z' : overrides.nextRunAt,
+  };
+}
+
 const SKILL_TRUST = {
   providerId: 'vercel',
   displayName: 'Vercel',
@@ -374,6 +411,13 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     createProject: vi.fn().mockResolvedValue(createProject('project-2')),
     updateProject: vi.fn().mockResolvedValue({ ...createProject('project-1'), description: 'updated' }),
     deleteProject: vi.fn().mockResolvedValue(undefined),
+    listPlans: vi.fn().mockResolvedValue([createPlan('plan-1')]),
+    getPlan: vi.fn().mockResolvedValue(createPlan('plan-1')),
+    createPlan: vi.fn().mockResolvedValue(createPlan('plan-2')),
+    updatePlan: vi.fn().mockResolvedValue({ ...createPlan('plan-1'), name: 'Updated plan' }),
+    deletePlan: vi.fn().mockResolvedValue(undefined),
+    runPlan: vi.fn().mockResolvedValue(createSession('session-3', PCode_Models_SessionType.CHAT)),
+    startPlan: vi.fn().mockResolvedValue({ planId: 'plan-1' }),
     listVaults: vi.fn().mockResolvedValue({ generatedAtUtc: '2026-04-05T00:00:00Z', items: [createVault('vault-1')] }),
     createVault: vi.fn().mockResolvedValue(createVault('vault-2')),
     updateVault: vi.fn().mockResolvedValue({ ...createVault('vault-1'), name: 'Updated Vault' }),

@@ -1,6 +1,7 @@
 import { Command, CommanderError } from 'commander';
 import { registerAutoTaskCommands } from './commands/autotask';
 import { registerChatCommands } from './commands/chat';
+import { registerPlanCommands } from './commands/plan';
 import { registerProjectCommands } from './commands/project';
 import { registerProposalCommands } from './commands/proposal';
 import { registerSkillsCommands } from './commands/skills';
@@ -25,7 +26,7 @@ export function createCliApp(
 
   program
     .name('hagi')
-    .description('HagiCode CLI for project, proposal, vault, chat, and AutoTask management.')
+    .description('HagiCode CLI for project, proposal, vault, chat, AutoTask, and scheduled plan management.')
     .showHelpAfterError()
     .exitOverride();
 
@@ -48,6 +49,7 @@ export function createCliApp(
   registerVaultCommands(program, dependencies);
   registerChatCommands(program, dependencies);
   registerAutoTaskCommands(program, dependencies);
+  registerPlanCommands(program, dependencies);
   registerSkillsCommands(program, dependencies);
 
   return program;
