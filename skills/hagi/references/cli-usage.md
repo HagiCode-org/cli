@@ -70,10 +70,55 @@ Explicit flags always override environment variables.
 ```text
 hagi
 |-- project   list | create | update | delete
-|-- proposal  list | create | generate-name | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- vault     list | create | update | delete
+|   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-`-- autotask  create | send
+|-- autotask  create | send
+|-- plan      list | get | create | update | enable | disable | delete | run
+`-- skills    local list | uninstall
+              gallery search | detail | install
+              trusted list | upsert | delete | reset
 ```
+
+## Plan commands
+
+Scheduled plans save a proposal or HagiTask input with a schedule and, for HagiTask plans, an agent pool.
+
+```text
+hagi plan
+|-- list
+|-- get      --id <id>
+|-- create   --input <file|-> [--name <name>] [--hero-id <id>] [--disabled]
+|-- update   --id <id> [--input <file|->] [--name <name>] [--hero-id <id>] [--enabled | --disabled]
+|-- enable   --id <id>
+|-- disable  --id <id>
+|-- delete   --id <id>
+`-- run      --id <id> [--background]
+```
+
+- `create` enables the plan unless the document sets `enabled` or `--disabled` is passed.
+- `update`, `enable` and `disable` read the current plan and send it back whole, so unchanged fields are kept. `update --input` replaces each top-level key it contains as a whole value.
+- `run` creates a session now and waits for it. `run --background` returns `{ planId, accepted: true }` once the backend accepts the run, before the session exists.
+- A manual run does not change the plan's state or next run time, and works for disabled and completed plans.
+
+A one-time proposal plan document for `plan create --input`:
+
+```json
+{
+  "type": "proposal",
+  "name": "Weekly triage",
+  "enabled": true,
+  "schedule": { "mode": "once", "runAt": "2026-06-12T10:30:00Z" },
+  "payload": {
+    "title": "Weekly triage",
+    "chiefComplaint": "Triage the open issues and propose the next sprint",
+    "projectId": "<project-id>"
+  }
+}
+```
+
+The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow.
 
 ## Exit codes
 

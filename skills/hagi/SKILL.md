@@ -8,7 +8,7 @@ description: Use when the user wants to run, verify, or update the HagiCode CLI 
 Use this skill when the user asks to:
 
 - run or verify the `hagi` CLI
-- explain or execute `project`, `proposal`, `chat`, or `autotask` commands
+- explain or execute `project`, `proposal`, `chat`, `autotask`, or `plan` commands
 - inspect CLI flags, environment variables, exit codes, or JSON automation behavior
 - validate proposal-session flows against a backend API
 - modify or debug the CLI implementation in `repos/cli`
@@ -51,8 +51,13 @@ The current top-level command families are:
 
 - `project`
 - `proposal`
+- `vault`
 - `chat`
 - `autotask`
+- `plan`
+- `skills`
+
+Scheduled plans (`hagi plan`) save a proposal or HagiTask input with a schedule. `list`, `get`, `create`, `update`, `enable`, `disable`, `delete` and `run` manage them; `run --background` returns the accepted plan id before the session exists. A manual run never changes a plan's state or next run time. See [`references/cli-usage.md`](references/cli-usage.md#plan-commands) for the action list and a plan document example.
 
 ## Source of truth
 

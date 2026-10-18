@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, and AutoTask management against a HagiCode backend API.
+`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, AutoTask, and scheduled plan management against a HagiCode backend API.
 The same repository also carries the canonical embedded Hagi skill under [`skills/`](skills/), so package usage and AI-oriented guidance live in one writable source.
 
 ## Requirements
@@ -118,6 +118,7 @@ hagi
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
 |-- autotask  create | send
+|-- plan      list | get | create | update | enable | disable | delete | run
 `-- skills    local list | uninstall
               gallery search | detail | install
               trusted list | upsert | delete | reset
@@ -323,6 +324,126 @@ Send a follow-up message to the AutoTask session:
 ```bash
 hagi autotask send --session-id "$AUTOTASK_ID" --content "Retry with a smaller diff"
 ```
+
+## Plan Commands
+
+A scheduled plan saves a proposal or HagiTask input with a schedule and an agent pool. The backend runs it on that schedule. `plan list` and `plan get` show the plans that exist:
+
+```bash
+hagi plan list
+hagi plan list --json
+hagi plan get --id "$PLAN_ID"
+hagi plan get --id "$PLAN_ID" --json | jq .plan
+```
+
+`plan list` prints one row per plan with its schedule summary, and an explicit message when there are none. `--json` prints `{ "plans": [...] }`, where each entry carries `id`, `type`, `name`, `enabled`, `state`, `nextRunAt`, `schedule`, `agentPool` and `payload` exactly as the backend returns them. `plan get --json` prints `{ "plan": {...} }` with the same fields.
+
+### Create a plan
+
+`plan create` reads a plan document with `--input <file>` or `--input -` for stdin. A recurring HagiTask plan:
+
+```json
+{
+  "type": "hagitask",
+  "name": "Nightly review",
+  "enabled": true,
+  "schedule": {
+    "mode": "recurring",
+    "timeZone": "Asia/Shanghai",
+    "startDate": "2026-05-01",
+    "endDate": "2026-05-31",
+    "timeOfDay": "02:00",
+    "repeat": { "rule": "daily", "weekdays": [] }
+  },
+  "agentPool": { "strategy": "random", "agents": [ { "heroId": "5de02573-0000-4000-8000-000000000001" } ] },
+  "payload": {
+    "projectId": "11111111-2222-3333-4444-555555555555",
+    "presetTaskId": "nightly-review"
+  }
+}
+```
+
+A one-time proposal plan runs once at `runAt` and has no time zone or repeat fields:
+
+```json
+{
+  "type": "proposal",
+  "name": "Weekly triage",
+  "schedule": { "mode": "once", "runAt": "2026-06-12T10:30:00Z" },
+  "payload": {
+    "title": "Weekly triage",
+    "chiefComplaint": "Triage the open issues and propose the next sprint",
+    "projectId": "11111111-2222-3333-4444-555555555555"
+  }
+}
+```
+
+```bash
+hagi plan create --input nightly-review.json
+hagi plan create --input weekly-triage.json --disabled
+PLAN_ID=$(hagi plan create --input nightly-review.json --json | json_field '.plan.id')
+```
+
+A plan is **enabled by default**. `create` sends `enabled: true` unless the document sets `enabled` or you pass `--disabled`. `--name` and `--hero-id` replace the document's `name` and agent pool, and `--hero-id` builds the single-agent `random` pool. Server-owned fields (`id`, `createdAt`, `updatedAt`, `state`, `nextRunAt`) in the document are ignored.
+
+### Update, enable, disable and delete
+
+`plan update` reads the current plan, applies your changes and sends the full plan back, so fields you do not mention keep their values:
+
+```bash
+hagi plan update --id "$PLAN_ID" --name "Nightly review (EU)"
+hagi plan update --id "$PLAN_ID" --input changes.json
+hagi plan update --id "$PLAN_ID" --hero-id 5de02573-0000-4000-8000-000000000002 --enabled
+```
+
+`--input` on update is a **shallow merge** over the top-level keys of the plan (`type`, `name`, `enabled`, `schedule`, `agentPool`, `payload`). Each key in the file replaces the current value as a whole, and keys missing from the file are kept. A `schedule` in the file replaces the whole current schedule, so write the complete object, without the fields you want removed (for example `endDate`). Passing `--enabled` and `--disabled` together is a usage error, and so is an update with no change.
+
+`enable` and `disable` change only the enabled flag. When the plan already has that flag, nothing is sent and the output says so:
+
+```bash
+hagi plan disable --id "$PLAN_ID"
+hagi plan enable --id "$PLAN_ID" --json
+```
+
+Delete a plan. It never runs again:
+
+```bash
+hagi plan delete --id "$PLAN_ID"
+hagi plan delete --id "$PLAN_ID" --json
+```
+
+To change a plan with a text editor, take the current document, edit it and feed it back. Server-owned fields are dropped automatically:
+
+```bash
+hagi plan get --id "$PLAN_ID" --json | jq .plan > plan.json
+# edit plan.json, then:
+hagi plan update --id "$PLAN_ID" --input plan.json
+```
+
+When the backend rejects a plan with 400 (exit code `20`), the CLI prints the summary and then one line per problem, naming its field:
+
+```text
+Scheduled plan is invalid. (status=400)
+  - agentPool: A HagiTask plan needs an agent pool with one agent.
+```
+
+Use `--json` to get the full backend body under `error.details`.
+
+### Run a plan now
+
+`plan run` creates a session from the plan's stored inputs immediately, without waiting for the schedule. It waits for the session and prints its summary, or `{ "session": {...} }` with `--json`:
+
+```bash
+hagi plan run --id "$PLAN_ID"
+```
+
+`plan run --background` starts the same run and returns as soon as the backend accepts it, before the session exists. It prints the plan id and `accepted: true`. The session shows up in the normal session list:
+
+```bash
+hagi plan run --id "$PLAN_ID" --background --json
+```
+
+A manual run does not change the plan's state or next run time. It works for disabled and completed plans, and the next automatic run still happens on the original schedule.
 
 ## Skills Commands
 
