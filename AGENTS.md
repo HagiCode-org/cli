@@ -20,7 +20,8 @@ npm run build
 npm test
 npm run typecheck
 npm run pack:check
-npm run generate:api   # regenerate src/generated/api from the backend OpenAPI doc
+npm run generate:api   # regenerate src/generated/api from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
+npm run generate:api:once   # same, but starts (or reuses) the sibling repos/hagicode-core PCode.SwaggerHost first via dotnet
 npm run dev -- <args>  # run the CLI from source via tsx (src/cli.ts)
 ```
 
@@ -29,6 +30,7 @@ Requires Node.js 24+.
 ## Release & Publishing
 
 - `.github/workflows/npm-publish.yml`: pushes to `main` publish a dev build to the `dev` dist-tag (version resolved by `scripts/resolve-dev-version.mjs`); published (non-draft, non-prerelease) GitHub releases publish to `latest`, with the version taken from the stable `vX.Y.Z` tag checked by `scripts/verify-release-version.mjs`. The package version is stamped in CI, not hand-bumped for releases.
+- `.github/workflows/release-draft-action.yml`: on push to `main` (or manual dispatch with an optional stable `X.Y.Z`) drafts the next stable release; publishing the draft stays manual.
 - Both paths run build, typecheck, test and `pack:check` first; keep them green. Release scripts are covered by `tests/release/`.
 
 ## Key Paths
