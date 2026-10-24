@@ -5,18 +5,16 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, AutoTask, and scheduled plan management against a HagiCode backend API.
-The same repository also carries the canonical embedded Hagi skill under [`skills/`](skills/), so package usage and AI-oriented guidance live in one writable source.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, AutoTasks, scheduled plans, and skills (local list and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
 - Node.js 24+
-- npm compatible with `10.9.2`
 - Access to a HagiCode backend API
 
 ## Installation
 
-Use the published npm package for normal CLI usage. You do not need to clone `repos/cli` to run `hagi`.
+Use the published npm package for normal CLI usage. You do not need to clone this repository to run `hagi`.
 
 ### Zero-install usage
 
@@ -59,11 +57,6 @@ If you are integrating Hagi CLI into an agent workflow, start from the embedded 
 - [`skills/README.md`](skills/README.md) - repository-level discovery entrypoint
 - [`skills/hagi/SKILL.md`](skills/hagi/SKILL.md) - canonical Hagi skill contract
 - [`skills/hagi/references/`](skills/hagi/references/) - focused package usage, proposal flow, maintainer, and validation guidance
-
-`repos/cli/skills/**` is the canonical writable source for future Hagi skill updates.
-`repos/skills/**` remains a historical/reference-only mirror during this consolidation.
-
-Repository-local `npm run dev -- ...` and `node ./dist/cli.js ...` commands stay in the maintainer section below.
 
 ## Shared Runtime Flags
 
@@ -488,50 +481,6 @@ hagi skills trusted delete --provider-id example-provider
 hagi skills trusted reset
 ```
 
-## Maintainer Workflow (`repos/cli` only)
-
-Use the commands in this section only when you are editing or validating the CLI source tree inside this repository.
-Package consumers and automation should stay on `npx @hagicode/cli ...` or an installed `hagi ...` unless they are working on `repos/cli` itself.
-
-Build the local repository output:
-
-```bash
-cd repos/cli
-npm install
-npm run build
-node ./dist/cli.js --help
-```
-
-For local development without building:
-
-```bash
-cd repos/cli
-npm run dev -- proposal list --json
-npm run dev -- chat list --json
-```
-
-## Release Automation
-
-`repos/cli/.github/workflows/release-draft-action.yml` maintains the next GitHub draft release for `@hagicode/cli` through `HagiCode-org/hagi-release-drafter@v0.1.2`, built from Conventional Commit messages since the latest `vX.Y.Z` tag. It runs on pushes to `main` and on manual dispatch. The optional `version` input overrides the derived version and accepts only a stable `X.Y.Z`. The draft title is `HagiCode CLI v{version}`. Only the draft job holds `contents: write`, and the workflow never publishes. Publishing the draft is a manual step in the GitHub UI, and that publish triggers `npm-publish.yml`.
-`repos/cli/.github/workflows/npm-publish.yml` publishes two channels with GitHub Actions OIDC plus provenance:
-
-- pushes to `main` publish a unique development prerelease under the npm `dev` dist-tag
-- published GitHub Releases for strict `vX.Y.Z` tags publish the stable package under the npm `latest` dist-tag
-
-### Local Release Verification
-
-Run the stable release gates locally before publishing a GitHub Release:
-
-```bash
-cd repos/cli
-version="$(npm run --silent publish:verify-release -- v0.1.0)"
-npm version --no-git-tag-version "$version"
-npm run build
-npm run typecheck
-npm test
-npm run pack:check
-```
-
 ## Environment Variables
 
 The CLI resolves runtime settings centrally before every command. Explicit flags always override environment variables.
@@ -541,20 +490,6 @@ The CLI resolves runtime settings centrally before every command. Explicit flags
 | `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. Required when neither is set. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
-
-## Generate the API Client
-
-The CLI owns its own OpenAPI configuration in `openapi-ts.config.json`.
-
-```bash
-cd repos/cli
-npm run generate:api
-npm run generate:api:once
-```
-
-Default Swagger source:
-
-- `http://127.0.0.1:35168/swagger/v1/swagger.json`
 
 ## Exit Codes
 
