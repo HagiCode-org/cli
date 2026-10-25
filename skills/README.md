@@ -25,6 +25,7 @@ Repository-local commands under `repos/cli` are maintainer workflows only.
 - [`hagi/SKILL.md`](hagi/SKILL.md) - canonical Hagi CLI skill entrypoint
 - [`hagi/agents/openai.yaml`](hagi/agents/openai.yaml) - agent display and invocation metadata
 - [`hagi/references/cli-usage.md`](hagi/references/cli-usage.md) - published package usage and runtime flags
+- [`hagi/references/session-data.md`](hagi/references/session-data.md) - inside a HagiCode session: read-only data commands and the actions that need an explicit request
 - [`hagi/references/proposal-flow.md`](hagi/references/proposal-flow.md) - explicit proposal lifecycle guidance
 - [`hagi/references/local-development.md`](hagi/references/local-development.md) - maintainer-only source-tree workflows
 - [`hagi/references/validation.md`](hagi/references/validation.md) - post-change validation steps
@@ -32,13 +33,15 @@ Repository-local commands under `repos/cli` are maintainer workflows only.
 ## Canonical writable source
 
 Update `repos/cli/skills/**` when the Hagi CLI skill contract changes.
-`repos/skills/**` remains a read-only historical/reference source during this consolidation.
+
+## Built-in copy
+
+The server also ships this folder as its built-in skill `hagi`. The copy lives in `repos/built-in-skills/content/hagi/` and is an exact byte copy of `repos/cli/skills/hagi/`. Edit this folder, then recopy and rehash the built-in copy.
 
 ## Skill installation and discovery
 
 If an agent runtime or skill loader needs the Hagi skill source, point it at `repos/cli/skills/hagi/`.
 Start discovery from this README, then open `repos/cli/skills/hagi/SKILL.md`.
-Do not treat `repos/skills/hagi/` as the writable source for future updates.
 
 ## Maintainer note
 

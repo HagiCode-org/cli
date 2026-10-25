@@ -56,7 +56,9 @@ If you are integrating Hagi CLI into an agent workflow, start from the embedded 
 
 - [`skills/README.md`](skills/README.md) - repository-level discovery entrypoint
 - [`skills/hagi/SKILL.md`](skills/hagi/SKILL.md) - canonical Hagi skill contract
-- [`skills/hagi/references/`](skills/hagi/references/) - focused package usage, proposal flow, maintainer, and validation guidance
+- [`skills/hagi/references/`](skills/hagi/references/) - focused package usage, session data, proposal flow, maintainer, and validation guidance
+
+The same folder is also shipped as the HagiCode server's built-in skill `hagi`, so an agent running inside a HagiCode session can answer questions about the user's own projects, proposals, sessions, vaults and plans without setup. Edit `skills/hagi/` here; the built-in copy is recopied from it.
 
 ## Shared Runtime Flags
 

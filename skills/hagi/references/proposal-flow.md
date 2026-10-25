@@ -2,7 +2,7 @@
 
 Treat the proposal lifecycle as explicit, non-interactive backend actions.
 One CLI command maps to one backend action.
-Do not imply hidden chaining between `create`, `generate-name`, `generate`, `annotate`, `execute`, `archive`, and `complete`.
+Do not imply hidden chaining between `create`, `optimize-description`, `generate`, `annotate`, `execute`, `archive`, and `complete`.
 
 ## Configuration first
 
@@ -19,14 +19,15 @@ Use this order when explaining or validating proposal flows:
 
 1. `proposal list`
 2. `proposal create`
-3. `proposal generate-name`
-4. `proposal optimize-description` (optional)
-5. `proposal generate`
-6. `proposal annotate` (optional review loop)
-7. `proposal execute`
-8. `proposal archive`
-9. `proposal complete`
-10. `proposal send` for follow-up conversation on the active session
+3. `proposal optimize-description` (optional)
+4. `proposal generate`
+5. `proposal annotate` (optional review loop)
+6. `proposal execute`
+7. `proposal archive`
+8. `proposal complete`
+9. `proposal send` for follow-up conversation on the active session
+
+`proposal status` sets the session status directly and is not part of the sequence above.
 
 The CLI may suggest a next command, but it does not call later lifecycle APIs automatically.
 
@@ -45,14 +46,6 @@ npx @hagicode/cli proposal create \
   --project-id <project-id> \
   --chief-complaint "Add CLI completion for session workflows" \
   --default-title \
-  --json
-```
-
-Generate the proposal name:
-
-```bash
-npx @hagicode/cli proposal generate-name \
-  --session-id <session-id> \
   --json
 ```
 

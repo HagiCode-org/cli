@@ -61,9 +61,22 @@ Explicit flags always override environment variables.
 
 | Variable | Purpose |
 | --- | --- |
-| `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. Required when neither is set. |
+| `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
+
+## Config file
+
+The base URL can also be stored in a local config file:
+
+```json
+{ "baseUrl": "https://api.example.com" }
+```
+
+The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset.
+
+Base URL precedence, highest first: `--base-url`, then `HAGI_API_BASE_URL`, then `baseUrl` in the config file.
+There is no default. When none of the three is set, the CLI exits with code `2` and names all three sources.
 
 ## Command overview
 

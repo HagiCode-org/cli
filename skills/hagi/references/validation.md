@@ -13,7 +13,7 @@ Confirm these paths resolve and link correctly:
 - `repos/cli/skills/hagi/agents/openai.yaml`
 - `repos/cli/skills/hagi/references/*.md`
 
-Compare the consolidated skill package against `repos/skills/hagi/` to ensure the Hagi contract and agent metadata were preserved.
+Check that every command named in the references is registered: the `hagi` help output after a build lists the same families and subcommands.
 
 ## Maintainer validation commands
 
@@ -39,4 +39,4 @@ cd repos/cli
 npm run pack:check
 ```
 
-For this consolidation, leave `package.json` unchanged unless verification proves that `skills/**` must ship in the npm tarball.
+The npm tarball ships `dist` and `README.md` only (`package.json` `files`), so `skills/**` is not in the package. The skill reaches users through the repository and the server's built-in skill copy, not through npm. Change `files` only if that decision changes.
