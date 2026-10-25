@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import path from 'node:path';
 import { defineConfig } from 'vite';
+
+const packageJson = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')) as { version: string };
 
 const NODE_BUILTINS = new Set([
   ...builtinModules,
@@ -26,6 +29,9 @@ function preserveCliShebang() {
 }
 
 export default defineConfig({
+  define: {
+    __HAGI_CLI_VERSION__: JSON.stringify(packageJson.version),
+  },
   build: {
     lib: {
       entry: {
