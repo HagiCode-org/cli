@@ -3,17 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto } from '../models/PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto';
-import type { PCode_Application_Contracts_Dto_GenerateSkillRecommendationsRequestDto } from '../models/PCode_Application_Contracts_Dto_GenerateSkillRecommendationsRequestDto';
-import type { PCode_Application_Contracts_Dto_InstallRecommendedSkillsRequestDto } from '../models/PCode_Application_Contracts_Dto_InstallRecommendedSkillsRequestDto';
-import type { PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto } from '../models/PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto';
 import type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from '../models/PCode_Application_Contracts_Dto_InstallSkillRequestDto';
 import type { PCode_Application_Contracts_Dto_InstallSkillResultDto } from '../models/PCode_Application_Contracts_Dto_InstallSkillResultDto';
 import type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from '../models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
+import type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto } from '../models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto';
+import type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto } from '../models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto';
 import type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryDetailDto';
 import type { PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto';
 import type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from '../models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
-import type { PCode_Application_Contracts_Dto_SkillRecommendationConfigDto } from '../models/PCode_Application_Contracts_Dto_SkillRecommendationConfigDto';
-import type { PCode_Application_Contracts_Dto_SkillRecommendationResponseDto } from '../models/PCode_Application_Contracts_Dto_SkillRecommendationResponseDto';
 import type { PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto } from '../models/PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto';
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto } from '../models/PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto';
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
@@ -46,6 +43,23 @@ export class SkillGalleryService {
     return __request(OpenAPI, {
       method: 'POST',
       url: '/api/skills/local/uninstall',
+      body: requestBody,
+      mediaType: 'application/json',
+    });
+  }
+  /**
+   * Turns one built-in skill on or off. The choice is stored outside the release folder and survives restarts.
+   * @returns PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto OK
+   * @throws ApiError
+   */
+  public static postApiSkillsLocalBuiltInAvailability({
+    requestBody,
+  }: {
+    requestBody?: PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/skills/local/built-in/availability',
       body: requestBody,
       mediaType: 'application/json',
     });
@@ -165,7 +179,7 @@ export class SkillGalleryService {
   }
   /**
    * Starts the managed skill install flow. The backend always builds
-   * `npx skills add <ref> -g -y` so web-triggered installs stay non-interactive.
+   * `skills add <ref> -g -y` so web-triggered installs stay non-interactive.
    * @returns PCode_Application_Contracts_Dto_InstallSkillResultDto OK
    * @throws ApiError
    */
@@ -177,58 +191,6 @@ export class SkillGalleryService {
     return __request(OpenAPI, {
       method: 'POST',
       url: '/api/skills/gallery/install',
-      body: requestBody,
-      mediaType: 'application/json',
-    });
-  }
-  /**
-   * Returns the recommendation tab bootstrap config, including effective hero and prompt summaries.
-   * @returns PCode_Application_Contracts_Dto_SkillRecommendationConfigDto OK
-   * @throws ApiError
-   */
-  public static getApiSkillsRecommendationsConfig({
-    locale,
-  }: {
-    locale?: string,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_SkillRecommendationConfigDto> {
-    return __request(OpenAPI, {
-      method: 'GET',
-      url: '/api/skills/recommendations/config',
-      query: {
-        'locale': locale,
-      },
-    });
-  }
-  /**
-   * Generates AI-assisted skill recommendations from the current project portfolio.
-   * @returns PCode_Application_Contracts_Dto_SkillRecommendationResponseDto OK
-   * @throws ApiError
-   */
-  public static postApiSkillsRecommendationsGenerate({
-    requestBody,
-  }: {
-    requestBody?: PCode_Application_Contracts_Dto_GenerateSkillRecommendationsRequestDto,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_SkillRecommendationResponseDto> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/skills/recommendations/generate',
-      body: requestBody,
-      mediaType: 'application/json',
-    });
-  }
-  /**
-   * Installs multiple selected recommendations through the existing managed single-skill install flow.
-   * @returns PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto OK
-   * @throws ApiError
-   */
-  public static postApiSkillsRecommendationsInstall({
-    requestBody,
-  }: {
-    requestBody?: PCode_Application_Contracts_Dto_InstallRecommendedSkillsRequestDto,
-  }): CancelablePromise<PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/api/skills/recommendations/install',
       body: requestBody,
       mediaType: 'application/json',
     });

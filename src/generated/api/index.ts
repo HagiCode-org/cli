@@ -116,7 +116,6 @@ export type { PCode_Application_Contracts_Dto_FrontendConfigVoiceHotwordDto } fr
 export type { PCode_Application_Contracts_Dto_FrontendConfigVoiceRecognitionDto } from './models/PCode_Application_Contracts_Dto_FrontendConfigVoiceRecognitionDto';
 export type { PCode_Application_Contracts_Dto_FrontendConfigVoiceReminderSelectionRepairDto } from './models/PCode_Application_Contracts_Dto_FrontendConfigVoiceReminderSelectionRepairDto';
 export type { PCode_Application_Contracts_Dto_GenerateProposalRequestDto } from './models/PCode_Application_Contracts_Dto_GenerateProposalRequestDto';
-export type { PCode_Application_Contracts_Dto_GenerateSkillRecommendationsRequestDto } from './models/PCode_Application_Contracts_Dto_GenerateSkillRecommendationsRequestDto';
 export type { PCode_Application_Contracts_Dto_HagipowerBindingDto } from './models/PCode_Application_Contracts_Dto_HagipowerBindingDto';
 export type { PCode_Application_Contracts_Dto_HagipowerDebugBindingDto } from './models/PCode_Application_Contracts_Dto_HagipowerDebugBindingDto';
 export type { PCode_Application_Contracts_Dto_HagipowerDebugStateDto } from './models/PCode_Application_Contracts_Dto_HagipowerDebugStateDto';
@@ -171,12 +170,11 @@ export type { PCode_Application_Contracts_Dto_HeroSystemSettingsDto } from './mo
 export type { PCode_Application_Contracts_Dto_HeroTraitDto } from './models/PCode_Application_Contracts_Dto_HeroTraitDto';
 export type { PCode_Application_Contracts_Dto_HeroTraitPresetDto } from './models/PCode_Application_Contracts_Dto_HeroTraitPresetDto';
 export type { PCode_Application_Contracts_Dto_InstallHeroPrimaryProfessionResultDto } from './models/PCode_Application_Contracts_Dto_InstallHeroPrimaryProfessionResultDto';
-export type { PCode_Application_Contracts_Dto_InstallRecommendedSkillsRequestDto } from './models/PCode_Application_Contracts_Dto_InstallRecommendedSkillsRequestDto';
-export type { PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto } from './models/PCode_Application_Contracts_Dto_InstallRecommendedSkillsResponseDto';
 export type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from './models/PCode_Application_Contracts_Dto_InstallSkillRequestDto';
 export type { PCode_Application_Contracts_Dto_InstallSkillResultDto } from './models/PCode_Application_Contracts_Dto_InstallSkillResultDto';
 export type { PCode_Application_Contracts_Dto_InstallWizardComponentRequestDto } from './models/PCode_Application_Contracts_Dto_InstallWizardComponentRequestDto';
 export type { PCode_Application_Contracts_Dto_InstallWizardComponentResultDto } from './models/PCode_Application_Contracts_Dto_InstallWizardComponentResultDto';
+export type { PCode_Application_Contracts_Dto_LocalSkillBuiltInInfoDto } from './models/PCode_Application_Contracts_Dto_LocalSkillBuiltInInfoDto';
 export type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from './models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
 export type { PCode_Application_Contracts_Dto_LocalSkillItemDto } from './models/PCode_Application_Contracts_Dto_LocalSkillItemDto';
 export type { PCode_Application_Contracts_Dto_LocalSkillManagedInstallMetadataDto } from './models/PCode_Application_Contracts_Dto_LocalSkillManagedInstallMetadataDto';
@@ -193,6 +191,7 @@ export type { PCode_Application_Contracts_Dto_OpenSpecChangeFolderDto } from './
 export type { PCode_Application_Contracts_Dto_OpenSpecChangesListResponseDto } from './models/PCode_Application_Contracts_Dto_OpenSpecChangesListResponseDto';
 export type { PCode_Application_Contracts_Dto_PathValidationResponseDto } from './models/PCode_Application_Contracts_Dto_PathValidationResponseDto';
 export { PCode_Application_Contracts_Dto_PathValidationStatus } from './models/PCode_Application_Contracts_Dto_PathValidationStatus';
+export type { PCode_Application_Contracts_Dto_PlanningDirectionOptionDto } from './models/PCode_Application_Contracts_Dto_PlanningDirectionOptionDto';
 export type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from './models/PCode_Application_Contracts_Dto_PostMessageResponseDto';
 export type { PCode_Application_Contracts_Dto_ProcessingStatusDto } from './models/PCode_Application_Contracts_Dto_ProcessingStatusDto';
 export type { PCode_Application_Contracts_Dto_ProjectAggregationDto } from './models/PCode_Application_Contracts_Dto_ProjectAggregationDto';
@@ -212,7 +211,6 @@ export type { PCode_Application_Contracts_Dto_ProposalOptimizationKeywordResultD
 export type { PCode_Application_Contracts_Dto_QuickActionCommandDto } from './models/PCode_Application_Contracts_Dto_QuickActionCommandDto';
 export type { PCode_Application_Contracts_Dto_QuickActionErrorDto } from './models/PCode_Application_Contracts_Dto_QuickActionErrorDto';
 export type { PCode_Application_Contracts_Dto_QuickActionResponseDto } from './models/PCode_Application_Contracts_Dto_QuickActionResponseDto';
-export type { PCode_Application_Contracts_Dto_RecommendationBatchInstallSummaryDto } from './models/PCode_Application_Contracts_Dto_RecommendationBatchInstallSummaryDto';
 export type { PCode_Application_Contracts_Dto_RepositoryAggregationDto } from './models/PCode_Application_Contracts_Dto_RepositoryAggregationDto';
 export type { PCode_Application_Contracts_Dto_RssFeedItemDto } from './models/PCode_Application_Contracts_Dto_RssFeedItemDto';
 export type { PCode_Application_Contracts_Dto_RssFeedResponseDto } from './models/PCode_Application_Contracts_Dto_RssFeedResponseDto';
@@ -222,17 +220,14 @@ export type { PCode_Application_Contracts_Dto_SecondaryProfessionCatalogStatusDt
 export type { PCode_Application_Contracts_Dto_SessionListResponseDto } from './models/PCode_Application_Contracts_Dto_SessionListResponseDto';
 export type { PCode_Application_Contracts_Dto_SessionSummaryDto } from './models/PCode_Application_Contracts_Dto_SessionSummaryDto';
 export type { PCode_Application_Contracts_Dto_SetAILanguageRequestDto } from './models/PCode_Application_Contracts_Dto_SetAILanguageRequestDto';
+export type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto } from './models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto';
+export type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto } from './models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto';
 export type { PCode_Application_Contracts_Dto_SimpleMessageResponseDto } from './models/PCode_Application_Contracts_Dto_SimpleMessageResponseDto';
 export type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from './models/PCode_Application_Contracts_Dto_SkillGalleryDetailDto';
 export type { PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto } from './models/PCode_Application_Contracts_Dto_SkillGalleryInstallContextDto';
 export type { PCode_Application_Contracts_Dto_SkillGalleryRepositoryDiscoveryDto } from './models/PCode_Application_Contracts_Dto_SkillGalleryRepositoryDiscoveryDto';
 export type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from './models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
 export type { PCode_Application_Contracts_Dto_SkillGallerySkillDto } from './models/PCode_Application_Contracts_Dto_SkillGallerySkillDto';
-export type { PCode_Application_Contracts_Dto_SkillRecommendationConfigDto } from './models/PCode_Application_Contracts_Dto_SkillRecommendationConfigDto';
-export type { PCode_Application_Contracts_Dto_SkillRecommendationHeroSummaryDto } from './models/PCode_Application_Contracts_Dto_SkillRecommendationHeroSummaryDto';
-export type { PCode_Application_Contracts_Dto_SkillRecommendationItemDto } from './models/PCode_Application_Contracts_Dto_SkillRecommendationItemDto';
-export type { PCode_Application_Contracts_Dto_SkillRecommendationPromptSummaryDto } from './models/PCode_Application_Contracts_Dto_SkillRecommendationPromptSummaryDto';
-export type { PCode_Application_Contracts_Dto_SkillRecommendationResponseDto } from './models/PCode_Application_Contracts_Dto_SkillRecommendationResponseDto';
 export type { PCode_Application_Contracts_Dto_SyncHeroSecondaryProfessionDto } from './models/PCode_Application_Contracts_Dto_SyncHeroSecondaryProfessionDto';
 export type { PCode_Application_Contracts_Dto_SyncHeroSecondaryProfessionResultDto } from './models/PCode_Application_Contracts_Dto_SyncHeroSecondaryProfessionResultDto';
 export type { PCode_Application_Contracts_Dto_SystemInfoDto } from './models/PCode_Application_Contracts_Dto_SystemInfoDto';
