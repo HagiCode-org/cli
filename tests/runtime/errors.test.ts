@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '../../src/generated/api/core/ApiError';
 import {
+  CliOperationFailedError,
   CliUsageError,
   EXIT_CODES,
   normalizeCliError,
@@ -133,6 +134,14 @@ describe('errors', () => {
     expect(normalizeCliError(new CliUsageError('Missing required input'))).toEqual({
       exitCode: EXIT_CODES.USAGE,
       message: 'Missing required input',
+    });
+  });
+
+  it('maps a refused operation to exit code 30 with the backend message', () => {
+    expect(EXIT_CODES.OPERATION_FAILED).toBe(30);
+    expect(normalizeCliError(new CliOperationFailedError('Unknown built-in skill: nope.'))).toEqual({
+      exitCode: 30,
+      message: 'Unknown built-in skill: nope.',
     });
   });
 });

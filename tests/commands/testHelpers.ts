@@ -273,6 +273,7 @@ export function createLocalSkillInventory() {
       {
         id: 'demo-skill',
         name: 'demo-skill',
+        origin: 'user',
         scope: 'global',
         path: '/home/user/.agents/skills/demo-skill',
         agents: ['claude-code', 'codex'],
@@ -287,6 +288,24 @@ export function createLocalSkillInventory() {
           recordedAtUtc: '2026-10-01T00:00:00Z',
         },
       },
+      {
+        id: 'builtin:hagi',
+        name: 'hagi',
+        origin: 'built-in',
+        scope: 'global',
+        path: '/home/user/.hagi/skills/hagi',
+        agents: [],
+        managedInstallMetadata: null,
+        builtIn: {
+          enabled: true,
+          version: '1.4.0',
+          source: 'built-in',
+          repository: 'hagicode',
+          ref: null,
+          path: null,
+          contentHash: null,
+        },
+      },
     ],
   };
 }
@@ -298,6 +317,16 @@ export function createUninstallResult(skillName: string) {
     userMessage: 'Skill uninstalled.',
     diagnosticMessage: null,
     occurredAt: '2026-10-16T00:00:00Z',
+  };
+}
+
+export function createBuiltInAvailabilityResult(slug: string, enabled: boolean, succeeded = true) {
+  return {
+    slug,
+    enabled,
+    succeeded,
+    userMessage: succeeded ? `Built-in skill ${slug} is now ${enabled ? 'enabled' : 'disabled'}.` : `Unknown built-in skill: ${slug}.`,
+    diagnosticMessage: null,
   };
 }
 
@@ -460,6 +489,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     archiveChat: vi.fn().mockResolvedValue({ message: 'Archived' }),
     listLocalSkills: vi.fn().mockResolvedValue(createLocalSkillInventory()),
     uninstallLocalSkill: vi.fn().mockResolvedValue(createUninstallResult('demo-skill')),
+    setBuiltInSkillAvailability: vi.fn().mockResolvedValue(createBuiltInAvailabilityResult('hagi', true)),
     searchSkillGallery: vi.fn().mockResolvedValue(createSkillGallery()),
     getSkillGalleryDetail: vi.fn().mockResolvedValue(createSkillGalleryDetail()),
     installGallerySkill: vi.fn().mockResolvedValue(createSkillInstallResult()),

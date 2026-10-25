@@ -11,6 +11,8 @@ import type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from '../
 import type { PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto';
 import type { PCode_Application_Contracts_Dto_ProjectDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProjectDto';
 import type { PCode_Application_Contracts_Dto_SessionListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionListResponseDto';
+import type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto';
+import type { PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto';
 import type { PCode_Application_Contracts_Dto_SimpleMessageResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SimpleMessageResponseDto';
 import type { PCode_Application_Contracts_Dto_UpdateProjectDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpdateProjectDto';
 import type { PCode_Application_Contracts_Dto_UpdateVaultRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpdateVaultRequestDto';
@@ -54,14 +56,6 @@ export type ListSessionsInput = {
   projectIds?: string[];
 };
 
-/**
- * Generate request. `proposalContentLanguage` is required by the backend but missing from the generated
- * model, so it is declared here until the client is regenerated.
- */
-export type GenerateProposalInput = PCode_Application_Contracts_Dto_GenerateProposalRequestDto & {
-  proposalContentLanguage: string;
-};
-
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
@@ -78,7 +72,7 @@ export interface HagiApi {
   ): Promise<PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto>;
   generateProposal(
     sessionId: string,
-    requestBody: GenerateProposalInput,
+    requestBody: PCode_Application_Contracts_Dto_GenerateProposalRequestDto,
   ): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   executeProposal(
     sessionId: string,
@@ -115,6 +109,10 @@ export interface HagiApi {
   archiveChat(sessionId: string): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   listLocalSkills(): Promise<PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto>;
   uninstallLocalSkill(requestBody: PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto): Promise<PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto>;
+  /** Turns one built-in skill on or off. A failed result (for example an unknown slug) is returned with `succeeded` false. */
+  setBuiltInSkillAvailability(
+    requestBody: PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto,
+  ): Promise<PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto>;
   searchSkillGallery(query?: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryResponseDto>;
   getSkillGalleryDetail(id: string, source: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryDetailDto>;
   installGallerySkill(requestBody: PCode_Application_Contracts_Dto_InstallSkillRequestDto): Promise<PCode_Application_Contracts_Dto_InstallSkillResultDto>;
@@ -164,6 +162,8 @@ export function createGeneratedHagiApi(): HagiApi {
     archiveChat: sessionId => SessionsService.postApiSessionsArchiveChat({ sessionId }),
     listLocalSkills: () => SkillGalleryService.getApiSkillsLocal(),
     uninstallLocalSkill: requestBody => SkillGalleryService.postApiSkillsLocalUninstall({ requestBody }),
+    setBuiltInSkillAvailability: requestBody =>
+      SkillGalleryService.postApiSkillsLocalBuiltInAvailability({ requestBody }),
     searchSkillGallery: query => SkillGalleryService.getApiSkillsGallery({ query }),
     getSkillGalleryDetail: (id, source) => SkillGalleryService.getApiSkillsGalleryDetail({ id, source }),
     installGallerySkill: requestBody => SkillGalleryService.postApiSkillsGalleryInstall({ requestBody }),

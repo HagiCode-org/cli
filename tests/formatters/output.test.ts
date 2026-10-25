@@ -296,3 +296,88 @@ describe('plan formatters', () => {
     expect(formatPlanRunAcceptedHuman(accepted)).toMatch(/^accepted\s+true$/m);
   });
 });
+
+describe('skills local formatters', () => {
+  const builtInEnabled = {
+    id: 'builtin:hagi',
+    name: 'hagi',
+    origin: 'built-in',
+    builtIn: { enabled: true, version: '1.4.0', source: 'built-in', repository: 'hagicode', ref: null, path: null, contentHash: null },
+    scope: 'global',
+    agents: ['claude-code'],
+    path: '/home/user/.hagi/skills/hagi',
+  };
+  const builtInDisabled = {
+    id: 'builtin:office',
+    name: 'office',
+    origin: 'built-in',
+    builtIn: { enabled: false, version: null, source: 'built-in', repository: 'hagicode', ref: null, path: null, contentHash: null },
+    scope: 'global',
+    agents: [],
+    path: '/home/user/.hagi/skills/office',
+  };
+  const userWithMetadata = {
+    id: 'demo-skill',
+    name: 'demo-skill',
+    origin: 'user',
+    scope: 'global',
+    agents: ['codex'],
+    path: '/home/user/.agents/skills/demo-skill',
+    managedInstallMetadata: { version: '1.2.0' },
+  };
+  const legacyWithoutOrigin = {
+    id: 'legacy-skill',
+    name: 'legacy-skill',
+    scope: 'global',
+    agents: [],
+    path: '/home/user/.agents/skills/legacy-skill',
+  };
+
+  function cellsFor(output: string, name: string): string[] {
+    const row = output.split('\n').find(line => line.startsWith(`${name} `));
+    return row?.split(/\s{2,}/) ?? [];
+  }
+
+  it('shows origin, enabled state and version for built-in and user rows', () => {
+    const output = formatLocalSkillsHuman({
+      generatedAtUtc: '2026-10-16T00:00:00Z',
+      items: [builtInEnabled, builtInDisabled, userWithMetadata, legacyWithoutOrigin],
+    } as never);
+
+    expect(output.split('\n')[1]).toMatch(/^Name\s+Origin\s+Enabled\s+Version\s+Scope\s+Agents\s+Path$/);
+    expect(cellsFor(output, 'hagi')).toEqual(['hagi', 'built-in', 'yes', '1.4.0', 'global', 'claude-code', '/home/user/.hagi/skills/hagi']);
+    expect(cellsFor(output, 'office')).toEqual(['office', 'built-in', 'no', '-', 'global', '-', '/home/user/.hagi/skills/office']);
+    expect(cellsFor(output, 'demo-skill')).toEqual(['demo-skill', 'user', '-', '1.2.0', 'global', 'codex', '/home/user/.agents/skills/demo-skill']);
+  });
+
+  it('treats a row with no origin as a user skill without an enabled state or version', () => {
+    const output = formatLocalSkillsHuman({ generatedAtUtc: '2026-10-16T00:00:00Z', items: [legacyWithoutOrigin] } as never);
+
+    expect(cellsFor(output, 'legacy-skill')).toEqual(['legacy-skill', 'user', '-', '-', 'global', '-', '/home/user/.agents/skills/legacy-skill']);
+  });
+
+  it('formats a successful and a failed availability result', () => {
+    const succeeded = formatBuiltInAvailabilityResultHuman({
+      slug: 'hagi',
+      enabled: true,
+      succeeded: true,
+      userMessage: 'Built-in skill hagi is now enabled.',
+      diagnosticMessage: null,
+    } as never);
+    expect(succeeded).toMatch(/^skillName\s+hagi$/m);
+    expect(succeeded).toMatch(/^enabled\s+yes$/m);
+    expect(succeeded).toContain('Built-in skill hagi is now enabled.');
+    expect(succeeded).not.toContain('diagnostic');
+
+    const failed = formatBuiltInAvailabilityResultHuman({
+      slug: 'nope',
+      enabled: false,
+      succeeded: false,
+      userMessage: 'Unknown built-in skill: nope.',
+      diagnosticMessage: 'No built-in skill matches the slug.',
+    } as never);
+    expect(failed).toMatch(/^enabled\s+no$/m);
+    expect(failed).toContain('Unknown built-in skill: nope.');
+    expect(failed).toMatch(/^diagnostic\s+No built-in skill matches the slug\.$/m);
+  });
+});

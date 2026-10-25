@@ -7,6 +7,7 @@ export const EXIT_CODES = {
   HTTP_FORBIDDEN: 23,
   HTTP_NOT_FOUND: 24,
   HTTP_CONFLICT: 29,
+  OPERATION_FAILED: 30,
   HTTP_CLIENT_ERROR: 40,
   HTTP_SERVER_ERROR: 50,
   TRANSPORT: 60,
@@ -26,6 +27,17 @@ export class CliUsageError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CliUsageError';
+  }
+}
+
+/**
+ * The backend answered with a result that says the operation did not happen, although the HTTP call succeeded.
+ * The message is the backend's user-facing message.
+ */
+export class CliOperationFailedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CliOperationFailedError';
   }
 }
 
@@ -98,6 +110,13 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
   if (error instanceof CliUsageError) {
     return {
       exitCode: EXIT_CODES.USAGE,
+      message: error.message,
+    };
+  }
+
+  if (error instanceof CliOperationFailedError) {
+    return {
+      exitCode: EXIT_CODES.OPERATION_FAILED,
       message: error.message,
     };
   }
