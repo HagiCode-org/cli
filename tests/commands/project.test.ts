@@ -1,9 +1,119 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createApiError, createDependencies } from './testHelpers';
+import { createApiError, createDependencies, createProjectWithRepositories } from './testHelpers';
 
 describe('project commands', () => {
+  it('lists a project repositories in human-readable mode', async () => {
+    const { dependencies, api, stdout } = createDependencies({
+      listProjects: vi.fn().mockResolvedValue({ projects: [createProjectWithRepositories('project-1')] }),
+    });
+    const exitCode = await runCli(['node', 'hagi', 'project', 'repositories', '--id', 'project-1'], dependencies);
+
+    expect(exitCode).toBe(0);
+    expect(api.listProjects).toHaveBeenCalledOnce();
+    const output = stdout.join('');
+    expect(output).toContain('projectId');
+    expect(output).toContain('project-1');
+    expect(output).toContain('Path');
+    expect(output).toContain('repos/cli');
+    expect(output).toContain('repos/web');
+    expect(output).toContain('Display name');
+    expect(output).not.toContain('"repositories"');
+  });
+
+  it('prints the repositories payload in json mode', async () => {
+    const { dependencies, stdout } = createDependencies({
+      listProjects: vi.fn().mockResolvedValue({ projects: [createProjectWithRepositories('project-1')] }),
+    });
+    const exitCode = await runCli(
+      ['node', 'hagi', 'project', 'repositories', '--id', 'project-1', '--json'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(0);
+    const payload = JSON.parse(stdout.join(''));
+    expect(payload).toEqual({
+      projectId: 'project-1',
+      name: 'Project',
+      isMonoSpecs: true,
+      hasError: false,
+      repositories: [
+        {
+          name: 'cli',
+          path: 'repos/cli',
+          displayName: 'CLI',
+          type: 'library',
+          branch: 'main',
+          isValidGitRepo: true,
+        },
+        {
+          name: 'web',
+          path: 'repos/web',
+          displayName: 'Web',
+          type: 'frontend',
+          branch: 'feature/x',
+          isValidGitRepo: true,
+        },
+      ],
+    });
+  });
+
+  it('says a project with no repositories lists none and returns an empty collection', async () => {
+    const { dependencies, stdout } = createDependencies();
+    const exitCode = await runCli(['node', 'hagi', 'project', 'repositories', '--id', 'project-1'], dependencies);
+
+    expect(exitCode).toBe(0);
+    expect(stdout.join('')).toContain('This project lists no repositories.');
+
+    const jsonDependencies = createDependencies();
+    expect(await runCli(
+      ['node', 'hagi', 'project', 'repositories', '--id', 'project-1', '--json'],
+      jsonDependencies.dependencies,
+    )).toBe(0);
+    expect(JSON.parse(jsonDependencies.stdout.join('')).repositories).toEqual([]);
+  });
+
+  it('fails with not-found and prints no repository list for an unknown project id', async () => {
+    const { dependencies, stdout, stderr } = createDependencies({
+      listProjects: vi.fn().mockResolvedValue({ projects: [createProjectWithRepositories('project-1')] }),
+    });
+    const exitCode = await runCli(
+      ['node', 'hagi', 'project', 'repositories', '--id', 'missing', '--json'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.HTTP_NOT_FOUND);
+    expect(stdout.join('')).toBe('');
+    expect(stderr.join('')).toContain('"status": 404');
+  });
+
+  it('shows the project error and does not present a failed snapshot as complete', async () => {
+    const { dependencies, stdout } = createDependencies({
+      listProjects: vi.fn().mockResolvedValue({
+        projects: [{ ...createProjectWithRepositories('project-1'), hasError: true, error: 'Repository scan failed' }],
+      }),
+    });
+    const exitCode = await runCli(['node', 'hagi', 'project', 'repositories', '--id', 'project-1'], dependencies);
+
+    expect(exitCode).toBe(0);
+    const output = stdout.join('');
+    expect(output).toContain('Repository scan failed');
+    expect(output).toContain('repos/cli');
+  });
+
+  it('keeps project list json free of repository entries', async () => {
+    const { dependencies, stdout } = createDependencies({
+      listProjects: vi.fn().mockResolvedValue({ projects: [createProjectWithRepositories('project-1')] }),
+    });
+    const exitCode = await runCli(['node', 'hagi', 'project', 'list', '--json'], dependencies);
+
+    expect(exitCode).toBe(0);
+    const project = JSON.parse(stdout.join('')).projects[0];
+    expect(Object.keys(project).sort()).toEqual(['description', 'hasError', 'id', 'isMonoSpecs', 'name', 'path']);
+    expect(stdout.join('')).not.toContain('"repositories"');
+  });
+
   it('lists projects from aggregation in human-readable mode', async () => {
     const { dependencies, api, stdout } = createDependencies();
     const exitCode = await runCli(['node', 'hagi', 'project', 'list'], dependencies);

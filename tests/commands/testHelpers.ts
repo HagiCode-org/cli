@@ -76,6 +76,33 @@ export function createProject(id: string) {
   };
 }
 
+export function createProjectWithRepositories(id: string) {
+  return {
+    ...createProject(id),
+    isMonoSpecs: true,
+    repositories: [
+      {
+        name: 'cli',
+        path: 'repos/cli',
+        relativePath: 'repos/cli',
+        displayName: 'CLI',
+        type: 'library',
+        branch: 'main',
+        isValidGitRepo: true,
+      },
+      {
+        name: 'web',
+        path: 'repos/web',
+        relativePath: 'repos/web',
+        displayName: 'Web',
+        type: 'frontend',
+        branch: 'feature/x',
+        isValidGitRepo: true,
+      },
+    ],
+  };
+}
+
 export function createVault(
   id: string,
   overrides: Partial<{

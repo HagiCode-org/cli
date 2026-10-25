@@ -3,7 +3,9 @@ import { formatJson } from '../../src/formatters/json';
 import {
   formatProjectListHuman,
   formatProjectListPayload,
+  formatProjectRepositoriesHuman,
   formatProjectSummaryHuman,
+  toProjectRepositoriesPayload,
   toProjectView,
 } from '../../src/formatters/project';
 import {
@@ -23,6 +25,10 @@ import {
   summarizePlanSchedule,
   toPlanView,
 } from '../../src/formatters/plan';
+import {
+  formatBuiltInAvailabilityResultHuman,
+  formatLocalSkillsHuman,
+} from '../../src/formatters/skills';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 
@@ -142,6 +148,66 @@ describe('shared formatters', () => {
 
     expect(formatProjectListHuman(payload.projects)).toContain('Projects (1)');
     expect(formatProjectSummaryHuman(view)).toContain('project-1');
+  });
+
+  it('formats the repositories view and passes each path through unchanged', () => {
+    const payload = toProjectRepositoriesPayload({
+      ...sampleProject,
+      isMonoSpecs: true,
+      repositories: [
+        {
+          name: 'cli',
+          path: 'repos/cli',
+          relativePath: 'repos/cli',
+          displayName: 'CLI',
+          type: 'library',
+          branch: 'main',
+          isValidGitRepo: true,
+        },
+        { name: 'docs', path: 'repos/docs', isValidGitRepo: false },
+      ],
+    });
+
+    expect(payload).toEqual({
+      projectId: 'project-1',
+      name: 'Project',
+      isMonoSpecs: true,
+      hasError: false,
+      error: undefined,
+      repositories: [
+        {
+          name: 'cli',
+          path: 'repos/cli',
+          displayName: 'CLI',
+          type: 'library',
+          branch: 'main',
+          isValidGitRepo: true,
+        },
+        {
+          name: 'docs',
+          path: 'repos/docs',
+          displayName: undefined,
+          type: undefined,
+          branch: undefined,
+          isValidGitRepo: false,
+        },
+      ],
+    });
+
+    const human = formatProjectRepositoriesHuman(payload);
+    expect(human).toContain('Name');
+    expect(human).toContain('Display name');
+    expect(human).toContain('repos/cli');
+    expect(human).toContain('repos/docs');
+    expect(formatJson(payload)).toContain('"path": "repos/cli"');
+  });
+
+  it('says a repositories view with no entries lists none and shows the project error', () => {
+    const empty = toProjectRepositoriesPayload(sampleProject);
+    expect(formatProjectRepositoriesHuman(empty)).toContain('This project lists no repositories.');
+
+    const failed = toProjectRepositoriesPayload({ ...sampleProject, hasError: true, error: 'Scan failed' });
+    expect(formatProjectRepositoriesHuman(failed)).toContain('Scan failed');
   });
 });
 

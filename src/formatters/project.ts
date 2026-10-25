@@ -90,3 +90,70 @@ export function formatProjectSummaryHuman(
     ...extras,
   ]);
 }
+
+export type ProjectRepositoryView = {
+  name?: string;
+  path?: string;
+  displayName?: string;
+  type?: string;
+  branch?: string;
+  isValidGitRepo?: boolean;
+};
+
+export type ProjectRepositoriesPayload = {
+  projectId: string;
+  name: string;
+  isMonoSpecs: boolean;
+  hasError: boolean;
+  error?: string;
+  repositories: ProjectRepositoryView[];
+};
+
+export function toProjectRepositoriesPayload(
+  project: PCode_Application_Contracts_Dto_ProjectAggregationDto,
+): ProjectRepositoriesPayload {
+  return {
+    projectId: optionalString(project.id) ?? '',
+    name: optionalString(project.name) ?? '',
+    isMonoSpecs: project.isMonoSpecs === true,
+    hasError: project.hasError === true,
+    error: optionalString(project.error),
+    repositories: (project.repositories ?? []).map(repository => ({
+      name: optionalString(repository.name),
+      path: repository.path ?? undefined,
+      displayName: optionalString(repository.displayName),
+      type: optionalString(repository.type),
+      branch: optionalString(repository.branch),
+      isValidGitRepo: typeof repository.isValidGitRepo === 'boolean' ? repository.isValidGitRepo : undefined,
+    })),
+  };
+}
+
+export function formatProjectRepositoriesHuman(payload: ProjectRepositoriesPayload): string {
+  const summary = renderKeyValueTable([
+    ['projectId', payload.projectId],
+    ['name', payload.name],
+    ['isMonoSpecs', String(payload.isMonoSpecs)],
+    ['hasError', String(payload.hasError)],
+    [
+      'error',
+      payload.error ?? (payload.hasError ? 'The project failed to load; its repository list may be incomplete.' : undefined),
+    ],
+  ]);
+
+  const repositories =
+    payload.repositories.length === 0
+      ? 'This project lists no repositories.\n'
+      : `${renderTable(
+          [
+            { header: 'Name', value: repository => repository.name ?? '' },
+            { header: 'Path', value: repository => repository.path ?? '' },
+            { header: 'Display name', value: repository => repository.displayName ?? '' },
+            { header: 'Type', value: repository => repository.type ?? '' },
+            { header: 'Branch', value: repository => repository.branch ?? '' },
+          ],
+          payload.repositories,
+        )}\n`;
+
+  return `${summary}\n${repositories}`;
+}
