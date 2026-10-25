@@ -1,13 +1,97 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, it, vi } from 'vitest';
+import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
+import { createDefaultDependencies, type CliIo } from '../../src/runtime/commandContext';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import { EXIT_CODES } from '../../src/runtime/errors';
 import { createProposalOptimizationBundle } from './testHelpers';
-import { createApiError, createDependencies, createSession } from './testHelpers';
+import { createApiError, createDependencies, createSession, TEST_BASE_URL } from './testHelpers';
+
+const CLI_VERSION = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version;
+
+/** Runs the real generated client against a stubbed fetch that answers every call with `body`. */
+function stubBackend(body: unknown) {
+  const fetchMock = vi.fn(async () =>
+    new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+  );
+  vi.stubGlobal('fetch', fetchMock);
+  return fetchMock;
+}
+
+function captureIo(): { io: CliIo; stdout: string[] } {
+  const stdout: string[] = [];
+  return {
+    io: {
+      stdout: value => {
+        stdout.push(value);
+      },
+      stderr: () => undefined,
+    },
+    stdout,
+  };
+}
+
+describe('proposal commands over the wire', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const env = { HAGI_API_BASE_URL: TEST_BASE_URL };
+  const createArgs = [
+    'node', 'hagi', 'proposal', 'create',
+    '--project-id', 'project-1',
+    '--chief-complaint', 'Add proposal CLI commands',
+    '--default-title',
+  ];
+
+  it('sends X-Hagi-Client with the package version on proposal create and proposal list', async () => {
+    const createFetch = stubBackend(createSession('session-2'));
+    await expect(runCli(createArgs, createDefaultDependencies(env, captureIo().io))).resolves.toBe(0);
+    expect(new Headers(createFetch.mock.calls[0][1]?.headers).get('X-Hagi-Client')).toBe(`cli/${CLI_VERSION}`);
+
+    const listFetch = stubBackend({ sessions: [createSession('session-1')] });
+    await expect(
+      runCli(['node', 'hagi', 'proposal', 'list', '--project-id', 'project-1'], createDefaultDependencies(env, captureIo().io)),
+    ).resolves.toBe(0);
+    expect(new Headers(listFetch.mock.calls[0][1]?.headers).get('X-Hagi-Client')).toBe(`cli/${CLI_VERSION}`);
+  });
+
+  it('keeps the proposal create --json output keys unchanged and free of client or achievement fields', async () => {
+    stubBackend(createSession('session-2'));
+    const { io, stdout } = captureIo();
+
+    await expect(runCli([...createArgs, '--json'], createDefaultDependencies(env, io))).resolves.toBe(0);
+
+    const output = stdout.join('');
+    expect(Object.keys(JSON.parse(output))).toEqual(['session', 'nextCommand']);
+    expect(output).not.toMatch(/client|achievement/i);
+  });
+
+  it('keeps the proposal create option list unchanged', async () => {
+    const { io, stdout } = captureIo();
+
+    await expect(runCli(['node', 'hagi', 'proposal', 'create', '--help'], createDefaultDependencies(env, io))).resolves.toBe(0);
+
+    const flags = [...stdout.join('').matchAll(/^ {2}(-\S.*?) {2,}/gm)].map(match => match[1]);
+    expect(flags).toEqual([
+      '--json',
+      '--project-id <id>',
+      '--chief-complaint <text>',
+      '--original-chief-complaint <text>',
+      '--title <title>',
+      '--default-title',
+      '--enable-independent-workspace',
+      '--base-branch <branch>',
+      '-h, --help',
+    ]);
+    expect(stdout.join('')).not.toMatch(/--(target|repo)/i);
+  });
+});
 
 describe('proposal commands', () => {
   it('lists proposal sessions through the session API in json mode', async () => {

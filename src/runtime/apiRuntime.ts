@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { OpenAPI } from '../generated/api/core/OpenAPI';
 import { CliUsageError } from './errors';
+import { CLI_CLIENT_MARKER } from './version';
 
 export const BASE_URL_FLAG = '--base-url';
 export const BASE_URL_ENV_VAR = 'HAGI_API_BASE_URL';
@@ -100,11 +101,10 @@ export function configureApiRuntime(
   OpenAPI.WITH_CREDENTIALS = false;
   OpenAPI.CREDENTIALS = 'omit';
   OpenAPI.TOKEN = resolved.token;
-  OpenAPI.HEADERS = resolved.lang
-    ? {
-        'Accept-Language': resolved.lang,
-      }
-    : undefined;
+  OpenAPI.HEADERS = {
+    'X-Hagi-Client': CLI_CLIENT_MARKER,
+    ...(resolved.lang ? { 'Accept-Language': resolved.lang } : {}),
+  };
 
   return resolved;
 }

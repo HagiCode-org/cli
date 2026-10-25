@@ -7,8 +7,13 @@ import {
   resolveApiRuntimeConfig,
   resolveConfigFilePath,
 } from '../../src/runtime/apiRuntime';
+import type { ApiRequestOptions } from '../../src/generated/api/core/ApiRequestOptions';
 import { OpenAPI } from '../../src/generated/api/core/OpenAPI';
+import { getHeaders } from '../../src/generated/api/core/request';
 import { CliUsageError } from '../../src/runtime/errors';
+import { CLI_CLIENT_MARKER } from '../../src/runtime/version';
+
+const REQUEST_OPTIONS = { method: 'GET', url: '/api/Sessions' } as ApiRequestOptions;
 
 describe('apiRuntime', () => {
   let configHome: string;
@@ -110,9 +115,42 @@ describe('apiRuntime', () => {
     expect(OpenAPI.BASE).toBe('https://runtime.example');
     expect(OpenAPI.TOKEN).toBe('runtime-token');
     expect(OpenAPI.HEADERS).toEqual({
+      'X-Hagi-Client': CLI_CLIENT_MARKER,
       'Accept-Language': 'ja-JP',
     });
     expect(OpenAPI.WITH_CREDENTIALS).toBe(false);
     expect(OpenAPI.CREDENTIALS).toBe('omit');
+  });
+
+  it('sends X-Hagi-Client and no Accept-Language when no language is set', async () => {
+    configureApiRuntime({ baseUrl: 'https://runtime.example' }, {});
+
+    const headers = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+
+    expect(headers.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
+    expect(headers.has('Accept-Language')).toBe(false);
+  });
+
+  it('sends X-Hagi-Client together with Accept-Language when a language is set', async () => {
+    configureApiRuntime({ baseUrl: 'https://runtime.example', lang: 'zh-CN' }, {});
+
+    const headers = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+
+    expect(headers.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
+    expect(headers.get('Accept-Language')).toBe('zh-CN');
+  });
+
+  it('adds no Authorization header without a token and sends one with a token', async () => {
+    configureApiRuntime({ baseUrl: 'https://runtime.example' }, {});
+
+    const anonymous = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    expect(anonymous.has('Authorization')).toBe(false);
+    expect(anonymous.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
+
+    configureApiRuntime({ baseUrl: 'https://runtime.example', token: 'runtime-token' }, {});
+
+    const authenticated = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    expect(authenticated.get('Authorization')).toBe('Bearer runtime-token');
+    expect(authenticated.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
   });
 });
