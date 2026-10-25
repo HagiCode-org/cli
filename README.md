@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, AutoTasks, scheduled plans, and skills (local list and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, AutoTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
@@ -107,14 +107,14 @@ $ echo $?
 
 ```text
 hagi
-|-- project   list | create | update | delete
+|-- project   list | repositories | create | update | delete
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
 |-- autotask  create | send
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | uninstall
+`-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
               trusted list | upsert | delete | reset
 ```
@@ -142,6 +142,13 @@ List projects through the aggregation endpoint:
 ```bash
 hagi project list
 hagi project list --json
+```
+
+List the repositories of one project. The read-only command prints each repository's name, path relative to the project root, display name, type and branch. These paths are the values a proposal's repository scope names:
+
+```bash
+hagi project repositories --id "$PROJECT_ID"
+hagi project repositories --id "$PROJECT_ID" --json
 ```
 
 Create a project. The backend creates the directory if it does not exist. The new id is read from `project.id`:
@@ -176,12 +183,20 @@ hagi proposal list --project-id "$PROJECT_ID"
 hagi proposal list --include-archived --json
 ```
 
+Every proposal names its writable repositories and its read-only repositories. Take the paths from `hagi project repositories --id "$PROJECT_ID" --json`, and begin the chief complaint with a `Repository scope` section: a `Writable repositories:` list and a `Read-only repositories:` list, one `- <path>` entry per line, with `- none` for an empty list. The scope is a text convention in the chief complaint; `proposal create` has no scope flags. The format and a worked example are in [`skills/hagi/references/proposal-flow.md`](skills/hagi/references/proposal-flow.md#repository-scope).
+
 Create a proposal session only. The new id is read from `session.sessionId`:
 
 ```bash
 PROPOSAL_ID=$(hagi proposal create \
   --project-id "$PROJECT_ID" \
-  --chief-complaint "Add CLI completion for session workflows" \
+  --chief-complaint "Repository scope
+Writable repositories:
+- repos/cli
+Read-only repositories:
+- none
+
+Add CLI completion for session workflows" \
   --default-title \
   --json | json_field '.session.sessionId')
 ```
@@ -442,16 +457,30 @@ A manual run does not change the plan's state or next run time. It works for dis
 
 ## Skills Commands
 
-List installed local skills and remove one by name:
+List installed local skills. The table shows each skill's origin (`user` or `built-in`), whether a built-in skill is enabled, its version, scope, agents and path. A user skill shows `-` in the Enabled column, because availability does not apply to it:
 
 ```bash
 hagi skills local list
 hagi skills local list --json
+```
+
+Turn a built-in skill on or off by name. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. A name that is not a built-in skill exits with code `30`, and the output carries the backend message:
+
+```bash
+hagi skills local enable --skill-name hagi
+hagi skills local disable --skill-name hagi --json
+```
+
+Built-in skills cannot be uninstalled. Use `skills local disable` to stop one from loading. Remove a user skill by name:
+
+```bash
 SKILL_NAME=demo-skill
 hagi skills local uninstall --skill-name "$SKILL_NAME"
 ```
 
-The uninstall result reports a status such as `Succeeded` or `PrerequisiteMissing`, with the backend message.
+The uninstall result reports a status such as `Succeeded` or `PrerequisiteMissing`, with the backend message. Passing a built-in skill's name returns the backend's refusal unchanged.
+
+Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
 
 Search the gallery and read one skill:
 
@@ -505,6 +534,7 @@ Stable non-zero exits used by the CLI:
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

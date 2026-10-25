@@ -82,17 +82,27 @@ There is no default. When none of the three is set, the CLI exits with code `2` 
 
 ```text
 hagi
-|-- project   list | create | update | delete
+|-- project   list | repositories | create | update | delete
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
 |-- autotask  create | send
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | uninstall
+`-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
               trusted list | upsert | delete | reset
 ```
+
+## Project repositories
+
+`project repositories --id <project-id>` is read-only. It reads the same aggregation snapshot as `project list` and prints one project's repositories: name, path relative to the project root (for example `repos/cli`), display name, type and branch, with the project's MonoSpecs flag. The `path` values are the ones a proposal's `Repository scope` names.
+
+```bash
+npx @hagicode/cli project repositories --id <project-id> --json
+```
+
+An unknown project id exits with code `24` and prints no list.
 
 ## Plan commands
 
@@ -133,6 +143,21 @@ A one-time proposal plan document for `plan create --input`:
 
 The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow.
 
+## Skills commands
+
+`skills local list` shows each installed skill with its origin (`user` or `built-in`), its enabled state for built-in skills (`yes` or `no`, shown as `-` for user skills), its version, scope, agents and path. `--json` returns the same data with the `origin` and `builtIn` fields.
+
+```bash
+hagi skills local list
+hagi skills local list --json
+hagi skills local enable --skill-name hagi
+hagi skills local disable --skill-name hagi --json
+```
+
+- `enable` and `disable` take `--skill-name` and change one built-in skill. They apply to agent runs that start afterwards.
+- `uninstall` removes a user skill. Built-in skills cannot be uninstalled; use `disable` to stop one from loading.
+- Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
+
 ## Exit codes
 
 Stable non-zero exits used by the CLI:
@@ -145,6 +170,7 @@ Stable non-zero exits used by the CLI:
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
