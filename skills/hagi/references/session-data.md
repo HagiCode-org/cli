@@ -76,6 +76,15 @@ hagi chat list --json
 hagi chat list --project-id <project-id> --active-only --json
 ```
 
+### HagiTasks
+
+```bash
+hagi hagitask list --json
+hagi hagitask schema --task-id <task-id> --json
+```
+
+Read the schema before creating a HagiTask session. Its `parameters` give the input keys, and `inputSchema` is the JSON Schema the input must satisfy.
+
 ### Scheduled plans
 
 ```bash
@@ -111,7 +120,7 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `proposal` | `create`, `optimize-description`, `generate`, `annotate`, `execute`, `archive`, `status`, `complete`, `send` |
 | `vault` | `create`, `update`, `delete` (`delete --delete-local-files` also removes files) |
 | `chat` | `create`, `archive`, `delete`, `send` |
-| `autotask` | `create`, `send` |
+| `hagitask` | `create`, `send` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 

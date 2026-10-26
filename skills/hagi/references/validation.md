@@ -36,6 +36,19 @@ Each of the three files must match the lines listed for it above. A file that is
 
 Confirm also that no skill file names `--writable-repo` or `--readonly-repo`, and that every `proposal create` example passes a chief complaint that begins with the `Repository scope` section.
 
+## HagiTask command check
+
+The `hagitask` command group must appear in the README and in each skill file that lists command families, and no file may document the retired `autotask` command. Run this from `repos/cli`:
+
+```bash
+for f in README.md skills/hagi/SKILL.md skills/hagi/references/cli-usage.md skills/hagi/references/session-data.md; do
+  grep -q "hagitask" "$f" && echo "ok   hagitask in $f" || echo "FAIL hagitask missing from $f"
+done
+grep -rniE "autotask|auto-task" README.md skills --exclude=validation.md | grep -vi "migrat" || echo "ok   no autotask command documented"
+```
+
+Each file must print `ok`. The last grep lists only the migration notes (lines that say "migrat"), so any other match is a stale `autotask` reference and fails the check. This file is excluded from that grep because it names the pattern itself.
+
 ## Built-in copy consistency check
 
 The embedded skill exists twice: `repos/cli/skills/hagi` is the only place it is edited, and `repos/built-in-skills/content/hagi` is the copy the server ships as the built-in `hagi` skill. Run this from the monorepo root to confirm the two match:

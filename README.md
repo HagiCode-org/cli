@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, AutoTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, HagiTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
@@ -47,7 +47,8 @@ hagi project list --json
 hagi proposal list --json
 hagi vault list --json
 hagi chat list --json
-hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
+hagi hagitask list
+hagi hagitask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
 ```
 
 ## Embedded Skills
@@ -112,7 +113,7 @@ hagi
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- autotask  create | send
+|-- hagitask  list | schema | create | send
 |-- plan      list | get | create | update | enable | disable | delete | run
 `-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
@@ -310,30 +311,58 @@ hagi chat archive --session-id "$CHAT_ID"
 hagi chat delete --session-id "$CHAT_ID"
 ```
 
-## AutoTask Commands
+## HagiTask Commands
 
-Create an AutoTask session with package-first automation flags. The new id is read from `session.sessionId`:
+A HagiTask is a preset task with a structured input. Read its schema first, write the input from the schema, then create the session. `hagitask list` shows the active tasks:
 
 ```bash
-AUTOTASK_ID=$(hagi autotask create \
+hagi hagitask list
+hagi hagitask list --json
+```
+
+`hagitask schema` shows one task's target scope, commands, parameters, requirements and scenes. Each required parameter is marked `yes`. The `--json` output adds the input JSON Schema and an example request body:
+
+```bash
+hagi hagitask schema --task-id compose-commit
+hagi hagitask schema --task-id compose-commit --json
+```
+
+Write the input file. Its keys are the parameter keys the schema lists under `inputs`, plus the `targets` and `targetScopes` keys when the schema's scope lists targets. For example, `input.json` for a task with one required input:
+
+```json
+{
+  "inputs": {
+    "commitScope": "cli"
+  }
+}
+```
+
+Create the session from that task and input. The new id is read from `session.sessionId`:
+
+```bash
+HAGITASK_ID=$(hagi hagitask create \
   --title "Auto compose commit" \
   --project-id "$PROJECT_ID" \
-  --prompt-id auto-compose-commit.en-US \
+  --task-id compose-commit \
+  --input input.json \
   --repository-path repos/cli \
   --need-push \
   --target-branch-mode new-custom \
   --target-branch-name feature/cli-completion \
-  --script-key autotask.auto-compose-commit \
   --json | json_field '.session.sessionId')
 ```
 
-The backend must have a hero available for the prompt's script. Without one, `autotask create` fails with a 400 whose error is `no-executable-hero`.
+Use `--prompt-id` instead of `--task-id` for a prompt template with no structured input. `--input` needs `--task-id`. Input is read from a file, or from stdin with `--input -`. The CLI only checks that the input is a JSON object. The backend checks the keys and values. It rejects a key that the schema does not list, and a missing required value. Its error is printed unchanged, and no session is reported as created. `--hero-selection-mode` takes `first` (the default) or `random`.
 
-Send a follow-up message to the AutoTask session:
+The backend must have a hero available for the task's script. Without one, `hagitask create` fails with a 400 whose error is `no-executable-hero`.
+
+Send a follow-up message to the HagiTask session:
 
 ```bash
-hagi autotask send --session-id "$AUTOTASK_ID" --content "Retry with a smaller diff"
+hagi hagitask send --session-id "$HAGITASK_ID" --content "Retry with a smaller diff"
 ```
+
+**Migration from AutoTask:** `hagi hagitask create` and `hagi hagitask send` replace `hagi autotask create` and `hagi autotask send`. There is no `autotask` alias, so an `autotask` command now fails as an unknown command. Read the task schema with `hagitask schema` to find the input keys that replace the old flags.
 
 ## Plan Commands
 

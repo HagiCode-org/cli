@@ -11,7 +11,7 @@ Use this skill when the user asks to:
 - list which installed skills are user skills and which are built-in skills, or which built-in skills are enabled
 - enable or disable a built-in skill
 - run or verify the `hagi` CLI
-- explain or execute `project`, `proposal`, `chat`, `autotask`, `vault`, `plan`, or `skills` commands
+- explain or execute `project`, `proposal`, `chat`, `hagitask`, `vault`, `plan`, or `skills` commands
 - inspect CLI flags, environment variables, exit codes, or JSON automation behavior
 - validate proposal-session flows against a backend API
 - modify or debug the CLI implementation in `repos/cli`
@@ -74,13 +74,15 @@ The current top-level command families are:
 - `proposal`
 - `vault`
 - `chat`
-- `autotask`
+- `hagitask`
 - `plan`
 - `skills`
 
 `project repositories --id <project-id>` is read-only. It lists one project's repositories with each path relative to the project root (for example `repos/cli`). Those paths are the values a proposal's `Repository scope` names; see [`references/proposal-flow.md`](references/proposal-flow.md#repository-scope).
 
 Scheduled plans (`hagi plan`) save a proposal or HagiTask input with a schedule. `list`, `get`, `create`, `update`, `enable`, `disable`, `delete` and `run` manage them; `run --background` returns the accepted plan id before the session exists. A manual run never changes a plan's state or next run time. See [`references/cli-usage.md`](references/cli-usage.md#plan-commands) for the action list and a plan document example.
+
+HagiTask sessions (`hagi hagitask`) run a preset task with a structured input. `list` shows the active tasks, `schema --task-id <id>` shows one task's scope, commands, parameters and required marks, and `create --task-id <id> --input <file>` creates the session. Read the schema first, write the input from it, then create. `send` posts a follow-up message. The backend rejects any input key the schema does not list. See [`references/cli-usage.md`](references/cli-usage.md#hagitask-commands) for the flow and an input example.
 
 ## Source of truth
 

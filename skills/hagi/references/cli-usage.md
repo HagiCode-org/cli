@@ -36,7 +36,8 @@ hagi --help
 hagi project list --json
 hagi proposal list --json
 hagi chat list --json
-hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
+hagi hagitask list --json
+hagi hagitask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
 ```
 
 ## Shared runtime flags
@@ -87,7 +88,7 @@ hagi
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- autotask  create | send
+|-- hagitask  list | schema | create | send
 |-- plan      list | get | create | update | enable | disable | delete | run
 `-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
@@ -103,6 +104,34 @@ npx @hagicode/cli project repositories --id <project-id> --json
 ```
 
 An unknown project id exits with code `24` and prints no list.
+
+## HagiTask commands
+
+A HagiTask is a preset task with a structured input. Use the schema-first flow: list the tasks, read one task's schema, write the input file from the schema, then create the session.
+
+```bash
+hagi hagitask list --json
+hagi hagitask schema --task-id compose-commit
+hagi hagitask schema --task-id compose-commit --json
+hagi hagitask create --title "Auto compose commit" --project-id <project-id> --task-id compose-commit --input input.json --json
+hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
+```
+
+- `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
+- `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
+- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`.
+
+Example `input.json` for a task with one required input:
+
+```json
+{
+  "inputs": {
+    "commitScope": "cli"
+  }
+}
+```
+
+Migration: `hagi hagitask create` and `hagi hagitask send` replace the former `autotask` commands. There is no alias, so `hagi autotask` fails as an unknown command.
 
 ## Plan commands
 
