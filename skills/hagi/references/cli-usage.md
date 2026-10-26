@@ -84,6 +84,7 @@ There is no default. When none of the three is set, the CLI exits with code `2` 
 ```text
 hagi
 |-- project   list | repositories | create | update | delete
+|   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
 |-- vault     list | create | update | delete
 |   `-- files list | preview
@@ -104,6 +105,26 @@ npx @hagicode/cli project repositories --id <project-id> --json
 ```
 
 An unknown project id exits with code `24` and prints no list.
+
+## MonoSpecs commands
+
+`project monospecs` manages a project's MonoSpecs configuration (`monospecs.yaml`) and the local checkouts of its repositories. The CLI only sends requests; the backend reads and writes files and runs Git on its own host.
+
+- `show --id <id>` prints the document: version, repo directory, config path, commit-when-archive, and one row per repository with its local Git state. A repository that is not a valid Git checkout is marked `missing or not a Git repository`. `--yaml` adds the YAML preview; `--json` emits the same fields plus `code` and `metadata`.
+- `init --id <id>` initializes the configuration; an already initialized project returns its document.
+- `set --id <id>` changes the document. Options: `--version`, `--repo-directory`, `--commit-when-archive <true|false>`, repeatable `--add-repository <path>` and `--remove-repository <path>`, `--clone`. `--url`, `--name`, `--display-name` and `--type` require exactly one `--add-repository`. `--clone` needs at least one addition. The CLI reads the document, applies the change and saves the complete document; it strips local Git state fields before saving. Duplicate additions and unknown removals fail before any save.
+- `validate --id <id>` validates the configuration. It exits `30` when the backend reports it invalid, after printing every error.
+- `reload --id <id>` rereads `monospecs.yaml` on the backend host and refreshes Git state.
+- `clone --id <id>` clones missing repositories. Repeat `--path <path>` to select some; `--include-optional` adds optional repositories when no `--path` is given. Every result row is printed; any `failed` row exits `30`.
+- `remove-checkout --id <id> --path <path>` deletes one configured repository's local checkout. Dirty, unpushed or no-upstream checkouts are refused (exit `29`); the hint suggests `--force` when the refusal can be overridden. The configuration file is not changed.
+
+Only configured repositories can be cloned or removed, and the backend confines paths to the project root. Exit codes: `2` usage (no request sent), `20` backend validation with field errors, `24` project not found, `29` conflict, `30` invalid configuration or failed clone.
+
+```bash
+hagi project monospecs show --id <project-id> --json
+hagi project monospecs set --id <project-id> --add-repository repos/api --url <git-url> --clone
+hagi project monospecs remove-checkout --id <project-id> --path repos/api --force
+```
 
 ## HagiTask commands
 
@@ -199,7 +220,7 @@ Stable non-zero exits used by the CLI:
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
-| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

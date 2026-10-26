@@ -109,6 +109,7 @@ $ echo $?
 ```text
 hagi
 |-- project   list | repositories | create | update | delete
+|   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
 |-- vault     list | create | update | delete
 |   `-- files list | preview
@@ -174,6 +175,39 @@ Delete the demo project:
 ```bash
 hagi project delete --id "$DEMO_PROJECT_ID"
 ```
+
+## MonoSpecs Commands
+
+`project monospecs` manages a project's MonoSpecs configuration (`monospecs.yaml`) and the local checkouts of its repositories. The CLI only sends requests: the backend reads and writes the files and runs Git on its own host, so `--base-url` may point at a remote backend.
+
+| Command | Purpose |
+| --- | --- |
+| `show --id <id>` | Print the version, repo directory, config path, commit-when-archive flag and one row per repository with its local Git state. `--yaml` adds the YAML preview. |
+| `init --id <id>` | Initialize the configuration. An initialized project returns its existing document. |
+| `set --id <id>` | Change metadata or repositories. Options: `--version`, `--repo-directory`, `--commit-when-archive <true\|false>`, repeatable `--add-repository <path>` and `--remove-repository <path>`, and `--clone`. `--url`, `--name`, `--display-name` and `--type` apply to a single `--add-repository`. |
+| `validate --id <id>` | Validate the configuration. Exits `30` and still prints every error when it is invalid. |
+| `reload --id <id>` | Reread `monospecs.yaml` on the backend host and refresh the Git state. |
+| `clone --id <id>` | Clone configured repositories that are missing. Repeatable `--path <path>` selects repositories; `--include-optional` adds optional ones when no `--path` is given. |
+| `remove-checkout --id <id> --path <path>` | Delete the local checkout of one configured repository. `--force` allows a checkout with uncommitted changes, unpushed commits or no upstream branch. |
+
+```bash
+hagi project monospecs show --id "$PROJECT_ID"
+hagi project monospecs set --id "$PROJECT_ID" --commit-when-archive true
+hagi project monospecs set --id "$PROJECT_ID" --add-repository repos/api --url https://github.com/example/api.git --clone
+hagi project monospecs set --id "$PROJECT_ID" --remove-repository repos/api
+hagi project monospecs validate --id "$PROJECT_ID" --json
+hagi project monospecs clone --id "$PROJECT_ID" --path repos/web
+hagi project monospecs remove-checkout --id "$PROJECT_ID" --path repos/web
+```
+
+Safety rules:
+
+- `set` reads the current document, applies only the options given and saves the complete document. Local Git state (branch, sync state and similar) is never written back; `code` and `metadata` are kept.
+- `set` rejects a duplicate `--add-repository`, a `--remove-repository` that is not configured, and companion options with more than one addition, before anything is saved. With `--clone`, the configuration is saved first; a failed clone leaves it saved and exits `30`.
+- `clone` and `remove-checkout` act only on repositories listed in the configuration. The backend confines paths to the project root and clones only over `https`, `http`, `ssh` and `git`, so a `file://` URL or a plain path is reported as `failed`.
+- `remove-checkout` refuses a checkout with uncommitted changes, unpushed commits or no upstream unless `--force` is given, and it never removes a path that is not a standalone repository root. It deletes a directory on the backend host and leaves `monospecs.yaml` unchanged.
+
+Exit codes for these commands: `2` usage error (no request was sent), `20` backend validation error (every field error is listed), `24` project not found, `29` another clone or removal is running or a checkout is blocked, `30` invalid configuration or a failed clone.
 
 ## Proposal Commands
 
@@ -563,7 +597,7 @@ Stable non-zero exits used by the CLI:
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
-| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
