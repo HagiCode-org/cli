@@ -10,7 +10,7 @@ import {
 import { PCode_Models_AIProviderType } from '../../generated/api/models/PCode_Models_AIProviderType';
 import { PCode_Models_MessageMode } from '../../generated/api/models/PCode_Models_MessageMode';
 
-type AutoTaskSendOptions = {
+type HagiTaskSendOptions = {
   sessionId: string;
   content: string;
   mode?: PCode_Models_MessageMode;
@@ -18,13 +18,13 @@ type AutoTaskSendOptions = {
   json?: boolean;
 };
 
-export function registerAutoTaskSendCommand(parent: Command, dependencies: AppDependencies): void {
+export function registerHagiTaskSendCommand(parent: Command, dependencies: AppDependencies): void {
   addJsonOption(
     parent
       .command('send')
-      .description('Send a follow-up message to an AutoTask session.'),
+      .description('Send a follow-up message to a HagiTask session.'),
   )
-    .requiredOption('--session-id <id>', 'AutoTask session id.')
+    .requiredOption('--session-id <id>', 'HagiTask session id.')
     .requiredOption('--content <text>', 'Message content.')
     .addOption(
       new Option('--mode <mode>', 'Message mode override.')
@@ -34,7 +34,7 @@ export function registerAutoTaskSendCommand(parent: Command, dependencies: AppDe
       new Option('--executor-type <type>', 'Executor override for this message.')
         .choices(Object.values(PCode_Models_AIProviderType)),
     )
-    .action(async function autoTaskSendAction(this: Command, options: AutoTaskSendOptions) {
+    .action(async function hagiTaskSendAction(this: Command, options: HagiTaskSendOptions) {
       const context = createCommandContext(this, dependencies);
       const sessionId = options.sessionId.trim();
       const response = await context.api.sendMessage(sessionId, {
@@ -55,7 +55,7 @@ export function registerAutoTaskSendCommand(parent: Command, dependencies: AppDe
         return;
       }
 
-      context.io.stdout(formatSessionMessageHuman('AutoTask message sent', sessionId, response, [
+      context.io.stdout(formatSessionMessageHuman('HagiTask message sent', sessionId, response, [
         ['mode', options.mode],
         ['executorType', options.executorType],
       ]));

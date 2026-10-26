@@ -70,6 +70,11 @@ function respond(method: string, path: string, response: ServerResponse): void {
     return;
   }
 
+  if (method === 'GET' && path === '/api/preset-tasks/schemas') {
+    json(200, []);
+    return;
+  }
+
   if (method === 'GET' && /^\/api\/Sessions\/[^/]+$/.test(path)) {
     json(200, SESSION_FIXTURE);
     return;
@@ -132,7 +137,7 @@ function requestLine(request: Recorded): string {
   return `${request.method} ${request.path}${request.query}`;
 }
 
-describe('request paths for chat, proposal, autotask, and vault commands', () => {
+describe('request paths for chat, proposal, hagitask, and vault commands', () => {
   // Chat (4.1)
   it('chat list requests the chat session collection', async () => {
     await run(['chat', 'list']);
@@ -228,48 +233,76 @@ describe('request paths for chat, proposal, autotask, and vault commands', () =>
     expect(recorded.map(requestLine)).toEqual(['GET /api/Sessions/s-1', 'PUT /api/Sessions/s-1']);
   });
 
-  // Autotask (5.1, 5.2)
-  it('autotask create forwards every optional field the request model supports', async () => {
+  // HagiTask (4.1 - 4.4)
+  it('hagitask create by task forwards the preset task id, locale, input and routing fields', async () => {
+    const inputPath = join(tempDir, 'input.json');
+    writeFileSync(inputPath, JSON.stringify({ inputs: { commitScope: 'cli' } }), 'utf8');
+
     await run([
-      'autotask', 'create',
+      'hagitask', 'create',
       '--title', 'Auto',
       '--project-id', 'p-1',
-      '--prompt-id', 'auto-compose-commit.en-US',
+      '--task-id', 'compose-commit',
+      '--input', inputPath,
+      '--locale', 'en-US',
       '--message', 'Do it',
-      '--preset-id', 'preset-1',
       '--repository-path', 'repos/app',
-      '--project-ids', 'p-1', 'p-2',
+      '--target-type', 'repository',
+      '--vault-id', 'vault-1',
       '--need-push',
+      '--pull-rebase',
       '--target-branch-mode', 'new-custom',
       '--target-branch-name', 'feature/cli',
-      '--script-key', 'autotask.auto-compose-commit',
+      '--script-key', 'hagitask.auto-compose-commit',
       '--hero-id', 'hero-1',
-      '--target-type', 'Vault',
-      '--vault-id', 'vault-1',
+      '--hero-selection-mode', 'random',
     ]);
 
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/auto-task']);
+    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask']);
+    expect(recorded[0].body).toEqual({
+      title: 'Auto',
+      projectId: 'p-1',
+      presetTaskId: 'compose-commit',
+      presetTaskLocale: 'en-US',
+      presetTaskInput: { inputs: { commitScope: 'cli' } },
+      message: 'Do it',
+      repositoryPath: 'repos/app',
+      targetType: 'repository',
+      vaultId: 'vault-1',
+      needPush: true,
+      pullRebaseBeforePush: true,
+      targetBranchMode: 'new-custom',
+      targetBranchName: 'feature/cli',
+      scriptKey: 'hagitask.auto-compose-commit',
+      heroId: 'hero-1',
+      heroSelectionMode: 'random',
+    });
+  });
+
+  it('hagitask create by prompt posts the prompt id without a preset task id', async () => {
+    await run(['hagitask', 'create', '--title', 'Auto', '--project-id', 'p-1', '--prompt-id', 'auto-compose-commit.en-US']);
+
+    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask']);
     expect(recorded[0].body).toEqual({
       title: 'Auto',
       projectId: 'p-1',
       promptId: 'auto-compose-commit.en-US',
-      message: 'Do it',
-      presetId: 'preset-1',
-      repositoryPath: 'repos/app',
-      projectIds: ['p-1', 'p-2'],
-      needPush: true,
-      targetBranchMode: 'new-custom',
-      targetBranchName: 'feature/cli',
-      scriptKey: 'autotask.auto-compose-commit',
-      heroId: 'hero-1',
-      targetType: 'Vault',
-      vaultId: 'vault-1',
     });
   });
 
-  it('autotask send targets the given session id messages endpoint', async () => {
-    await run(['autotask', 'send', '--session-id', 'autotask-9', '--content', 'continue']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/autotask-9/messages']);
+  it('hagitask list requests the schema summary collection', async () => {
+    await run(['hagitask', 'list']);
+    expect(recorded.map(requestLine)).toEqual(['GET /api/preset-tasks/schemas']);
+  });
+
+  it('hagitask schema requests the schema of the given task id', async () => {
+    await run(['hagitask', 'schema', '--task-id', 'compose-commit']);
+    expect(recorded.map(requestLine)).toEqual(['GET /api/preset-tasks/compose-commit/schema']);
+  });
+
+  it('hagitask send targets the given session id messages endpoint', async () => {
+    await run(['hagitask', 'send', '--session-id', 'hagitask-9', '--content', 'continue']);
+    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask-9/messages']);
   });
 
   // Vault (6.1 - 6.4)

@@ -23,8 +23,8 @@ import type { PCode_Models_OpenSpecFileResponseDto } from '../models/PCode_Model
 import type { PCode_Models_SessionResponseDto } from '../models/PCode_Models_SessionResponseDto';
 import type { PCode_Models_SessionType } from '../models/PCode_Models_SessionType';
 import type { PCode_Web_Controllers_CancelSessionResponseDto } from '../models/PCode_Web_Controllers_CancelSessionResponseDto';
-import type { PCode_Web_Controllers_CreateAutoTaskSessionRequest } from '../models/PCode_Web_Controllers_CreateAutoTaskSessionRequest';
 import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../models/PCode_Web_Controllers_CreateChatSessionRequest';
+import type { PCode_Web_Controllers_CreateHagiTaskSessionRequest } from '../models/PCode_Web_Controllers_CreateHagiTaskSessionRequest';
 import type { PCode_Web_Controllers_CreateSessionRequest } from '../models/PCode_Web_Controllers_CreateSessionRequest';
 import type { PCode_Web_Controllers_OpenInVsCodeResponseDto } from '../models/PCode_Web_Controllers_OpenInVsCodeResponseDto';
 import type { PCode_Web_Controllers_OptimizeProposalRequest } from '../models/PCode_Web_Controllers_OptimizeProposalRequest';
@@ -36,29 +36,31 @@ import { request as __request } from '../core/request';
 export class SessionsService {
   /**
    * Creates a new Chat session with an initial prompt template and optional custom message.
-   * This endpoint is specifically designed for AI auto-task scenarios where sessions need
+   * This endpoint is specifically designed for AI HagiTask scenarios where sessions need
    * to be created with predefined prompt templates.
    * The prompt ID should be in the format "scenario.locale" (e.g., "auto-compose-commit.en-US").
-   * For user preset sessions, use "user-preset.{locale}" format with a non-empty message parameter.
-   * For unified docs maintenance, use "claude-md-update.{locale}".
    * If a custom message is provided for other scenarios, it will be used instead of the prompt template.
-   * AutoTask executor selection is not client-configurable through this endpoint.
-   * Runtime routing is resolved from the mapped hero dungeon member selection or emergency/global fallback,
+   * HagiTask executor selection is configurable only through the optional heroId and heroSelectionMode fields.
+   * heroSelectionMode accepts "first" (default; also used when omitted or blank) or "random". With "random" and no heroId,
+   * one eligible member is picked uniformly at random from the first scenario tier that has any: non-default roster members,
+   * then default roster members, then the special emergency team. An unknown value returns 400 and creates no session.
+   * An explicit heroId always takes precedence over heroSelectionMode.
+   * Runtime routing is resolved from the mapped hero scenario member selection or emergency/global fallback,
    * and the initial message is sent asynchronously after session creation.
    * @returns PCode_Models_SessionResponseDto Session created successfully
    * @throws ApiError
    */
-  public static postApiSessionsAutoTask({
+  public static postApiSessionsHagitask({
     requestBody,
   }: {
     /**
      * The request containing session title, project ID, prompt ID, optional scriptKey, and optional message
      */
-    requestBody?: PCode_Web_Controllers_CreateAutoTaskSessionRequest,
+    requestBody?: PCode_Web_Controllers_CreateHagiTaskSessionRequest,
   }): CancelablePromise<PCode_Models_SessionResponseDto> {
     return __request(OpenAPI, {
       method: 'POST',
-      url: '/api/Sessions/auto-task',
+      url: '/api/Sessions/hagitask',
       body: requestBody,
       mediaType: 'application/json',
       errors: {

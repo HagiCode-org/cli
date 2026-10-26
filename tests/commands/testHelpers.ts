@@ -257,6 +257,93 @@ export function createPlan(
   };
 }
 
+/** HagiTask schema summary row in the backend response shape. */
+export function createHagiTaskSummary(id: string, overrides: Partial<{ title: string; description: string | null }> = {}) {
+  return {
+    id,
+    groupId: 'hagi-tasks',
+    sourceKind: 'bundled',
+    version: '1.0.0',
+    title: overrides.title ?? 'Compose commit',
+    description: overrides.description === undefined ? 'Writes a commit message.' : overrides.description,
+    targetCount: 1,
+    commandCount: 0,
+    parameterCount: 2,
+  };
+}
+
+/** Creation schema for one HagiTask in the backend response shape, with a required and an optional parameter. */
+export function createHagiTaskSchema(id = 'compose-commit') {
+  return {
+    id,
+    version: '1.0.0',
+    locale: 'en-US',
+    title: 'Compose commit',
+    description: 'Writes a commit message.',
+    scope: {
+      defaultTargetType: 'repository',
+      targets: [
+        {
+          id: 'repositories',
+          kind: 'repository',
+          selectionMode: 'multi',
+          required: true,
+          allowedAccessTypes: ['write', 'read'],
+          scopeSource: 'project',
+          requestKey: 'targets.repositories',
+          scopeRequestKey: 'targetScopes.repositories',
+        },
+      ],
+    },
+    commands: null,
+    parameters: [
+      {
+        key: 'commitScope',
+        origin: 'input',
+        producer: null,
+        valueType: 'string',
+        required: true,
+        label: 'Commit scope',
+        hint: null,
+        options: null,
+        aliases: null,
+      },
+      {
+        key: 'language',
+        origin: 'input',
+        producer: null,
+        valueType: 'string',
+        required: false,
+        label: 'Language',
+        hint: null,
+        options: [{ value: 'en', label: 'English' }],
+        aliases: [{ key: 'lang', deprecated: true }],
+      },
+    ],
+    requirements: [{ type: 'agent', name: 'claude', names: null }],
+    scenes: { provider: 'hero', defaultSceneKey: 'default', registrations: [{ sceneKey: 'default', title: 'Default', summary: null, backgroundImageSlot: 0 }] },
+    request: {
+      method: 'POST',
+      path: '/api/Sessions/hagitask',
+      presetTaskIdField: 'presetTaskId',
+      localeField: 'presetTaskLocale',
+      requiredFields: ['title', 'projectId'],
+    },
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['commitScope'],
+      properties: { commitScope: { type: 'string' } },
+    },
+    example: {
+      title: '<title>',
+      projectId: '<project-id>',
+      presetTaskId: id,
+      presetTaskInput: { inputs: { commitScope: '<commit-scope>' } },
+    },
+  };
+}
+
 const SKILL_TRUST = {
   providerId: 'vercel',
   displayName: 'Vercel',
@@ -453,7 +540,9 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     getSession: vi.fn().mockResolvedValue(createSession('session-1')),
     createProposalSession: vi.fn().mockResolvedValue(createSession('session-2')),
     createChatSession: vi.fn().mockResolvedValue(createSession('chat-1', PCode_Models_SessionType.CHAT)),
-    createAutoTaskSession: vi.fn().mockResolvedValue(createSession('autotask-1', PCode_Models_SessionType.CHAT)),
+    createHagiTaskSession: vi.fn().mockResolvedValue(createSession('hagitask-1', PCode_Models_SessionType.CHAT)),
+    listHagiTaskSchemas: vi.fn().mockResolvedValue([createHagiTaskSummary('compose-commit')]),
+    getHagiTaskSchema: vi.fn().mockResolvedValue(createHagiTaskSchema()),
     updateSession: vi.fn().mockResolvedValue(undefined),
     deleteSession: vi.fn().mockResolvedValue({ message: 'Deleted' }),
     sendMessage: vi.fn().mockResolvedValue({ message: 'Queued' }),

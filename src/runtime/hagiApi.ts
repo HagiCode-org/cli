@@ -22,11 +22,13 @@ import type { PCode_Application_Contracts_Dto_VaultItemDto } from '../generated/
 import type { PCode_Application_Contracts_Dto_VaultListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_VaultListResponseDto';
 import type { PCode_Models_SessionResponseDto } from '../generated/api/models/PCode_Models_SessionResponseDto';
 import type { PCode_Models_SessionType } from '../generated/api/models/PCode_Models_SessionType';
-import type { PCode_Web_Controllers_CreateAutoTaskSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateAutoTaskSessionRequest';
 import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateChatSessionRequest';
+import type { PCode_Web_Controllers_CreateHagiTaskSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateHagiTaskSessionRequest';
 import type { PCode_Web_Controllers_CreateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateSessionRequest';
 import type { PCode_Web_Controllers_OptimizeProposalRequest } from '../generated/api/models/PCode_Web_Controllers_OptimizeProposalRequest';
 import type { PCode_Web_Controllers_PostMessageRequest } from '../generated/api/models/PCode_Web_Controllers_PostMessageRequest';
+import type { PCode_Web_Controllers_PresetTaskCreationSchemaDto } from '../generated/api/models/PCode_Web_Controllers_PresetTaskCreationSchemaDto';
+import type { PCode_Web_Controllers_PresetTaskSchemaSummaryDto } from '../generated/api/models/PCode_Web_Controllers_PresetTaskSchemaSummaryDto';
 import type { PCode_Web_Controllers_ScheduledPlanResponse } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanResponse';
 import type { PCode_Web_Controllers_ScheduledPlanRunAcceptedDto } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanRunAcceptedDto';
 import type { PCode_Web_Controllers_ScheduledPlanSaveRequest } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanSaveRequest';
@@ -42,6 +44,7 @@ import type { PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto } fr
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
 import type { PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto';
 import { DataAggregationService } from '../generated/api/services/DataAggregationService';
+import { PresetTasksService } from '../generated/api/services/PresetTasksService';
 import { ProjectService } from '../generated/api/services/ProjectService';
 import { ScheduledPlansService } from '../generated/api/services/ScheduledPlansService';
 import { SessionsService } from '../generated/api/services/SessionsService';
@@ -61,7 +64,12 @@ export interface HagiApi {
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
   createProposalSession(requestBody: PCode_Web_Controllers_CreateSessionRequest): Promise<PCode_Models_SessionResponseDto>;
   createChatSession(requestBody: PCode_Web_Controllers_CreateChatSessionRequest): Promise<PCode_Models_SessionResponseDto>;
-  createAutoTaskSession(requestBody: PCode_Web_Controllers_CreateAutoTaskSessionRequest): Promise<PCode_Models_SessionResponseDto>;
+  /** Creates a session from a HagiTask preset task id or prompt id. The backend validates the structured input. */
+  createHagiTaskSession(requestBody: PCode_Web_Controllers_CreateHagiTaskSessionRequest): Promise<PCode_Models_SessionResponseDto>;
+  /** Lists the creation schema summary of every active HagiTask. */
+  listHagiTaskSchemas(): Promise<PCode_Web_Controllers_PresetTaskSchemaSummaryDto[]>;
+  /** Reads the creation schema of one active HagiTask. Unknown and disabled ids reject with 404. */
+  getHagiTaskSchema(presetTaskId: string): Promise<PCode_Web_Controllers_PresetTaskCreationSchemaDto>;
   updateSession(sessionId: string, requestBody: PCode_Web_Controllers_UpdateSessionRequest): Promise<unknown>;
   deleteSession(sessionId: string, deleteFiles?: boolean): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   sendMessage(sessionId: string, requestBody: PCode_Web_Controllers_PostMessageRequest): Promise<PCode_Application_Contracts_Dto_PostMessageResponseDto>;
@@ -128,7 +136,9 @@ export function createGeneratedHagiApi(): HagiApi {
     getSession: sessionId => SessionsService.getApiSessions1({ sessionId }),
     createProposalSession: requestBody => SessionsService.postApiSessions({ requestBody }),
     createChatSession: requestBody => SessionsService.postApiSessionsChat({ requestBody }),
-    createAutoTaskSession: requestBody => SessionsService.postApiSessionsAutoTask({ requestBody }),
+    createHagiTaskSession: requestBody => SessionsService.postApiSessionsHagitask({ requestBody }),
+    listHagiTaskSchemas: () => PresetTasksService.getApiPresetTasksSchemas(),
+    getHagiTaskSchema: presetTaskId => PresetTasksService.getApiPresetTasksSchema({ presetTaskId }),
     updateSession: (sessionId, requestBody) => SessionsService.putApiSessions({ sessionId, requestBody }),
     deleteSession: (sessionId, deleteFiles) => SessionsService.deleteApiSessions({ sessionId, deleteFiles }),
     sendMessage: (sessionId, requestBody) => SessionsService.postApiSessionsMessages({ sessionId, requestBody }),
