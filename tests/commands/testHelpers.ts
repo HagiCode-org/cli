@@ -103,6 +103,75 @@ export function createProjectWithRepositories(id: string) {
   };
 }
 
+/**
+ * MonoSpecs management document in the backend response shape. Repositories carry the local Git state,
+ * the configured `code` and `metadata` fields; `overrides.repositories` replaces the default list.
+ */
+export function createMonoSpecsDocument(
+  overrides: Partial<{
+    version: string;
+    repoDirectory: string;
+    configPath: string;
+    commitWhenArchive: boolean;
+    yamlPreview: string;
+    metadata: Array<{ key: string; value: string; valueKind: string }>;
+    repositories: Array<Record<string, unknown>>;
+  }> = {},
+) {
+  return {
+    version: overrides.version ?? '1.0',
+    repoDirectory: overrides.repoDirectory ?? 'repos',
+    configPath: overrides.configPath ?? '/tmp/project/monospecs.yaml',
+    commitWhenArchive: overrides.commitWhenArchive ?? false,
+    yamlPreview: overrides.yamlPreview ?? 'version: "1.0"\n',
+    metadata: overrides.metadata ?? [{ key: 'owner', value: 'hagi', valueKind: 'string' }],
+    repositories: overrides.repositories ?? [
+      {
+        name: 'cli',
+        code: 'CLI',
+        path: 'repos/cli',
+        url: 'https://github.com/HagiCode-org/cli.git',
+        displayName: 'CLI',
+        type: 'library',
+        icon: null,
+        optional: false,
+        tags: ['cli'],
+        metadata: [{ key: 'team', value: 'tools', valueKind: 'string' }],
+        isValidGitRepo: true,
+        branch: 'main',
+        hasUncommittedChanges: false,
+        unpushedCommitCount: 0,
+        hasTrackingBranch: true,
+        trackingBranch: 'origin/main',
+        aheadCount: 0,
+        behindCount: 0,
+        syncState: 'synced',
+      },
+      {
+        name: 'web',
+        code: null,
+        path: 'repos/web',
+        url: 'https://github.com/HagiCode-org/web.git',
+        displayName: 'Web',
+        type: 'frontend',
+        icon: null,
+        optional: true,
+        tags: [],
+        metadata: [],
+        isValidGitRepo: false,
+        branch: null,
+        hasUncommittedChanges: false,
+        unpushedCommitCount: 0,
+        hasTrackingBranch: false,
+        trackingBranch: null,
+        aheadCount: 0,
+        behindCount: 0,
+        syncState: null,
+      },
+    ],
+  };
+}
+
 export function createVault(
   id: string,
   overrides: Partial<{
@@ -586,6 +655,19 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     upsertTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
     deleteTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
     resetTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
+    getMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
+    saveMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
+    initializeMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument({ repositories: [] })),
+    reloadMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
+    validateMonoSpecs: vi.fn().mockResolvedValue({ isValid: true, config: null, warnings: [], errors: [] }),
+    cloneMonoSpecsRepositories: vi.fn().mockResolvedValue({
+      results: [{ path: 'repos/web', status: 'cloned', message: 'Cloned.' }],
+    }),
+    removeMonoSpecsRepositoryCheckout: vi.fn().mockResolvedValue({
+      path: 'repos/web',
+      removed: true,
+      message: 'Removed.',
+    }),
     ...apiOverrides,
   };
 

@@ -180,11 +180,16 @@ export type { PCode_Application_Contracts_Dto_LocalSkillItemDto } from './models
 export type { PCode_Application_Contracts_Dto_LocalSkillManagedInstallMetadataDto } from './models/PCode_Application_Contracts_Dto_LocalSkillManagedInstallMetadataDto';
 export type { PCode_Application_Contracts_Dto_MessageListResponseDto } from './models/PCode_Application_Contracts_Dto_MessageListResponseDto';
 export type { PCode_Application_Contracts_Dto_MigrateFrontendConfigRequestDto } from './models/PCode_Application_Contracts_Dto_MigrateFrontendConfigRequestDto';
+export type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto';
+export type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto';
+export type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoryResultDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoryResultDto';
 export type { PCode_Application_Contracts_Dto_MonoSpecsConfigDetailsDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsConfigDetailsDto';
 export type { PCode_Application_Contracts_Dto_MonoSpecsManagementDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsManagementDto';
 export type { PCode_Application_Contracts_Dto_MonoSpecsManagementFieldErrorDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsManagementFieldErrorDto';
+export type { PCode_Application_Contracts_Dto_MonoSpecsManagementMetadataEntryDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsManagementMetadataEntryDto';
 export type { PCode_Application_Contracts_Dto_MonoSpecsManagementRepositoryDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsManagementRepositoryDto';
 export type { PCode_Application_Contracts_Dto_MonoSpecsManagementValidationErrorDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsManagementValidationErrorDto';
+export type { PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto } from './models/PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto';
 export type { PCode_Application_Contracts_Dto_OpenCodeModelCatalogEntryDto } from './models/PCode_Application_Contracts_Dto_OpenCodeModelCatalogEntryDto';
 export type { PCode_Application_Contracts_Dto_OpenCodeModelCatalogStatusDto } from './models/PCode_Application_Contracts_Dto_OpenCodeModelCatalogStatusDto';
 export type { PCode_Application_Contracts_Dto_OpenSpecChangeFolderDto } from './models/PCode_Application_Contracts_Dto_OpenSpecChangeFolderDto';

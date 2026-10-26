@@ -7,6 +7,13 @@ import type { PCode_Application_Contracts_Dto_DataAggregationResponseDto } from 
 import type { PCode_Application_Contracts_Dto_DeleteVaultResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_DeleteVaultResponseDto';
 import type { PCode_Application_Contracts_Dto_ExecuteProposalRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ExecuteProposalRequestDto';
 import type { PCode_Application_Contracts_Dto_GenerateProposalRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_GenerateProposalRequestDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsManagementDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MonoSpecsManagementDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto';
+import type { PCode_Application_Contracts_Dto_UpdateMonoSpecsManagementRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpdateMonoSpecsManagementRequestDto';
+import type { PCode_Application_Contracts_Dto_ValidateMonoSpecsRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ValidateMonoSpecsRequestDto';
+import type { PCode_Application_Contracts_Dto_ValidateMonoSpecsResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ValidateMonoSpecsResponseDto';
 import type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_PostMessageResponseDto';
 import type { PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto';
 import type { PCode_Application_Contracts_Dto_ProjectDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProjectDto';
@@ -99,6 +106,31 @@ export interface HagiApi {
   createProject(requestBody: PCode_Application_Contracts_Dto_CreateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   updateProject(id: string, requestBody: PCode_Application_Contracts_Dto_UpdateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   deleteProject(id: string): Promise<unknown>;
+  /** Reads the MonoSpecs management document of a project, including local Git state per repository. */
+  getMonoSpecsManagement(id: string): Promise<PCode_Application_Contracts_Dto_MonoSpecsManagementDto>;
+  /** Saves the complete MonoSpecs management document. The backend validates it and returns the normalized document. */
+  saveMonoSpecsManagement(
+    id: string,
+    requestBody: PCode_Application_Contracts_Dto_UpdateMonoSpecsManagementRequestDto,
+  ): Promise<PCode_Application_Contracts_Dto_MonoSpecsManagementDto>;
+  initializeMonoSpecsManagement(id: string): Promise<PCode_Application_Contracts_Dto_MonoSpecsManagementDto>;
+  /** Rereads monospecs.yaml on the backend host and refreshes Git state. */
+  reloadMonoSpecsManagement(id: string): Promise<PCode_Application_Contracts_Dto_MonoSpecsManagementDto>;
+  /** Validates the MonoSpecs configuration at a project path. The path is resolved by the caller. */
+  validateMonoSpecs(
+    requestBody: PCode_Application_Contracts_Dto_ValidateMonoSpecsRequestDto,
+  ): Promise<PCode_Application_Contracts_Dto_ValidateMonoSpecsResponseDto>;
+  /** Clones configured repositories on the backend host. An empty request clones every missing repository. */
+  cloneMonoSpecsRepositories(
+    id: string,
+    requestBody: PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto,
+  ): Promise<PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto>;
+  /** Deletes the local checkout of one configured repository on the backend host. Dirty checkouts are refused unless forced. */
+  removeMonoSpecsRepositoryCheckout(
+    id: string,
+    path: string,
+    force: boolean,
+  ): Promise<PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto>;
   listPlans(): Promise<PCode_Web_Controllers_ScheduledPlanResponse[]>;
   getPlan(id: string): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
   createPlan(requestBody: PCode_Web_Controllers_ScheduledPlanSaveRequest): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
@@ -156,6 +188,15 @@ export function createGeneratedHagiApi(): HagiApi {
     createProject: requestBody => ProjectService.postApiProject({ requestBody }),
     updateProject: (id, requestBody) => ProjectService.putApiProject({ id, requestBody }),
     deleteProject: id => ProjectService.deleteApiProject({ id }),
+    getMonoSpecsManagement: id => ProjectService.getApiProjectMonospecsManagement({ id }),
+    saveMonoSpecsManagement: (id, requestBody) => ProjectService.putApiProjectMonospecsManagement({ id, requestBody }),
+    initializeMonoSpecsManagement: id => ProjectService.postApiProjectMonospecsInitialize({ id }),
+    reloadMonoSpecsManagement: id => ProjectService.postApiProjectMonospecsReload({ id }),
+    validateMonoSpecs: requestBody => ProjectService.postApiProjectValidateMonospecs({ requestBody }),
+    cloneMonoSpecsRepositories: (id, requestBody) =>
+      ProjectService.postApiProjectMonospecsRepositoriesClone({ id, requestBody }),
+    removeMonoSpecsRepositoryCheckout: (id, path, force) =>
+      ProjectService.deleteApiProjectMonospecsRepositoriesCheckout({ id, path, force }),
     listPlans: () => ScheduledPlansService.getApiScheduledPlans(),
     getPlan: id => ScheduledPlansService.getApiScheduledPlans1({ id }),
     createPlan: requestBody => ScheduledPlansService.postApiScheduledPlans({ requestBody }),

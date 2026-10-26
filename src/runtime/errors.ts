@@ -135,11 +135,12 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
       readStringProperty(error.body, 'error') ??
       readStringProperty(error.body, 'message') ??
       error.message;
+    const fieldLines = readFieldErrorLines(error.body);
 
     return {
       exitCode: mapExitCodeFromStatus(error.status),
       status: error.status,
-      message: backendMessage,
+      message: fieldLines.length > 0 ? [backendMessage, ...fieldLines].join('\n') : backendMessage,
       errorCode: readStringProperty(error.body, 'errorCode'),
       correlationId: readStringProperty(error.body, 'correlationId'),
       details: error.body,
@@ -180,6 +181,23 @@ function readValidationLines(details: unknown): string[] {
   }
 
   return errors.flatMap(entry => {
+    const field = readStringProperty(entry, 'field');
+    const message = readStringProperty(entry, 'message');
+    return field && message ? [`  - ${field}: ${message}`] : [];
+  });
+}
+
+/**
+ * MonoSpecs field errors (`fieldErrors[]` with string `field` and `message`) appended to the error message.
+ * The body itself stays in `details`, so JSON output keeps the full backend payload.
+ */
+function readFieldErrorLines(details: unknown): string[] {
+  const fieldErrors = asErrorObject(details)?.fieldErrors;
+  if (!Array.isArray(fieldErrors)) {
+    return [];
+  }
+
+  return fieldErrors.flatMap(entry => {
     const field = readStringProperty(entry, 'field');
     const message = readStringProperty(entry, 'message');
     return field && message ? [`  - ${field}: ${message}`] : [];

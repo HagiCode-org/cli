@@ -2,11 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Application_Contracts_Dto_MonoSpecsManagementMetadataEntryDto } from './PCode_Application_Contracts_Dto_MonoSpecsManagementMetadataEntryDto';
 import type { PCode_Application_Contracts_Dto_MonoSpecsManagementRepositoryDto } from './PCode_Application_Contracts_Dto_MonoSpecsManagementRepositoryDto';
 export type PCode_Application_Contracts_Dto_UpdateMonoSpecsManagementRequestDto = {
   version?: string | null;
   repoDirectory?: string | null;
   commitWhenArchive?: boolean;
   repositories?: Array<PCode_Application_Contracts_Dto_MonoSpecsManagementRepositoryDto> | null;
+  metadata?: Array<PCode_Application_Contracts_Dto_MonoSpecsManagementMetadataEntryDto> | null;
 };
 

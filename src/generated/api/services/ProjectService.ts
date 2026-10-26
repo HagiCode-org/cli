@@ -2,6 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto } from '../models/PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto } from '../models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto';
+import type { PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto } from '../models/PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto';
 import type { PCode_Application_Contracts_Dto_BranchValidationResponseDto } from '../models/PCode_Application_Contracts_Dto_BranchValidationResponseDto';
 import type { PCode_Application_Contracts_Dto_CreateProjectDto } from '../models/PCode_Application_Contracts_Dto_CreateProjectDto';
 import type { PCode_Application_Contracts_Dto_MonoSpecsManagementDto } from '../models/PCode_Application_Contracts_Dto_MonoSpecsManagementDto';
@@ -172,6 +175,90 @@ export class ProjectService {
       errors: {
         400: `Bad Request`,
         404: `Not Found`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * Reloads the registered project's MonoSpecs configuration and invalidates its Git snapshot.
+   * Access is governed by the same trusted-host boundary as the other project routes.
+   * @returns PCode_Application_Contracts_Dto_MonoSpecsManagementDto OK
+   * @throws ApiError
+   */
+  public static postApiProjectMonospecsReload({
+    id,
+  }: {
+    id: string,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_MonoSpecsManagementDto> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/Project/{id}/monospecs/reload',
+      path: {
+        'id': id,
+      },
+      errors: {
+        400: `Bad Request`,
+        404: `Not Found`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * Clones the configured MonoSpecs repositories that are missing on the backend host. Per-repository failures are reported in the body.
+   * @returns PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto OK
+   * @throws ApiError
+   */
+  public static postApiProjectMonospecsRepositoriesClone({
+    id,
+    requestBody,
+  }: {
+    id: string,
+    requestBody?: PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesRequestDto,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_MonoSpecsCloneRepositoriesResponseDto> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/Project/{id}/monospecs/repositories/clone',
+      path: {
+        'id': id,
+      },
+      body: requestBody,
+      mediaType: 'application/json',
+      errors: {
+        400: `Bad Request`,
+        404: `Not Found`,
+        409: `Conflict`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * Removes the local checkout of one configured MonoSpecs repository. The configuration file is not changed.
+   * @returns PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto OK
+   * @throws ApiError
+   */
+  public static deleteApiProjectMonospecsRepositoriesCheckout({
+    id,
+    path,
+    force = false,
+  }: {
+    id: string,
+    path?: string,
+    force?: boolean,
+  }): CancelablePromise<PCode_Application_Contracts_Dto_MonoSpecsRemoveCheckoutResponseDto> {
+    return __request(OpenAPI, {
+      method: 'DELETE',
+      url: '/api/Project/{id}/monospecs/repositories/checkout',
+      path: {
+        'id': id,
+      },
+      query: {
+        'path': path,
+        'force': force,
+      },
+      errors: {
+        400: `Bad Request`,
+        404: `Not Found`,
+        409: `Conflict`,
         500: `Internal Server Error`,
       },
     });
