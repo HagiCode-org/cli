@@ -6,7 +6,7 @@ Inherits all behavior from `/AGENTS.md` at the monorepo root. Local rules extend
 
 ## Project Context
 
-`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, AutoTask, scheduled plan, and skills management against a HagiCode backend API. Also carries the canonical embedded Hagi skill under `skills/`.
+`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, AutoTask, scheduled plan, and skills management against a HagiCode backend over gRPC-Web (`<base-url>/grpc`). Also carries the canonical embedded Hagi skill under `skills/`.
 
 ## Working Directory
 
@@ -20,7 +20,9 @@ npm run build
 npm test
 npm run typecheck
 npm run pack:check
-npm run generate:api   # regenerate src/generated/api from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
+npm run generate:grpc   # regenerate src/generated/grpc (Connect-ES stubs) from ../hagicode-core/protos (or HAGICODE_PROTO_DIR) with the local buf
+npm run generate:grpc:check   # fail when src/generated/grpc differs from a fresh generation
+npm run generate:api   # regenerate the DTO types in src/generated/api/models from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
 npm run generate:api:once   # same, but starts (or reuses) the sibling repos/hagicode-core PCode.SwaggerHost first via dotnet
 npm run dev -- <args>  # run the CLI from source via tsx (src/cli.ts)
 ```
@@ -38,8 +40,9 @@ Requires Node.js 24+.
 - `src/`: CLI source (bin entry: `dist/cli.js`)
 - `src/commands/`: one command family per file/dir (project, proposal, vault, chat, autotask, plan, skills)
 - `src/formatters/`: human table and deterministic `--json` output
-- `src/runtime/`: API runtime, `HagiApi` facade, error mapping
-- `src/generated/api/`: generated OpenAPI client (`buildTools/`); regenerate instead of hand-editing
+- `src/runtime/`: API runtime, `HagiApi` facade (`hagiApi.ts`, one gRPC call per method), `grpc/` transport and proto-to-DTO mapper, error mapping (`ConnectError` to exit codes)
+- `src/generated/grpc/`: generated gRPC stubs (`buf generate`), committed; regenerate instead of hand-editing
+- `src/generated/api/models/`: generated DTO types only (OpenAPI); there is no REST client or runtime any more
 - `tests/`: Vitest suites (commands, formatters, runtime, release)
 - `skills/`: canonical embedded Hagi skill for AI-oriented guidance
 - `dist/`: published build output
@@ -48,7 +51,7 @@ Requires Node.js 24+.
 
 - Treat this as a published npm package; avoid breaking changes to the `hagi` CLI contract without version bumps.
 - For AI-oriented usage guidance, consult `skills/` content.
-- Keep CLI commands aligned with the HagiCode backend API contract.
+- Keep CLI commands aligned with the HagiCode backend API contract. All backend calls go through gRPC (`protos/` in `repos/hagicode-core`); a new operation needs its RPC in the facade, not a REST call.
 - If changing command signatures or output formats, update corresponding tests.
 - Operation commands need a backend base URL (`--base-url`, `HAGI_API_BASE_URL`, or the local config file); there is no default.
 - When adding a command family, also update `README.md` and the embedded skill under `skills/hagi/`.

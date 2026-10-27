@@ -94,7 +94,7 @@ If none of the three is set, the command exits with code `2` and sends no backen
 
 Operation commands send requests without a credential by default. Pass `--token` (or set `HAGI_API_TOKEN`) only when your backend requires one.
 
-When the backend cannot be reached, the CLI names the base URL and exits with code `60`. A backend HTTP error is reported differently: it prints the HTTP status and the backend error message, and exits with a status-mapped code.
+When the backend cannot be reached, the CLI names the base URL and exits with code `60`. A backend failure is reported differently: it prints the HTTP-equivalent status of the gRPC status and the backend error message, and exits with a status-mapped code.
 
 ```text
 $ hagi --base-url http://127.0.0.1:1 project list
@@ -585,9 +585,15 @@ The CLI resolves runtime settings centrally before every command. Explicit flags
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
 
+## Backend Transport
+
+The CLI talks to the backend over gRPC-Web only. It appends `/grpc` to the base URL (for example `http://127.0.0.1:35167/grpc`) and calls the `hagicode.*.v1` services; no REST route is used. gRPC-Web runs over HTTP/1.1, so it works against the plain-HTTP local backend and through reverse proxies. The bearer token, `Accept-Language` and the `X-Hagi-Client` marker travel as request headers. The backend therefore has to expose its `/grpc` endpoints.
+
+gRPC status codes keep the exit codes below: `InvalidArgument` is `20`, `Unauthenticated` `21`, `PermissionDenied` `23`, `NotFound` `24`, `FailedPrecondition`, `AlreadyExists` and `Aborted` `29`, other client-side statuses `40`, and `Internal`, `Unavailable`, `DeadlineExceeded` and the rest `50`. The status line in error output (`status=404`) shows the HTTP-equivalent number.
+
 ## Exit Codes
 
-Stable non-zero exits used by the CLI:
+Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
 
 | Exit code | Meaning |
 | --- | --- |

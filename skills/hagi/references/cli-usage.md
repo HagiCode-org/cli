@@ -210,7 +210,7 @@ hagi skills local disable --skill-name hagi --json
 
 ## Exit codes
 
-Stable non-zero exits used by the CLI:
+Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
 
 | Exit code | Meaning |
 | --- | --- |

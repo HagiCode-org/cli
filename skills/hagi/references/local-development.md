@@ -43,16 +43,25 @@ Inspect these areas when implementation details matter:
 - `src/commands/` - command registration, flags, and request shaping
 - `src/runtime/` - API runtime, shared context, and error handling
 - `src/formatters/` - human-readable and JSON output formatting
-- `buildTools/` - OpenAPI client generation scripts
+- `buildTools/` - gRPC stub generation and DTO type generation scripts
 - `scripts/verify-package.mjs` - publish-surface verification
 
 ## API client generation
 
-The CLI owns its OpenAPI generation configuration.
-Use these commands when the backend schema changes:
+The CLI calls the backend over gRPC-Web (`<base-url>/grpc`). The stubs in `src/generated/grpc` come from the proto contracts in `repos/hagicode-core/protos`.
+Use these commands when a proto changes:
 
 ```bash
 cd repos/cli
+npm run generate:grpc
+npm run generate:grpc:check
+```
+
+`HAGICODE_PROTO_DIR` points generation at another checkout of the protos.
+
+The DTO types in `src/generated/api/models` are still generated from the OpenAPI document (types only, no REST client):
+
+```bash
 npm run generate:api
 npm run generate:api:once
 ```
