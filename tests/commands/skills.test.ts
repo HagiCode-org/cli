@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
-import { createGeneratedHagiApi } from '../../src/runtime/hagiApi';
+import { createGrpcHagiApi } from '../../src/runtime/hagiApi';
 import { EXIT_CODES } from '../../src/runtime/errors';
 import { createDependencies } from './testHelpers';
 
@@ -317,7 +317,7 @@ describe('skills recommendation and install stream', () => {
 
     expect(exitCode).toBe(0);
     expect(api.installGallerySkill).toHaveBeenCalledTimes(1);
-    const facadeMethods = Object.keys(createGeneratedHagiApi());
+    const facadeMethods = Object.keys(createGrpcHagiApi());
     expect(facadeMethods.filter(name => /stream|recommend/i.test(name))).toEqual([]);
     expect(facadeMethods).toContain('installGallerySkill');
   });

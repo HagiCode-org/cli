@@ -1,9 +1,13 @@
 import { mkdtempSync, rmSync } from 'node:fs';
-import { createServer, type IncomingMessage, type RequestListener, type Server, type ServerResponse } from 'node:http';
+import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
+import { connectNodeAdapter } from '@connectrpc/connect-node';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { fromJson } from '@bufbuild/protobuf';
+import { GetAggregatedDataResponseSchema, StatisticsService } from '../../src/generated/grpc/hagicode/platform/v1/statistics_pb';
 import { runCli } from '../../src/main';
 import { createDefaultDependencies, type CliIo } from '../../src/runtime/commandContext';
 import { EXIT_CODES } from '../../src/runtime/errors';
@@ -31,7 +35,21 @@ function captureIo(): { io: CliIo; stdout: string[]; stderr: string[] } {
   };
 }
 
-async function startServer(handler: RequestListener): Promise<RunningServer> {
+type AggregationHandler = (context: HandlerContext) => void;
+
+/** A real gRPC-Web endpoint under /grpc whose GetAggregatedData runs `onCall` (which may throw a ConnectError). */
+async function startServer(onCall: AggregationHandler = () => undefined): Promise<RunningServer> {
+  const handler = connectNodeAdapter({
+    requestPathPrefix: '/grpc',
+    routes: router => {
+      router.service(StatisticsService, {
+        getAggregatedData: (_request, context) => {
+          onCall(context);
+          return fromJson(GetAggregatedDataResponseSchema, { result: { projects: [], metadata: { totalProjects: 0, totalRepositories: 0, failedProjects: 0, hasFailures: false } } }, { ignoreUnknownFields: true });
+        },
+      } as never);
+    },
+  });
   const server = createServer(handler);
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address() as AddressInfo;
@@ -67,42 +85,32 @@ describe('backend connection', () => {
     rmSync(configHome, { recursive: true, force: true });
   });
 
-  it('sends operation requests to the resolved base URL with no Authorization header', async () => {
-    const seen: Array<{ path?: string; authorization?: string }> = [];
-    running = await startServer((request: IncomingMessage, response: ServerResponse) => {
-      seen.push({ path: request.url, authorization: request.headers.authorization });
-      response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(
-        JSON.stringify({
-          projects: [],
-          metadata: { timestamp: '2026-10-16T00:00:00Z', totalProjects: 0, totalRepositories: 0, failedProjects: 0, hasFailures: false },
-        }),
-      );
+  it('sends operation requests to the resolved base URL over gRPC-Web with no Authorization header', async () => {
+    const seen: Array<{ authorization: string | null; client: string | null }> = [];
+    running = await startServer(context => {
+      seen.push({
+        authorization: context.requestHeader.get('authorization'),
+        client: context.requestHeader.get('x-hagi-client'),
+      });
     });
 
-    const { io } = captureIo();
+    const { io, stdout } = captureIo();
     const exitCode = await runCli(
       ['node', 'hagi', '--base-url', running.url, 'project', 'list', '--json'],
       createDefaultDependencies({ XDG_CONFIG_HOME: configHome }, io),
     );
 
     expect(exitCode).toBe(0);
+    expect(JSON.parse(stdout.join(''))).toBeDefined();
     expect(seen).toHaveLength(1);
-    expect(seen[0].path).toBe('/api/DataAggregation');
-    expect(seen[0].authorization).toBeUndefined();
+    expect(seen[0].authorization).toBeNull();
+    expect(seen[0].client).toMatch(/^cli\//);
   });
 
   it('attaches a bearer token only when the caller passes --token', async () => {
-    const seen: Array<string | undefined> = [];
-    running = await startServer((request, response) => {
-      seen.push(request.headers.authorization);
-      response.writeHead(200, { 'content-type': 'application/json' });
-      response.end(
-        JSON.stringify({
-          projects: [],
-          metadata: { timestamp: '2026-10-16T00:00:00Z', totalProjects: 0, totalRepositories: 0, failedProjects: 0, hasFailures: false },
-        }),
-      );
+    const seen: Array<string | null> = [];
+    running = await startServer(context => {
+      seen.push(context.requestHeader.get('authorization'));
     });
 
     const { io } = captureIo();
@@ -137,9 +145,8 @@ describe('backend connection', () => {
       createDefaultDependencies({ XDG_CONFIG_HOME: configHome }, unreachableCapture.io),
     );
 
-    running = await startServer((_request, response) => {
-      response.writeHead(500, { 'content-type': 'application/json' });
-      response.end(JSON.stringify({ error: 'Backend exploded' }));
+    running = await startServer(() => {
+      throw new ConnectError('Backend exploded', Code.Internal);
     });
     const httpCapture = captureIo();
     const httpExit = await runCli(

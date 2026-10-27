@@ -1,3 +1,105 @@
+import { createClient } from '@connectrpc/connect';
+import type { Message } from '@bufbuild/protobuf';
+import type { GenMessage } from '@bufbuild/protobuf/codegenv2';
+import {
+  CreateProjectDtoSchema,
+  CreateProjectResponseSchema,
+  CloneMonoSpecsRepositoriesResponseSchema,
+  GetMonoSpecsManagementResponseSchema,
+  InitializeMonoSpecsResponseSchema,
+  MonoSpecsCloneRepositoriesRequestDtoSchema,
+  ProjectService,
+  ReloadMonoSpecsResponseSchema,
+  RemoveMonoSpecsRepositoryCheckoutResponseSchema,
+  UpdateMonoSpecsManagementRequestDtoSchema,
+  UpdateMonoSpecsManagementResponseSchema,
+  UpdateProjectDtoSchema,
+  UpdateProjectResponseSchema,
+  ValidateMonoSpecsConfigResponseSchema,
+  ValidateMonoSpecsRequestDtoSchema,
+} from '../generated/grpc/hagicode/project/v1/project_pb';
+import {
+  CreateVaultRequestDtoSchema,
+  CreateVaultResponseSchema,
+  DeleteVaultResponseSchema,
+  GetVaultFilePreviewResponseSchema,
+  GetVaultFilesResponseSchema,
+  ListVaultsResponseSchema,
+  UpdateVaultRequestDtoSchema,
+  UpdateVaultResponseSchema,
+  VaultService,
+} from '../generated/grpc/hagicode/project/v1/vault_pb';
+import {
+  CreateScheduledPlanResponseSchema,
+  DeleteScheduledPlanResponseSchema,
+  GetScheduledPlanResponseSchema,
+  ListScheduledPlansResponseSchema,
+  RunScheduledPlanResponseSchema,
+  ScheduledPlanSaveRequestSchema,
+  ScheduledPlansService,
+  StartScheduledPlanResponseSchema,
+  UpdateScheduledPlanResponseSchema,
+} from '../generated/grpc/hagicode/community/v1/scheduled_plans_pb';
+import {
+  GetPresetTaskSchemaResponseSchema,
+  ListPresetTaskSchemasResponseSchema,
+  PresetTasksService,
+} from '../generated/grpc/hagicode/community/v1/preset_tasks_pb';
+import {
+  DeleteTrustedSkillProviderRequestDtoSchema,
+  DeleteTrustedSkillProviderResponseSchema,
+  GetLocalSkillsResponseSchema,
+  GetSkillGalleryDetailResponseSchema,
+  GetSkillGalleryResponseSchema,
+  GetTrustedSkillProvidersResponseSchema,
+  InstallSkillRequestDtoSchema,
+  InstallSkillResponseSchema,
+  ResetTrustedSkillProvidersResponseSchema,
+  SetBuiltInSkillAvailabilityRequestDtoSchema,
+  SetBuiltInSkillAvailabilityResponseSchema,
+  SkillGalleryService,
+  UninstallLocalSkillRequestDtoSchema,
+  UninstallLocalSkillResponseSchema,
+  UpsertTrustedSkillProviderRequestDtoSchema,
+  UpsertTrustedSkillProviderResponseSchema,
+} from '../generated/grpc/hagicode/community/v1/skill_gallery_pb';
+import { GetAggregatedDataResponseSchema, StatisticsService } from '../generated/grpc/hagicode/platform/v1/statistics_pb';
+import {
+  AnnotationSubmissionDtoSchema,
+  PostMessageRequestSchema,
+  PostSessionMessageResponseSchema,
+  SessionMessagingService,
+  SubmitSessionAnnotationsResponseSchema,
+} from '../generated/grpc/hagicode/session/v1/session_messaging_pb';
+import {
+  ArchiveSessionRequestDtoSchema,
+  ArchiveSessionResponseSchema,
+  CompleteSessionResponseSchema,
+  ExecuteProposalRequestDtoSchema,
+  ExecuteProposalResponseSchema,
+  GenerateProposalRequestDtoSchema,
+  GenerateProposalResponseSchema,
+  OptimizeProposalRequestSchema,
+  OptimizeSessionProposalResponseSchema,
+  SessionProposalService,
+} from '../generated/grpc/hagicode/session/v1/session_proposal_pb';
+import {
+  ArchiveChatSessionResponseSchema,
+  CreateChatSessionRequestSchema,
+  CreateHagiTaskSessionRequestSchema,
+  CreateSessionRequestSchema,
+  DeleteSessionResponseSchema,
+  GetSessionResponseSchema,
+  ListSessionsResponseSchema,
+  OpenChatSessionResponseSchema,
+  OpenSessionResponseSchema,
+  SaveSessionResponseSchema,
+  SessionsService,
+  StartHagiTaskSessionResponseSchema,
+  UpdateSessionRequestSchema,
+} from '../generated/grpc/hagicode/session/v1/sessions_pb';
+import { dtoToProto, resultOf } from './grpc/mappers';
+import { getGrpcTransport } from './grpc/transport';
 import type { PCode_Application_Contracts_Dto_AnnotationSubmissionDto } from '../generated/api/models/PCode_Application_Contracts_Dto_AnnotationSubmissionDto';
 import type { PCode_Application_Contracts_Dto_AnnotationSubmissionResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_AnnotationSubmissionResponseDto';
 import type { PCode_Application_Contracts_Dto_ArchiveSessionRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ArchiveSessionRequestDto';
@@ -50,13 +152,6 @@ import type { PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDt
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto';
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
 import type { PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto';
-import { DataAggregationService } from '../generated/api/services/DataAggregationService';
-import { PresetTasksService } from '../generated/api/services/PresetTasksService';
-import { ProjectService } from '../generated/api/services/ProjectService';
-import { ScheduledPlansService } from '../generated/api/services/ScheduledPlansService';
-import { SessionsService } from '../generated/api/services/SessionsService';
-import { SkillGalleryService } from '../generated/api/services/SkillGalleryService';
-import { VaultService } from '../generated/api/services/VaultService';
 
 export type ListSessionsInput = {
   type?: PCode_Models_SessionType;
@@ -162,65 +257,191 @@ export interface HagiApi {
   resetTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
 }
 
-export function createGeneratedHagiApi(): HagiApi {
+
+// One Connect client per call: the transport is cached per base URL, so the active runtime settings always apply.
+const projects = () => createClient(ProjectService, getGrpcTransport());
+const vaults = () => createClient(VaultService, getGrpcTransport());
+const scheduledPlans = () => createClient(ScheduledPlansService, getGrpcTransport());
+const presetTasks = () => createClient(PresetTasksService, getGrpcTransport());
+const skills = () => createClient(SkillGalleryService, getGrpcTransport());
+const statistics = () => createClient(StatisticsService, getGrpcTransport());
+const sessions = () => createClient(SessionsService, getGrpcTransport());
+const sessionMessaging = () => createClient(SessionMessagingService, getGrpcTransport());
+const sessionProposal = () => createClient(SessionProposalService, getGrpcTransport());
+
+/** Every RPC answers `{ result }`; this returns that result as the DTO the facade promises. */
+async function result<T>(schema: GenMessage<Message>, response: Promise<Message>): Promise<T> {
+  return resultOf<T>(schema, await response);
+}
+
+/**
+ * The facade over the backend's gRPC services (`hagicode.*.v1`, gRPC-Web under `/grpc`). Every method keeps the signature and
+ * the DTO type the REST client had, so commands and formatters are unchanged. A failure is a `ConnectError`;
+ * `normalizeCliError` maps it to the same exit codes the REST statuses had.
+ */
+export function createGrpcHagiApi(): HagiApi {
   return {
-    listSessions: input => SessionsService.getApiSessions(input),
-    getSession: sessionId => SessionsService.getApiSessions1({ sessionId }),
-    createProposalSession: requestBody => SessionsService.postApiSessions({ requestBody }),
-    createChatSession: requestBody => SessionsService.postApiSessionsChat({ requestBody }),
-    createHagiTaskSession: requestBody => SessionsService.postApiSessionsHagitask({ requestBody }),
-    listHagiTaskSchemas: () => PresetTasksService.getApiPresetTasksSchemas(),
-    getHagiTaskSchema: presetTaskId => PresetTasksService.getApiPresetTasksSchema({ presetTaskId }),
-    updateSession: (sessionId, requestBody) => SessionsService.putApiSessions({ sessionId, requestBody }),
-    deleteSession: (sessionId, deleteFiles) => SessionsService.deleteApiSessions({ sessionId, deleteFiles }),
-    sendMessage: (sessionId, requestBody) => SessionsService.postApiSessionsMessages({ sessionId, requestBody }),
-    optimizeProposal: (sessionId, requestBody) =>
-      SessionsService.postApiSessionsOptimizeProposal({ sessionId, requestBody }),
-    generateProposal: (sessionId, requestBody) =>
-      SessionsService.postApiSessionsGenerateProposal({ sessionId, requestBody }),
-    executeProposal: (sessionId, requestBody) =>
-      SessionsService.postApiSessionsExecuteProposal({ sessionId, requestBody }),
-    archiveProposal: (sessionId, requestBody) => SessionsService.postApiSessionsArchive({ sessionId, requestBody }),
-    completeProposal: sessionId => SessionsService.postApiSessionsComplete({ sessionId }),
-    submitAnnotations: (sessionId, requestBody) =>
-      SessionsService.postApiSessionsAnnotations({ sessionId, requestBody }),
-    listProjects: () => DataAggregationService.getApiDataAggregation(),
-    createProject: requestBody => ProjectService.postApiProject({ requestBody }),
-    updateProject: (id, requestBody) => ProjectService.putApiProject({ id, requestBody }),
-    deleteProject: id => ProjectService.deleteApiProject({ id }),
-    getMonoSpecsManagement: id => ProjectService.getApiProjectMonospecsManagement({ id }),
-    saveMonoSpecsManagement: (id, requestBody) => ProjectService.putApiProjectMonospecsManagement({ id, requestBody }),
-    initializeMonoSpecsManagement: id => ProjectService.postApiProjectMonospecsInitialize({ id }),
-    reloadMonoSpecsManagement: id => ProjectService.postApiProjectMonospecsReload({ id }),
-    validateMonoSpecs: requestBody => ProjectService.postApiProjectValidateMonospecs({ requestBody }),
-    cloneMonoSpecsRepositories: (id, requestBody) =>
-      ProjectService.postApiProjectMonospecsRepositoriesClone({ id, requestBody }),
-    removeMonoSpecsRepositoryCheckout: (id, path, force) =>
-      ProjectService.deleteApiProjectMonospecsRepositoriesCheckout({ id, path, force }),
-    listPlans: () => ScheduledPlansService.getApiScheduledPlans(),
-    getPlan: id => ScheduledPlansService.getApiScheduledPlans1({ id }),
-    createPlan: requestBody => ScheduledPlansService.postApiScheduledPlans({ requestBody }),
-    updatePlan: (id, requestBody) => ScheduledPlansService.putApiScheduledPlans({ id, requestBody }),
-    deletePlan: id => ScheduledPlansService.deleteApiScheduledPlans({ id }),
-    runPlan: id => ScheduledPlansService.postApiScheduledPlansRun({ id }),
-    startPlan: id => ScheduledPlansService.postApiScheduledPlansStart({ id }),
-    listVaults: () => VaultService.getApiVaults(),
-    createVault: requestBody => VaultService.postApiVaults({ requestBody }),
-    updateVault: (id, requestBody) => VaultService.putApiVaults({ id, requestBody }),
-    deleteVault: (id, deleteLocalFiles) => VaultService.deleteApiVaults({ id, deleteLocalFiles }),
-    listVaultFiles: (id, path) => VaultService.getApiVaultsFiles({ id, path }),
-    previewVaultFile: (id, path) => VaultService.getApiVaultsFilesContent({ id, path }),
-    archiveChat: sessionId => SessionsService.postApiSessionsArchiveChat({ sessionId }),
-    listLocalSkills: () => SkillGalleryService.getApiSkillsLocal(),
-    uninstallLocalSkill: requestBody => SkillGalleryService.postApiSkillsLocalUninstall({ requestBody }),
-    setBuiltInSkillAvailability: requestBody =>
-      SkillGalleryService.postApiSkillsLocalBuiltInAvailability({ requestBody }),
-    searchSkillGallery: query => SkillGalleryService.getApiSkillsGallery({ query }),
-    getSkillGalleryDetail: (id, source) => SkillGalleryService.getApiSkillsGalleryDetail({ id, source }),
-    installGallerySkill: requestBody => SkillGalleryService.postApiSkillsGalleryInstall({ requestBody }),
-    listTrustedSkillProviders: () => SkillGalleryService.getApiSkillsProvidersTrusted(),
-    upsertTrustedSkillProvider: requestBody => SkillGalleryService.postApiSkillsProvidersTrusted({ requestBody }),
-    deleteTrustedSkillProvider: requestBody => SkillGalleryService.deleteApiSkillsProvidersTrusted({ requestBody }),
-    resetTrustedSkillProviders: () => SkillGalleryService.postApiSkillsProvidersTrustedReset(),
+    listSessions: async input =>
+      result(
+        ListSessionsResponseSchema,
+        sessions().listSessions({
+          type: input.type,
+          activeOnly: input.activeOnly,
+          includeArchived: input.includeArchived,
+          projectId: input.projectId,
+          projectIds: input.projectIds ?? [],
+        }),
+      ),
+    getSession: async sessionId => result(GetSessionResponseSchema, sessions().getSession({ sessionId })),
+    createProposalSession: async requestBody =>
+      result(OpenSessionResponseSchema, sessions().openSession({ body: dtoToProto(CreateSessionRequestSchema, requestBody) })),
+    createChatSession: async requestBody =>
+      result(
+        OpenChatSessionResponseSchema,
+        sessions().openChatSession({ body: dtoToProto(CreateChatSessionRequestSchema, requestBody) }),
+      ),
+    createHagiTaskSession: async requestBody =>
+      result(
+        StartHagiTaskSessionResponseSchema,
+        sessions().startHagiTaskSession({ body: dtoToProto(CreateHagiTaskSessionRequestSchema, requestBody) }),
+      ),
+    listHagiTaskSchemas: async () => result(ListPresetTaskSchemasResponseSchema, presetTasks().listPresetTaskSchemas({})),
+    getHagiTaskSchema: async presetTaskId =>
+      result(GetPresetTaskSchemaResponseSchema, presetTasks().getPresetTaskSchema({ presetTaskId })),
+    updateSession: async (sessionId, requestBody) =>
+      result(
+        SaveSessionResponseSchema,
+        sessions().saveSession({ sessionId, body: dtoToProto(UpdateSessionRequestSchema, requestBody) }),
+      ),
+    deleteSession: async (sessionId, deleteFiles) =>
+      result(DeleteSessionResponseSchema, sessions().deleteSession({ sessionId, deleteFiles: deleteFiles ?? false })),
+    sendMessage: async (sessionId, requestBody) =>
+      result(
+        PostSessionMessageResponseSchema,
+        sessionMessaging().postSessionMessage({ sessionId, body: dtoToProto(PostMessageRequestSchema, requestBody) }),
+      ),
+    optimizeProposal: async (sessionId, requestBody) =>
+      result(
+        OptimizeSessionProposalResponseSchema,
+        sessionProposal().optimizeSessionProposal({ sessionId, body: dtoToProto(OptimizeProposalRequestSchema, requestBody) }),
+      ),
+    generateProposal: async (sessionId, requestBody) =>
+      result(
+        GenerateProposalResponseSchema,
+        sessionProposal().generateProposal({ sessionId, body: dtoToProto(GenerateProposalRequestDtoSchema, requestBody) }),
+      ),
+    executeProposal: async (sessionId, requestBody) =>
+      result(
+        ExecuteProposalResponseSchema,
+        sessionProposal().executeProposal({ sessionId, body: dtoToProto(ExecuteProposalRequestDtoSchema, requestBody ?? {}) }),
+      ),
+    archiveProposal: async (sessionId, requestBody) =>
+      result(
+        ArchiveSessionResponseSchema,
+        sessionProposal().archiveSession({ sessionId, body: dtoToProto(ArchiveSessionRequestDtoSchema, requestBody ?? {}) }),
+      ),
+    completeProposal: async sessionId => result(CompleteSessionResponseSchema, sessionProposal().completeSession({ sessionId })),
+    submitAnnotations: async (sessionId, requestBody) =>
+      result(
+        SubmitSessionAnnotationsResponseSchema,
+        sessionMessaging().submitSessionAnnotations({ sessionId, body: dtoToProto(AnnotationSubmissionDtoSchema, requestBody) }),
+      ),
+    listProjects: async () =>
+      result(GetAggregatedDataResponseSchema, statistics().getAggregatedData({ forceRefresh: false })),
+    createProject: async requestBody =>
+      result(CreateProjectResponseSchema, projects().createProject({ body: dtoToProto(CreateProjectDtoSchema, requestBody) })),
+    updateProject: async (id, requestBody) =>
+      result(UpdateProjectResponseSchema, projects().updateProject({ id, body: dtoToProto(UpdateProjectDtoSchema, requestBody) })),
+    deleteProject: async id => {
+      await projects().deleteProject({ id });
+    },
+    getMonoSpecsManagement: async id =>
+      result(GetMonoSpecsManagementResponseSchema, projects().getMonoSpecsManagement({ projectId: id })),
+    saveMonoSpecsManagement: async (id, requestBody) =>
+      result(
+        UpdateMonoSpecsManagementResponseSchema,
+        projects().updateMonoSpecsManagement({
+          projectId: id,
+          body: dtoToProto(UpdateMonoSpecsManagementRequestDtoSchema, requestBody),
+        }),
+      ),
+    initializeMonoSpecsManagement: async id =>
+      result(InitializeMonoSpecsResponseSchema, projects().initializeMonoSpecs({ projectId: id })),
+    reloadMonoSpecsManagement: async id => result(ReloadMonoSpecsResponseSchema, projects().reloadMonoSpecs({ projectId: id })),
+    validateMonoSpecs: async requestBody =>
+      result(
+        ValidateMonoSpecsConfigResponseSchema,
+        projects().validateMonoSpecsConfig({ body: dtoToProto(ValidateMonoSpecsRequestDtoSchema, requestBody) }),
+      ),
+    cloneMonoSpecsRepositories: async (id, requestBody) =>
+      result(
+        CloneMonoSpecsRepositoriesResponseSchema,
+        projects().cloneMonoSpecsRepositories({
+          projectId: id,
+          body: dtoToProto(MonoSpecsCloneRepositoriesRequestDtoSchema, requestBody),
+        }),
+      ),
+    removeMonoSpecsRepositoryCheckout: async (id, path, force) =>
+      result(
+        RemoveMonoSpecsRepositoryCheckoutResponseSchema,
+        projects().removeMonoSpecsRepositoryCheckout({ projectId: id, path, force }),
+      ),
+    listPlans: async () => result(ListScheduledPlansResponseSchema, scheduledPlans().listScheduledPlans({})),
+    getPlan: async id => result(GetScheduledPlanResponseSchema, scheduledPlans().getScheduledPlan({ id })),
+    createPlan: async requestBody =>
+      result(
+        CreateScheduledPlanResponseSchema,
+        scheduledPlans().createScheduledPlan({ body: dtoToProto(ScheduledPlanSaveRequestSchema, requestBody) }),
+      ),
+    updatePlan: async (id, requestBody) =>
+      result(
+        UpdateScheduledPlanResponseSchema,
+        scheduledPlans().updateScheduledPlan({ id, body: dtoToProto(ScheduledPlanSaveRequestSchema, requestBody) }),
+      ),
+    deletePlan: async id => {
+      await scheduledPlans().deleteScheduledPlan({ id });
+    },
+    runPlan: async id => result(RunScheduledPlanResponseSchema, scheduledPlans().runScheduledPlan({ id })),
+    startPlan: async id => result(StartScheduledPlanResponseSchema, scheduledPlans().startScheduledPlan({ id })),
+    listVaults: async () => result(ListVaultsResponseSchema, vaults().listVaults({})),
+    createVault: async requestBody =>
+      result(CreateVaultResponseSchema, vaults().createVault({ body: dtoToProto(CreateVaultRequestDtoSchema, requestBody) })),
+    updateVault: async (id, requestBody) =>
+      result(UpdateVaultResponseSchema, vaults().updateVault({ id, body: dtoToProto(UpdateVaultRequestDtoSchema, requestBody) })),
+    deleteVault: async (id, deleteLocalFiles) =>
+      result(DeleteVaultResponseSchema, vaults().deleteVault({ id, deleteLocalFiles: deleteLocalFiles ?? false })),
+    listVaultFiles: async (id, path) => result(GetVaultFilesResponseSchema, vaults().getVaultFiles({ id, path })),
+    previewVaultFile: async (id, path) => result(GetVaultFilePreviewResponseSchema, vaults().getVaultFilePreview({ id, path })),
+    archiveChat: async sessionId => result(ArchiveChatSessionResponseSchema, sessions().archiveChatSession({ sessionId })),
+    listLocalSkills: async () => result(GetLocalSkillsResponseSchema, skills().getLocalSkills({})),
+    uninstallLocalSkill: async requestBody =>
+      result(
+        UninstallLocalSkillResponseSchema,
+        skills().uninstallLocalSkill({ body: dtoToProto(UninstallLocalSkillRequestDtoSchema, requestBody) }),
+      ),
+    setBuiltInSkillAvailability: async requestBody =>
+      result(
+        SetBuiltInSkillAvailabilityResponseSchema,
+        skills().setBuiltInSkillAvailability({ body: dtoToProto(SetBuiltInSkillAvailabilityRequestDtoSchema, requestBody) }),
+      ),
+    searchSkillGallery: async query => result(GetSkillGalleryResponseSchema, skills().getSkillGallery({ query })),
+    getSkillGalleryDetail: async (id, source) =>
+      result(GetSkillGalleryDetailResponseSchema, skills().getSkillGalleryDetail({ id, source })),
+    installGallerySkill: async requestBody =>
+      result(InstallSkillResponseSchema, skills().installSkill({ body: dtoToProto(InstallSkillRequestDtoSchema, requestBody) })),
+    listTrustedSkillProviders: async () =>
+      result(GetTrustedSkillProvidersResponseSchema, skills().getTrustedSkillProviders({})),
+    upsertTrustedSkillProvider: async requestBody =>
+      result(
+        UpsertTrustedSkillProviderResponseSchema,
+        skills().upsertTrustedSkillProvider({ body: dtoToProto(UpsertTrustedSkillProviderRequestDtoSchema, requestBody) }),
+      ),
+    deleteTrustedSkillProvider: async requestBody =>
+      result(
+        DeleteTrustedSkillProviderResponseSchema,
+        skills().deleteTrustedSkillProvider({ body: dtoToProto(DeleteTrustedSkillProviderRequestDtoSchema, requestBody) }),
+      ),
+    resetTrustedSkillProviders: async () =>
+      result(ResetTrustedSkillProvidersResponseSchema, skills().resetTrustedSkillProviders({})),
   };
 }

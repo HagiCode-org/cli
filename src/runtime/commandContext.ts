@@ -2,7 +2,7 @@ import type { Command } from 'commander';
 import { configureApiRuntime, type ResolvedApiRuntimeConfig } from './apiRuntime';
 import { CliUsageError } from './errors';
 import {
-  createGeneratedHagiApi,
+  createGrpcHagiApi,
   type HagiApi,
 } from './hagiApi';
 
@@ -63,7 +63,7 @@ export function createDefaultDependencies(
   },
 ): AppDependencies {
   return {
-    api: createGeneratedHagiApi(),
+    api: createGrpcHagiApi(),
     env,
     io,
   };

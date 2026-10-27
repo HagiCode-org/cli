@@ -1,4 +1,5 @@
-import { ApiError } from '../generated/api/core/ApiError';
+import { Code, ConnectError } from '@connectrpc/connect';
+import { ErrorDetailSchema } from '../generated/grpc/hagicode/common/v1/error_detail_pb';
 
 export const EXIT_CODES = {
   USAGE: 2,
@@ -72,7 +73,12 @@ function inferTransportError(message: string): boolean {
     message.includes('fetch failed') ||
     message.includes('ECONNREFUSED') ||
     message.includes('ENOTFOUND') ||
-    message.includes('Failed to parse URL')
+    message.includes('ECONNRESET') ||
+    message.includes('ETIMEDOUT') ||
+    message.includes('EHOSTUNREACH') ||
+    message.includes('EAI_AGAIN') ||
+    message.includes('Failed to parse URL') ||
+    message.includes('Invalid URL')
   );
 }
 
@@ -101,10 +107,97 @@ export function mapExitCodeFromStatus(status?: number): number {
   }
 }
 
+/**
+ * HTTP-equivalent status of a gRPC code. The CLI exit codes and the `status=` text stay what they were on REST, so scripts
+ * that branch on them keep working. The table matches the one the web client uses.
+ */
+const STATUS_BY_CODE: Partial<Record<Code, number>> = {
+  [Code.InvalidArgument]: 400,
+  [Code.OutOfRange]: 400,
+  [Code.Unauthenticated]: 401,
+  [Code.PermissionDenied]: 403,
+  [Code.NotFound]: 404,
+  [Code.AlreadyExists]: 409,
+  [Code.FailedPrecondition]: 409,
+  [Code.Aborted]: 409,
+  [Code.Unimplemented]: 501,
+  [Code.Internal]: 500,
+  [Code.Unknown]: 500,
+  [Code.DataLoss]: 500,
+  [Code.Unavailable]: 503,
+  [Code.DeadlineExceeded]: 504,
+};
+
+// ResourceExhausted is 429 unless the server says a message was too large, which REST reported as 413.
+const TOO_LARGE_PATTERN = /exceeds?\s+the\s+maximum|too\s+large|payload\s+too\s+large/i;
+
+export function mapStatusFromGrpcCode(error: ConnectError): number {
+  if (error.code === Code.ResourceExhausted) {
+    return TOO_LARGE_PATTERN.test(error.rawMessage) ? 413 : 429;
+  }
+
+  return STATUS_BY_CODE[error.code] ?? 500;
+}
+
+/**
+ * True when the call never got an answer from a gRPC server: the socket failed or the URL is unusable. A status the server
+ * sent on purpose (a business `Unavailable`, for example) has no underlying cause and is not a transport failure.
+ */
+function isTransportFailure(error: ConnectError): boolean {
+  if (error.code !== Code.Unavailable && error.code !== Code.Unknown && error.code !== Code.Internal && error.code !== Code.Aborted) {
+    return false;
+  }
+
+  return error.cause instanceof Error || inferTransportError(error.rawMessage);
+}
+
+/** A backend failure read from a `ConnectError`, in the shape the REST error body had. */
+export type BackendFailure = {
+  status: number;
+  message: string;
+  /** Stable business code the server attached to the failure, when it sent one. */
+  code?: string;
+  /** `{ error, code?, ...values }`: the message plus the structured values of the failure (validation errors, diagnostics). */
+  body: Record<string, unknown>;
+};
+
+/**
+ * Reads a gRPC status failure as the old REST error body: the message under `error`, the business code under `code` and the
+ * structured values the server packed into the status details beside them. Returns undefined for anything that is not an
+ * answer from the backend (another error type, a cancelled call, a failed connection).
+ */
+export function readBackendFailure(error: unknown): BackendFailure | undefined {
+  if (!(error instanceof ConnectError) || error.code === Code.Canceled || isTransportFailure(error)) {
+    return undefined;
+  }
+
+  const [detail] = error.findDetails(ErrorDetailSchema);
+  const code = detail && detail.code.length > 0 ? detail.code : undefined;
+  const data = (detail?.data ?? {}) as Record<string, unknown>;
+  const message = error.rawMessage.trim() || `The backend rejected the request (${Code[error.code]}).`;
+
+  return {
+    status: mapStatusFromGrpcCode(error),
+    message,
+    code,
+    body: { error: message, ...(code ? { code } : {}), ...data },
+  };
+}
+
 export type CliErrorContext = {
   /** Base URL the failed invocation resolved to, named in connection failures. */
   baseUrl?: string;
 };
+
+function normalizeTransportError(message: string, context: CliErrorContext): CliErrorPayload {
+  const target = context.baseUrl ?? 'the configured backend';
+  return {
+    exitCode: EXIT_CODES.TRANSPORT,
+    message: /Failed to parse URL|Invalid URL/i.test(message)
+      ? `Invalid HagiCode backend base URL: ${target}`
+      : `Cannot reach HagiCode backend at ${target}. Check that the backend is running and the base URL is correct.`,
+  };
+}
 
 export function normalizeCliError(error: unknown, context: CliErrorContext = {}): CliErrorPayload {
   if (error instanceof CliUsageError) {
@@ -130,21 +223,26 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
     };
   }
 
-  if (error instanceof ApiError) {
-    const backendMessage =
-      readStringProperty(error.body, 'error') ??
-      readStringProperty(error.body, 'message') ??
-      error.message;
-    const fieldLines = readFieldErrorLines(error.body);
+  if (error instanceof ConnectError) {
+    const failure = readBackendFailure(error);
+    if (failure) {
+      const fieldLines = readFieldErrorLines(failure.body);
 
-    return {
-      exitCode: mapExitCodeFromStatus(error.status),
-      status: error.status,
-      message: fieldLines.length > 0 ? [backendMessage, ...fieldLines].join('\n') : backendMessage,
-      errorCode: readStringProperty(error.body, 'errorCode'),
-      correlationId: readStringProperty(error.body, 'correlationId'),
-      details: error.body,
-    };
+      return {
+        exitCode: mapExitCodeFromStatus(failure.status),
+        status: failure.status,
+        message: fieldLines.length > 0 ? [failure.message, ...fieldLines].join('\n') : failure.message,
+        errorCode: readStringProperty(failure.body, 'errorCode') ?? failure.code,
+        correlationId: readStringProperty(failure.body, 'correlationId'),
+        details: failure.body,
+      };
+    }
+
+    if (error.code === Code.Canceled) {
+      return { exitCode: EXIT_CODES.UNKNOWN, message: 'The request was cancelled.' };
+    }
+
+    return normalizeTransportError(error.rawMessage, context);
   }
 
   if (error instanceof Error) {
@@ -155,13 +253,7 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
       };
     }
 
-    const target = context.baseUrl ?? 'the configured backend';
-    return {
-      exitCode: EXIT_CODES.TRANSPORT,
-      message: error.message.includes('Failed to parse URL')
-        ? `Invalid HagiCode backend base URL: ${target}`
-        : `Cannot reach HagiCode backend at ${target}. Check that the backend is running and the base URL is correct.`,
-    };
+    return normalizeTransportError(error.message, context);
   }
 
   return {

@@ -3,7 +3,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { fromJson, type JsonValue } from '@bufbuild/protobuf';
+import type { HandlerContext } from '@connectrpc/connect';
+import { connectNodeAdapter } from '@connectrpc/connect-node';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SessionsService } from '../../src/generated/grpc/hagicode/session/v1/sessions_pb';
 import { runCli } from '../../src/main';
 import { createDefaultDependencies, type CliIo } from '../../src/runtime/commandContext';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
@@ -14,13 +20,48 @@ import { createApiError, createDependencies, createSession, TEST_BASE_URL } from
 
 const CLI_VERSION = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version;
 
-/** Runs the real generated client against a stubbed fetch that answers every call with `body`. */
-function stubBackend(body: unknown) {
-  const fetchMock = vi.fn(async () =>
-    new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } }),
-  );
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
+type StubBackend = { url: string; calls: Array<{ rpc: string; client: string | null }>; server: Server };
+const runningBackends: Server[] = [];
+
+/** A gRPC-Web endpoint under /grpc that answers OpenSession and ListSessions with `session`, and records each call. */
+async function stubBackend(session: Record<string, unknown>): Promise<StubBackend> {
+  const calls: StubBackend['calls'] = [];
+  const answer = (rpc: string, context: HandlerContext, response: JsonValue, schemaOf: 'open' | 'list') => {
+    calls.push({ rpc, client: context.requestHeader.get('x-hagi-client') });
+    const method = SessionsService.methods.find(candidate => candidate.name === (schemaOf === 'open' ? 'OpenSession' : 'ListSessions'))!;
+    return fromJson(method.output, response, { ignoreUnknownFields: true });
+  };
+  const handler = connectNodeAdapter({
+    requestPathPrefix: '/grpc',
+    routes: router => {
+      router.service(SessionsService, {
+        openSession: (_request: unknown, context: HandlerContext) =>
+          answer('OpenSession', context, { result: session } as JsonValue, 'open'),
+        listSessions: (_request: unknown, context: HandlerContext) =>
+          answer('ListSessions', context, { result: { sessions: [session] } } as JsonValue, 'list'),
+      } as never);
+    },
+  });
+  const server = createServer(handler);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  runningBackends.push(server);
+  return { url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, calls, server };
+}
+
+/** The session as protobuf JSON: ids are plain strings on the wire. */
+function createWireSession(sessionId: string) {
+  return {
+    sessionId,
+    title: 'CLI proposal management',
+    code: 12,
+    type: 'Proposal',
+    status: 'Drafting',
+    isActive: true,
+    projectId: 'project-1',
+    projectName: 'Project',
+    projectPath: '/tmp/project',
+    pendingMessageCount: 0,
+  };
 }
 
 function captureIo(): { io: CliIo; stdout: string[] } {
@@ -37,11 +78,13 @@ function captureIo(): { io: CliIo; stdout: string[] } {
 }
 
 describe('proposal commands over the wire', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  afterEach(async () => {
+    for (const server of runningBackends.splice(0)) {
+      server.closeAllConnections();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
   });
 
-  const env = { HAGI_API_BASE_URL: TEST_BASE_URL };
   const createArgs = [
     'node', 'hagi', 'proposal', 'create',
     '--project-id', 'project-1',
@@ -50,19 +93,23 @@ describe('proposal commands over the wire', () => {
   ];
 
   it('sends X-Hagi-Client with the package version on proposal create and proposal list', async () => {
-    const createFetch = stubBackend(createSession('session-2'));
-    await expect(runCli(createArgs, createDefaultDependencies(env, captureIo().io))).resolves.toBe(0);
-    expect(new Headers(createFetch.mock.calls[0][1]?.headers).get('X-Hagi-Client')).toBe(`cli/${CLI_VERSION}`);
+    const backend = await stubBackend(createWireSession('session-2'));
+    const env = { HAGI_API_BASE_URL: backend.url };
 
-    const listFetch = stubBackend({ sessions: [createSession('session-1')] });
+    await expect(runCli(createArgs, createDefaultDependencies(env, captureIo().io))).resolves.toBe(0);
     await expect(
       runCli(['node', 'hagi', 'proposal', 'list', '--project-id', 'project-1'], createDefaultDependencies(env, captureIo().io)),
     ).resolves.toBe(0);
-    expect(new Headers(listFetch.mock.calls[0][1]?.headers).get('X-Hagi-Client')).toBe(`cli/${CLI_VERSION}`);
+
+    expect(backend.calls).toEqual([
+      { rpc: 'OpenSession', client: `cli/${CLI_VERSION}` },
+      { rpc: 'ListSessions', client: `cli/${CLI_VERSION}` },
+    ]);
   });
 
   it('keeps the proposal create --json output keys unchanged and free of client or achievement fields', async () => {
-    stubBackend(createSession('session-2'));
+    const backend = await stubBackend(createWireSession('session-2'));
+    const env = { HAGI_API_BASE_URL: backend.url };
     const { io, stdout } = captureIo();
 
     await expect(runCli([...createArgs, '--json'], createDefaultDependencies(env, io))).resolves.toBe(0);
@@ -73,6 +120,7 @@ describe('proposal commands over the wire', () => {
   });
 
   it('keeps the proposal create option list unchanged', async () => {
+    const env = { HAGI_API_BASE_URL: TEST_BASE_URL };
     const { io, stdout } = captureIo();
 
     await expect(runCli(['node', 'hagi', 'proposal', 'create', '--help'], createDefaultDependencies(env, io))).resolves.toBe(0);

@@ -1,5 +1,7 @@
+import { Code, ConnectError } from '@connectrpc/connect';
 import { describe, expect, it } from 'vitest';
-import { ApiError } from '../../src/generated/api/core/ApiError';
+import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/error_detail_pb';
+import { createApiError } from '../commands/testHelpers';
 import {
   CliOperationFailedError,
   CliUsageError,
@@ -7,29 +9,6 @@ import {
   normalizeCliError,
   renderCliError,
 } from '../../src/runtime/errors';
-
-function createApiError(status: number, body: unknown): ApiError {
-  return new ApiError(
-    {
-      method: 'GET',
-      url: '/api/Sessions',
-      path: {},
-      query: {},
-      formData: {},
-      headers: {},
-      cookies: {},
-      errors: {},
-    },
-    {
-      url: 'https://api.example/api/Sessions',
-      ok: false,
-      status,
-      statusText: 'Bad Request',
-      body,
-    },
-    'Backend error',
-  );
-}
 
 describe('errors', () => {
   it('maps backend HTTP errors to stable exit codes', () => {
@@ -142,6 +121,88 @@ describe('errors', () => {
     expect(normalizeCliError(new CliOperationFailedError('Unknown built-in skill: nope.'))).toEqual({
       exitCode: 30,
       message: 'Unknown built-in skill: nope.',
+    });
+  });
+
+  describe('gRPC failures', () => {
+    it.each([
+      [Code.InvalidArgument, 400, EXIT_CODES.HTTP_BAD_REQUEST],
+      [Code.Unauthenticated, 401, EXIT_CODES.HTTP_UNAUTHORIZED],
+      [Code.PermissionDenied, 403, EXIT_CODES.HTTP_FORBIDDEN],
+      [Code.NotFound, 404, EXIT_CODES.HTTP_NOT_FOUND],
+      [Code.FailedPrecondition, 409, EXIT_CODES.HTTP_CONFLICT],
+      [Code.AlreadyExists, 409, EXIT_CODES.HTTP_CONFLICT],
+      [Code.ResourceExhausted, 429, EXIT_CODES.HTTP_CLIENT_ERROR],
+      [Code.Internal, 500, EXIT_CODES.HTTP_SERVER_ERROR],
+      [Code.Unavailable, 503, EXIT_CODES.HTTP_SERVER_ERROR],
+      [Code.DeadlineExceeded, 504, EXIT_CODES.HTTP_SERVER_ERROR],
+    ])('maps %s to status %i and exit code %i', (code, status, exitCode) => {
+      expect(normalizeCliError(new ConnectError('Backend said no', code))).toMatchObject({
+        exitCode,
+        status,
+        message: 'Backend said no',
+      });
+    });
+
+    it('reports a message that is too large as 413', () => {
+      expect(
+        normalizeCliError(new ConnectError('Request message exceeds the maximum size.', Code.ResourceExhausted)),
+      ).toMatchObject({ status: 413, exitCode: EXIT_CODES.HTTP_CLIENT_ERROR });
+    });
+
+    it('treats a failure with an underlying socket error as a transport failure', () => {
+      const error = new ConnectError('connect ECONNREFUSED 127.0.0.1:1', Code.Unavailable, undefined, undefined, new Error('boom'));
+
+      expect(normalizeCliError(error, { baseUrl: 'http://127.0.0.1:1' })).toEqual({
+        exitCode: EXIT_CODES.TRANSPORT,
+        message: 'Cannot reach HagiCode backend at http://127.0.0.1:1. Check that the backend is running and the base URL is correct.',
+      });
+    });
+
+    it('keeps an Unavailable status the backend sent on purpose as an HTTP-style failure', () => {
+      expect(normalizeCliError(new ConnectError('A dependency is unavailable.', Code.Unavailable))).toMatchObject({
+        exitCode: EXIT_CODES.HTTP_SERVER_ERROR,
+        status: 503,
+      });
+    });
+
+    it('reports an unusable base URL by name', () => {
+      const error = new ConnectError('Invalid URL', Code.Unknown, undefined, undefined, new TypeError('Invalid URL'));
+
+      expect(normalizeCliError(error, { baseUrl: 'not a url' })).toEqual({
+        exitCode: EXIT_CODES.TRANSPORT,
+        message: 'Invalid HagiCode backend base URL: not a url',
+      });
+    });
+
+    it('surfaces the business code from the error detail as errorCode', () => {
+      const error = new ConnectError('Project is locked.', Code.FailedPrecondition, undefined, [
+        { desc: ErrorDetailSchema, value: { code: 'PCode.Project.Locked' } },
+      ]);
+
+      expect(normalizeCliError(error)).toMatchObject({
+        status: 409,
+        errorCode: 'PCode.Project.Locked',
+        details: { error: 'Project is locked.', code: 'PCode.Project.Locked' },
+      });
+    });
+
+    it('lists MonoSpecs field errors under the message', () => {
+      const payload = normalizeCliError(
+        createApiError(400, {
+          error: 'MonoSpecs configuration is invalid.',
+          fieldErrors: [{ field: 'repositories[0].path', message: 'Path is required.' }],
+        }),
+      );
+
+      expect(payload.message).toBe('MonoSpecs configuration is invalid.\n  - repositories[0].path: Path is required.');
+    });
+
+    it('describes a cancelled call without a status', () => {
+      expect(normalizeCliError(new ConnectError('aborted', Code.Canceled))).toEqual({
+        exitCode: EXIT_CODES.UNKNOWN,
+        message: 'The request was cancelled.',
+      });
     });
   });
 });

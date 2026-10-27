@@ -1,25 +1,38 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fromJson, toJson, type JsonValue, type Message } from '@bufbuild/protobuf';
+import type { DescMessage, DescService } from '@bufbuild/protobuf';
+import type { Interceptor } from '@connectrpc/connect';
+import { connectNodeAdapter } from '@connectrpc/connect-node';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { PresetTasksService } from '../../src/generated/grpc/hagicode/community/v1/preset_tasks_pb';
+import { ScheduledPlansService } from '../../src/generated/grpc/hagicode/community/v1/scheduled_plans_pb';
+import { SkillGalleryService } from '../../src/generated/grpc/hagicode/community/v1/skill_gallery_pb';
+import { StatisticsService } from '../../src/generated/grpc/hagicode/platform/v1/statistics_pb';
+import { ProjectService } from '../../src/generated/grpc/hagicode/project/v1/project_pb';
+import { VaultService } from '../../src/generated/grpc/hagicode/project/v1/vault_pb';
+import { SessionMessagingService } from '../../src/generated/grpc/hagicode/session/v1/session_messaging_pb';
+import { SessionProposalService } from '../../src/generated/grpc/hagicode/session/v1/session_proposal_pb';
+import { SessionsService } from '../../src/generated/grpc/hagicode/session/v1/sessions_pb';
 import { runCli } from '../../src/main';
 import { configureApiRuntime } from '../../src/runtime/apiRuntime';
 import { createDefaultDependencies, type CliIo } from '../../src/runtime/commandContext';
-import { createGeneratedHagiApi } from '../../src/runtime/hagiApi';
+import { createGrpcHagiApi } from '../../src/runtime/hagiApi';
 
 /**
- * Request-path checks: every command runs through the real generated client against a local
- * recording server. Each case asserts the exact method, path, query, and body that reached the wire.
- * Lifecycle commands must produce exactly one backend request.
+ * Request-path checks: every command runs through the real gRPC-Web client against a local recording server. Each case
+ * asserts the exact RPC (service and method) and the request message that reached the wire. Lifecycle commands must
+ * produce exactly one backend call.
  */
 
 type Recorded = {
-  method: string;
-  path: string;
-  query: string;
-  body: unknown;
+  /** `<Service>/<Method>`, for example `SessionsService/ListSessions`. */
+  rpc: string;
+  /** The request message as protobuf JSON, with default values written out. */
+  request: any;
 };
 
 const VAULT_LIST_FIXTURE = {
@@ -39,14 +52,14 @@ const VAULT_LIST_FIXTURE = {
 };
 
 const SESSION_FIXTURE = {
-  sessionId: { value: 's-1' },
+  sessionId: 's-1',
   title: 'Session',
   description: 'desc',
   type: 'Proposal',
   status: 'Drafting',
   isActive: true,
   lastActiveAt: '2026-03-30T00:00:00Z',
-  projectId: { value: 'p-1' },
+  projectId: 'p-1',
   projectName: 'Project',
   projectPath: '/tmp/project',
   isMonoSpecs: false,
@@ -59,47 +72,49 @@ let baseUrl: string;
 let recorded: Recorded[];
 let tempDir: string;
 
-function respond(method: string, path: string, response: ServerResponse): void {
-  const json = (status: number, body: unknown) => {
-    response.writeHead(status, { 'content-type': 'application/json' });
-    response.end(JSON.stringify(body));
-  };
+// Answers by RPC method name; every other RPC answers an empty response message.
+const RESPONSES: Record<string, unknown> = {
+  ListVaults: { result: VAULT_LIST_FIXTURE },
+  ListPresetTaskSchemas: { result: [] },
+  GetSession: { result: SESSION_FIXTURE },
+};
 
-  if (method === 'GET' && path === '/api/vaults') {
-    json(200, VAULT_LIST_FIXTURE);
-    return;
-  }
+const SERVICES: DescService[] = [
+  SessionsService,
+  SessionMessagingService,
+  SessionProposalService,
+  ProjectService,
+  VaultService,
+  ScheduledPlansService,
+  PresetTasksService,
+  SkillGalleryService,
+  StatisticsService,
+];
 
-  if (method === 'GET' && path === '/api/preset-tasks/schemas') {
-    json(200, []);
-    return;
-  }
-
-  if (method === 'GET' && /^\/api\/Sessions\/[^/]+$/.test(path)) {
-    json(200, SESSION_FIXTURE);
-    return;
-  }
-
-  json(200, {});
-}
+const recordRequests: Interceptor = next => async request => {
+  recorded.push({
+    rpc: `${request.service.name}/${request.method.name}`,
+    request: toJson(request.method.input as DescMessage, request.message as Message, { alwaysEmitImplicit: true }),
+  });
+  return next(request);
+};
 
 beforeAll(async () => {
-  server = createServer((request: IncomingMessage, response: ServerResponse) => {
-    const chunks: Buffer[] = [];
-    request.on('data', chunk => chunks.push(chunk as Buffer));
-    request.on('end', () => {
-      const url = new URL(request.url ?? '/', 'http://127.0.0.1');
-      const rawBody = Buffer.concat(chunks).toString('utf8');
-      recorded.push({
-        method: request.method ?? '',
-        path: url.pathname,
-        query: url.search,
-        body: rawBody ? JSON.parse(rawBody) : undefined,
-      });
-      respond(request.method ?? '', url.pathname, response);
-    });
+  const handler = connectNodeAdapter({
+    requestPathPrefix: '/grpc',
+    interceptors: [recordRequests],
+    routes: router => {
+      for (const service of SERVICES) {
+        const implementation: Record<string, () => Message> = {};
+        for (const method of service.methods) {
+          implementation[method.localName] = () =>
+            fromJson(method.output, (RESPONSES[method.name] ?? {}) as JsonValue, { ignoreUnknownFields: true });
+        }
+        router.service(service, implementation as never);
+      }
+    },
   });
-
+  server = createServer(handler);
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
@@ -133,43 +148,45 @@ async function run(args: string[]): Promise<{ exitCode: number; stdout: string; 
   return { exitCode, stdout: stdout.join(''), stderr: stderr.join('') };
 }
 
-function requestLine(request: Recorded): string {
-  return `${request.method} ${request.path}${request.query}`;
-}
+const rpcName = (call: Recorded): string => call.rpc.replace(/^hagicode\.[a-z]+\.v1\./, '');
 
 describe('request paths for chat, proposal, hagitask, and vault commands', () => {
   // Chat (4.1)
   it('chat list requests the chat session collection', async () => {
     await run(['chat', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/Sessions?type=Chat']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/ListSessions']);
+    expect(recorded[0].request).toMatchObject({ type: 'Chat' });
   });
 
   it('chat create posts the chat session body', async () => {
     await run(['chat', 'create', '--title', 'Chat', '--project-id', 'p-1']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/chat']);
-    expect(recorded[0].body).toMatchObject({ title: 'Chat', projectId: 'p-1' });
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/OpenChatSession']);
+    expect(recorded[0].request.body).toMatchObject({ title: 'Chat', projectId: 'p-1' });
   });
 
   it('chat archive uses the dedicated archive-chat endpoint', async () => {
     await run(['chat', 'archive', '--session-id', 's-1']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/archive-chat']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/ArchiveChatSession']);
+    expect(recorded[0].request).toMatchObject({ sessionId: 's-1' });
   });
 
   it('chat delete removes the session by id', async () => {
     await run(['chat', 'delete', '--session-id', 's-1']);
-    expect(recorded.map(requestLine)).toEqual(['DELETE /api/Sessions/s-1?deleteFiles=false']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/DeleteSession']);
+    expect(recorded[0].request).toMatchObject({ sessionId: 's-1', deleteFiles: false });
   });
 
   it('chat send posts the message to the session messages endpoint', async () => {
     await run(['chat', 'send', '--session-id', 's-1', '--content', 'hello']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/messages']);
-    expect(recorded[0].body).toMatchObject({ content: 'hello' });
+    expect(recorded.map(rpcName)).toEqual(['SessionMessagingService/PostSessionMessage']);
+    expect(recorded[0].request.body).toMatchObject({ content: 'hello' });
   });
 
   // Proposal list and create (4.2)
   it('proposal list requests the proposal session collection', async () => {
     await run(['proposal', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/Sessions?type=Proposal']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/ListSessions']);
+    expect(recorded[0].request).toMatchObject({ type: 'Proposal' });
   });
 
   it('proposal create posts a proposal session only', async () => {
@@ -179,19 +196,19 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
       '--chief-complaint', 'Fix login',
       '--title', 'Login fix',
     ]);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/OpenSession']);
   });
 
   // Explicit lifecycle commands (4.3): exactly one request each
   it('proposal generate issues exactly one generate-proposal request', async () => {
     await run(['proposal', 'generate', '--session-id', 's-1', '--proposal-content-language', 'en-US']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/generate-proposal']);
-    expect(recorded[0].body).toMatchObject({ proposalContentLanguage: 'en-US' });
+    expect(recorded.map(rpcName)).toEqual(['SessionProposalService/GenerateProposal']);
+    expect(recorded[0].request.body).toMatchObject({ proposalContentLanguage: 'en-US' });
   });
 
   it('proposal execute issues exactly one execute-proposal request', async () => {
     await run(['proposal', 'execute', '--session-id', 's-1']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/execute-proposal']);
+    expect(recorded.map(rpcName)).toEqual(['SessionProposalService/ExecuteProposal']);
   });
 
   it('proposal annotate issues exactly one annotations request', async () => {
@@ -199,22 +216,22 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
     writeFileSync(inputPath, JSON.stringify({ files: [{ fileName: 'proposal.md', filePath: 'proposal.md' }] }));
 
     await run(['proposal', 'annotate', '--session-id', 's-1', '--input', inputPath]);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/annotations']);
+    expect(recorded.map(rpcName)).toEqual(['SessionMessagingService/SubmitSessionAnnotations']);
   });
 
   it('proposal archive issues exactly one archive request', async () => {
     await run(['proposal', 'archive', '--session-id', 's-1']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/archive']);
+    expect(recorded.map(rpcName)).toEqual(['SessionProposalService/ArchiveSession']);
   });
 
   it('proposal complete issues exactly one complete request (archive and transition step)', async () => {
     await run(['proposal', 'complete', '--session-id', 's-1']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/complete']);
+    expect(recorded.map(rpcName)).toEqual(['SessionProposalService/CompleteSession']);
   });
 
   it('proposal send issues exactly one messages request', async () => {
     await run(['proposal', 'send', '--session-id', 's-1', '--content', 'continue']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/messages']);
+    expect(recorded.map(rpcName)).toEqual(['SessionMessagingService/PostSessionMessage']);
   });
 
   it('proposal optimize-description issues exactly one optimize-proposal request with the description', async () => {
@@ -224,13 +241,13 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
       '--description', 'Refine this',
       '--default-title',
     ]);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/s-1/optimize-proposal']);
-    expect(recorded[0].body).toEqual({ description: 'Refine this', isDefaultTitle: true });
+    expect(recorded.map(rpcName)).toEqual(['SessionProposalService/OptimizeSessionProposal']);
+    expect(recorded[0].request.body).toMatchObject({ description: 'Refine this', isDefaultTitle: true });
   });
 
   it('proposal status reads the session before writing the merged update', async () => {
     await run(['proposal', 'status', '--session-id', 's-1', '--status', 'Completed']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/Sessions/s-1', 'PUT /api/Sessions/s-1']);
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/GetSession', 'SessionsService/SaveSession']);
   });
 
   // HagiTask (4.1 - 4.4)
@@ -258,8 +275,8 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
       '--hero-selection-mode', 'random',
     ]);
 
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask']);
-    expect(recorded[0].body).toEqual({
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/StartHagiTaskSession']);
+    expect(recorded[0].request.body).toMatchObject({
       title: 'Auto',
       projectId: 'p-1',
       presetTaskId: 'compose-commit',
@@ -282,8 +299,8 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
   it('hagitask create by prompt posts the prompt id without a preset task id', async () => {
     await run(['hagitask', 'create', '--title', 'Auto', '--project-id', 'p-1', '--prompt-id', 'auto-compose-commit.en-US']);
 
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask']);
-    expect(recorded[0].body).toEqual({
+    expect(recorded.map(rpcName)).toEqual(['SessionsService/StartHagiTaskSession']);
+    expect(recorded[0].request.body).toMatchObject({
       title: 'Auto',
       projectId: 'p-1',
       promptId: 'auto-compose-commit.en-US',
@@ -292,80 +309,86 @@ describe('request paths for chat, proposal, hagitask, and vault commands', () =>
 
   it('hagitask list requests the schema summary collection', async () => {
     await run(['hagitask', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/preset-tasks/schemas']);
+    expect(recorded.map(rpcName)).toEqual(['PresetTasksService/ListPresetTaskSchemas']);
   });
 
   it('hagitask schema requests the schema of the given task id', async () => {
     await run(['hagitask', 'schema', '--task-id', 'compose-commit']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/preset-tasks/compose-commit/schema']);
+    expect(recorded.map(rpcName)).toEqual(['PresetTasksService/GetPresetTaskSchema']);
+    expect(recorded[0].request).toMatchObject({ presetTaskId: 'compose-commit' });
   });
 
   it('hagitask send targets the given session id messages endpoint', async () => {
     await run(['hagitask', 'send', '--session-id', 'hagitask-9', '--content', 'continue']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/Sessions/hagitask-9/messages']);
+    expect(recorded.map(rpcName)).toEqual(['SessionMessagingService/PostSessionMessage']);
+    expect(recorded[0].request).toMatchObject({ sessionId: 'hagitask-9' });
   });
 
   // Vault (6.1 - 6.4)
   it('vault list requests the vault collection', async () => {
     await run(['vault', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/vaults']);
+    expect(recorded.map(rpcName)).toEqual(['VaultService/ListVaults']);
   });
 
   it('vault create posts the vault body', async () => {
     await run(['vault', 'create', '--name', 'Notes', '--type', 'folder', '--physical-path', '/vaults/notes']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/vaults']);
-    expect(recorded[0].body).toMatchObject({ name: 'Notes', type: 'folder', physicalPath: '/vaults/notes' });
+    expect(recorded.map(rpcName)).toEqual(['VaultService/CreateVault']);
+    expect(recorded[0].request.body).toMatchObject({ name: 'Notes', type: 'folder', physicalPath: '/vaults/notes' });
   });
 
   it('vault update reads the current vault first and keeps omitted fields', async () => {
     await run(['vault', 'update', '--id', 'vault-1', '--name', 'Renamed']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/vaults', 'PUT /api/vaults/vault-1']);
-    expect(recorded[1].body).toMatchObject({ name: 'Renamed', physicalPath: '/vaults/main' });
+    expect(recorded.map(rpcName)).toEqual(['VaultService/ListVaults', 'VaultService/UpdateVault']);
+    expect(recorded[1].request.body).toMatchObject({ name: 'Renamed', physicalPath: '/vaults/main' });
   });
 
   it('vault delete sends deleteLocalFiles=true when requested', async () => {
     await run(['vault', 'delete', '--id', 'vault-1', '--delete-local-files']);
-    expect(recorded.map(requestLine)).toEqual(['DELETE /api/vaults/vault-1?deleteLocalFiles=true']);
+    expect(recorded.map(rpcName)).toEqual(['VaultService/DeleteVault']);
+    expect(recorded[0].request).toMatchObject({ id: 'vault-1', deleteLocalFiles: true });
   });
 
   it('vault delete does not request local file cleanup by default', async () => {
     await run(['vault', 'delete', '--id', 'vault-1']);
-    expect(recorded.map(requestLine)).toEqual(['DELETE /api/vaults/vault-1?deleteLocalFiles=false']);
+    expect(recorded.map(rpcName)).toEqual(['VaultService/DeleteVault']);
+    expect(recorded[0].request).toMatchObject({ id: 'vault-1', deleteLocalFiles: false });
   });
 
   it('vault files list browses the vault path', async () => {
     await run(['vault', 'files', 'list', '--id', 'vault-1', '--path', 'docs']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/vaults/vault-1/files?path=docs']);
+    expect(recorded.map(rpcName)).toEqual(['VaultService/GetVaultFiles']);
+    expect(recorded[0].request).toMatchObject({ id: 'vault-1', path: 'docs' });
   });
 
   it('vault files preview requests the file content endpoint', async () => {
     await run(['vault', 'files', 'preview', '--id', 'vault-1', '--path', 'docs/a.md']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/vaults/vault-1/files/content?path=docs%2Fa.md']);
+    expect(recorded.map(rpcName)).toEqual(['VaultService/GetVaultFilePreview']);
+    expect(recorded[0].request).toMatchObject({ id: 'vault-1', path: 'docs/a.md' });
   });
 });
 
 describe('request paths for skills commands', () => {
   it('skills local list requests the local inventory', async () => {
     await run(['skills', 'local', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/skills/local']);
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetLocalSkills']);
   });
 
   it('skills local uninstall posts the skill name', async () => {
     await run(['skills', 'local', 'uninstall', '--skill-name', 'demo-skill']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/skills/local/uninstall']);
-    expect(recorded[0].body).toEqual({ skillName: 'demo-skill' });
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/UninstallLocalSkill']);
+    expect(recorded[0].request.body).toMatchObject({ skillName: 'demo-skill' });
   });
 
   it('skills gallery search sends the keyword as a query parameter', async () => {
     await run(['skills', 'gallery', 'search', '--query', 'react']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/skills/gallery?query=react']);
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetSkillGallery']);
+    expect(recorded[0].request).toMatchObject({ query: 'react' });
   });
 
   it('skills gallery detail sends the id and source', async () => {
     await run(['skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills']);
-    expect(recorded.map(requestLine)).toEqual([
-      'GET /api/skills/gallery/detail?id=react-best-practices&source=vercel%2Fskills',
-    ]);
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetSkillGalleryDetail']);
+    expect(recorded[0].request).toMatchObject({ id: 'react-best-practices', source: 'vercel/skills' });
   });
 
   it('skills gallery install posts the install body with the version token', async () => {
@@ -376,8 +399,8 @@ describe('request paths for skills commands', () => {
       '--skill-slug', 'react-best-practices',
       '--version', '1.2.0',
     ]);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/skills/gallery/install']);
-    expect(recorded[0].body).toEqual({
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/InstallSkill']);
+    expect(recorded[0].request.body).toMatchObject({
       id: 'react-best-practices',
       source: 'vercel/skills',
       skillSlug: 'react-best-practices',
@@ -387,7 +410,7 @@ describe('request paths for skills commands', () => {
 
   it('skills trusted list requests the provider directory', async () => {
     await run(['skills', 'trusted', 'list']);
-    expect(recorded.map(requestLine)).toEqual(['GET /api/skills/providers/trusted']);
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetTrustedSkillProviders']);
   });
 
   it('skills trusted upsert posts the provider document', async () => {
@@ -395,19 +418,19 @@ describe('request paths for skills commands', () => {
     writeFileSync(inputPath, JSON.stringify({ providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2 }));
 
     await run(['skills', 'trusted', 'upsert', '--input', inputPath]);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/skills/providers/trusted']);
-    expect(recorded[0].body).toEqual({ providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2 });
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/UpsertTrustedSkillProvider']);
+    expect(recorded[0].request.body).toMatchObject({ providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2 });
   });
 
   it('skills trusted delete sends the provider id in the request body', async () => {
     await run(['skills', 'trusted', 'delete', '--provider-id', 'vercel']);
-    expect(recorded.map(requestLine)).toEqual(['DELETE /api/skills/providers/trusted']);
-    expect(recorded[0].body).toEqual({ providerId: 'vercel' });
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/DeleteTrustedSkillProvider']);
+    expect(recorded[0].request.body).toMatchObject({ providerId: 'vercel' });
   });
 
   it('skills trusted reset posts to the reset endpoint', async () => {
     await run(['skills', 'trusted', 'reset']);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/skills/providers/trusted/reset']);
+    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/ResetTrustedSkillProviders']);
   });
 });
 
@@ -420,39 +443,44 @@ describe('request paths for scheduled plan facade methods', () => {
   });
 
   it('listPlans requests the plan collection', async () => {
-    await createGeneratedHagiApi().listPlans();
-    expect(recorded.map(requestLine)).toEqual(['GET /api/ScheduledPlans']);
+    await createGrpcHagiApi().listPlans();
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/ListScheduledPlans']);
   });
 
   it('getPlan requests the plan by id', async () => {
-    await createGeneratedHagiApi().getPlan('plan-1');
-    expect(recorded.map(requestLine)).toEqual(['GET /api/ScheduledPlans/plan-1']);
+    await createGrpcHagiApi().getPlan('plan-1');
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/GetScheduledPlan']);
+    expect(recorded[0].request).toMatchObject({ id: 'plan-1' });
   });
 
   it('createPlan posts the save body to the plan collection', async () => {
-    await createGeneratedHagiApi().createPlan(PLAN_SAVE_BODY);
-    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans']);
-    expect(recorded[0].body).toEqual(PLAN_SAVE_BODY);
+    await createGrpcHagiApi().createPlan(PLAN_SAVE_BODY);
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/CreateScheduledPlan']);
+    expect(recorded[0].request.body).toMatchObject(PLAN_SAVE_BODY);
   });
 
   it('updatePlan puts the save body to the plan by id', async () => {
-    await createGeneratedHagiApi().updatePlan('plan-1', PLAN_SAVE_BODY);
-    expect(recorded.map(requestLine)).toEqual(['PUT /api/ScheduledPlans/plan-1']);
-    expect(recorded[0].body).toEqual(PLAN_SAVE_BODY);
+    await createGrpcHagiApi().updatePlan('plan-1', PLAN_SAVE_BODY);
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/UpdateScheduledPlan']);
+    expect(recorded[0].request).toMatchObject({ id: 'plan-1' });
+    expect(recorded[0].request.body).toMatchObject(PLAN_SAVE_BODY);
   });
 
   it('deletePlan deletes the plan by id', async () => {
-    await createGeneratedHagiApi().deletePlan('plan-1');
-    expect(recorded.map(requestLine)).toEqual(['DELETE /api/ScheduledPlans/plan-1']);
+    await createGrpcHagiApi().deletePlan('plan-1');
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/DeleteScheduledPlan']);
+    expect(recorded[0].request).toMatchObject({ id: 'plan-1' });
   });
 
   it('runPlan posts to the run endpoint', async () => {
-    await createGeneratedHagiApi().runPlan('plan-1');
-    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans/plan-1/run']);
+    await createGrpcHagiApi().runPlan('plan-1');
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/RunScheduledPlan']);
+    expect(recorded[0].request).toMatchObject({ id: 'plan-1' });
   });
 
   it('startPlan posts to the start endpoint', async () => {
-    await createGeneratedHagiApi().startPlan('plan-1');
-    expect(recorded.map(requestLine)).toEqual(['POST /api/ScheduledPlans/plan-1/start']);
+    await createGrpcHagiApi().startPlan('plan-1');
+    expect(recorded.map(rpcName)).toEqual(['ScheduledPlansService/StartScheduledPlan']);
+    expect(recorded[0].request).toMatchObject({ id: 'plan-1' });
   });
 });

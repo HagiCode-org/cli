@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { OpenAPI } from '../generated/api/core/OpenAPI';
 import { CliUsageError } from './errors';
 import { CLI_CLIENT_MARKER } from './version';
 
@@ -91,25 +90,30 @@ export function resolveApiRuntimeConfig(
   };
 }
 
+let activeRuntime: ResolvedApiRuntimeConfig | undefined;
+
+/**
+ * Resolves the backend settings and makes them the active ones. The gRPC transport reads them on every call, so the
+ * base URL, bearer token and language of the current invocation apply without rebuilding the facade.
+ */
 export function configureApiRuntime(
   input: ApiRuntimeInput = {},
   env: NodeJS.ProcessEnv = process.env,
 ): ResolvedApiRuntimeConfig {
-  const resolved = resolveApiRuntimeConfig(input, env);
-
-  OpenAPI.BASE = resolved.baseUrl;
-  OpenAPI.WITH_CREDENTIALS = false;
-  OpenAPI.CREDENTIALS = 'omit';
-  OpenAPI.TOKEN = resolved.token;
-  OpenAPI.HEADERS = {
-    'X-Hagi-Client': CLI_CLIENT_MARKER,
-    ...(resolved.lang ? { 'Accept-Language': resolved.lang } : {}),
-  };
-
-  return resolved;
+  activeRuntime = resolveApiRuntimeConfig(input, env);
+  return activeRuntime;
 }
 
-/** Base URL most recently applied to the generated runtime, used to name it in connection errors. */
+/** Settings most recently applied by `configureApiRuntime`; a call made before any configuration is a usage error. */
+export function getActiveRuntime(): ResolvedApiRuntimeConfig {
+  if (!activeRuntime) {
+    throw new CliUsageError('The backend connection is not configured. Resolve the API runtime before calling the backend.');
+  }
+
+  return activeRuntime;
+}
+
+/** Base URL most recently applied by `configureApiRuntime`, used to name it in connection errors. */
 export function getActiveBaseUrl(): string | undefined {
-  return normalizeRuntimeValue(OpenAPI.BASE);
+  return normalizeRuntimeValue(activeRuntime?.baseUrl);
 }

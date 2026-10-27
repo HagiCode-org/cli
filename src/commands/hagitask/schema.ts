@@ -1,5 +1,4 @@
 import type { Command } from 'commander';
-import { ApiError } from '../../generated/api/core/ApiError';
 import type { PCode_Web_Controllers_PresetTaskCreationSchemaDto } from '../../generated/api/models/PCode_Web_Controllers_PresetTaskCreationSchemaDto';
 import type { HagiApi } from '../../runtime/hagiApi';
 import { formatJson } from '../../formatters/json';
@@ -10,7 +9,7 @@ import {
   requireOptionValue,
   type AppDependencies,
 } from '../../runtime/commandContext';
-import { CliHttpError } from '../../runtime/errors';
+import { CliHttpError, readBackendFailure } from '../../runtime/errors';
 
 type HagiTaskSchemaOptions = {
   taskId: string;
@@ -41,15 +40,16 @@ async function loadHagiTaskSchema(api: HagiApi, taskId: string): Promise<PCode_W
   try {
     return await api.getHagiTaskSchema(taskId);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
-      const diagnostics = readDiagnostics(error.body);
+    const failure = readBackendFailure(error);
+    if (failure?.status === 404) {
+      const diagnostics = readDiagnostics(failure.body);
       if (diagnostics.length > 0) {
         const lines = diagnostics.map(diagnostic => {
           const location = diagnostic.path ? ` (${diagnostic.path})` : '';
           return `  - ${diagnostic.code ?? 'diagnostic'}: ${diagnostic.message ?? ''}${location}`;
         });
-        const message = readString(error.body, 'error') ?? `HagiTask ${taskId} is not available.`;
-        throw new CliHttpError(404, [message, ...lines].join('\n'), error.body);
+        const message = readString(failure.body, 'error') ?? `HagiTask ${taskId} is not available.`;
+        throw new CliHttpError(404, [message, ...lines].join('\n'), failure.body);
       }
     }
 

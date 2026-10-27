@@ -4,16 +4,21 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   configureApiRuntime,
+  getActiveBaseUrl,
+  getActiveRuntime,
   resolveApiRuntimeConfig,
   resolveConfigFilePath,
 } from '../../src/runtime/apiRuntime';
-import type { ApiRequestOptions } from '../../src/generated/api/core/ApiRequestOptions';
-import { OpenAPI } from '../../src/generated/api/core/OpenAPI';
-import { getHeaders } from '../../src/generated/api/core/request';
+import { GRPC_PATH_PREFIX, headerInterceptor, resolveGrpcBaseUrl } from '../../src/runtime/grpc/transport';
 import { CliUsageError } from '../../src/runtime/errors';
 import { CLI_CLIENT_MARKER } from '../../src/runtime/version';
 
-const REQUEST_OPTIONS = { method: 'GET', url: '/api/Sessions' } as ApiRequestOptions;
+/** Runs the header interceptor over a bare request and returns the headers it ended up with. */
+async function interceptedHeaders(): Promise<Headers> {
+  const request = { header: new Headers() } as never as Parameters<ReturnType<typeof headerInterceptor>>[0];
+  await headerInterceptor((async (req: { header: Headers }) => req) as never)(request);
+  return (request as unknown as { header: Headers }).header;
+}
 
 describe('apiRuntime', () => {
   let configHome: string;
@@ -102,30 +107,24 @@ describe('apiRuntime', () => {
     );
   });
 
-  it('writes the resolved values into the generated OpenAPI runtime', () => {
-    configureApiRuntime(
-      {
-        baseUrl: 'https://runtime.example',
-        token: 'runtime-token',
-        lang: 'ja-JP',
-      },
-      {},
-    );
+  it('keeps the resolved values as the active runtime', () => {
+    configureApiRuntime({ baseUrl: 'https://runtime.example', token: 'runtime-token', lang: 'ja-JP' }, {});
 
-    expect(OpenAPI.BASE).toBe('https://runtime.example');
-    expect(OpenAPI.TOKEN).toBe('runtime-token');
-    expect(OpenAPI.HEADERS).toEqual({
-      'X-Hagi-Client': CLI_CLIENT_MARKER,
-      'Accept-Language': 'ja-JP',
-    });
-    expect(OpenAPI.WITH_CREDENTIALS).toBe(false);
-    expect(OpenAPI.CREDENTIALS).toBe('omit');
+    expect(getActiveRuntime()).toEqual({ baseUrl: 'https://runtime.example', token: 'runtime-token', lang: 'ja-JP' });
+    expect(getActiveBaseUrl()).toBe('https://runtime.example');
+  });
+
+  it('puts the gRPC services under the /grpc prefix of the base URL', () => {
+    expect(GRPC_PATH_PREFIX).toBe('/grpc');
+    expect(resolveGrpcBaseUrl('https://runtime.example')).toBe('https://runtime.example/grpc');
+    expect(resolveGrpcBaseUrl('https://runtime.example///')).toBe('https://runtime.example/grpc');
+    expect(resolveGrpcBaseUrl('https://proxy.example/hagi')).toBe('https://proxy.example/hagi/grpc');
   });
 
   it('sends X-Hagi-Client and no Accept-Language when no language is set', async () => {
     configureApiRuntime({ baseUrl: 'https://runtime.example' }, {});
 
-    const headers = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    const headers = await interceptedHeaders();
 
     expect(headers.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
     expect(headers.has('Accept-Language')).toBe(false);
@@ -134,7 +133,7 @@ describe('apiRuntime', () => {
   it('sends X-Hagi-Client together with Accept-Language when a language is set', async () => {
     configureApiRuntime({ baseUrl: 'https://runtime.example', lang: 'zh-CN' }, {});
 
-    const headers = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    const headers = await interceptedHeaders();
 
     expect(headers.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
     expect(headers.get('Accept-Language')).toBe('zh-CN');
@@ -143,13 +142,13 @@ describe('apiRuntime', () => {
   it('adds no Authorization header without a token and sends one with a token', async () => {
     configureApiRuntime({ baseUrl: 'https://runtime.example' }, {});
 
-    const anonymous = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    const anonymous = await interceptedHeaders();
     expect(anonymous.has('Authorization')).toBe(false);
     expect(anonymous.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
 
     configureApiRuntime({ baseUrl: 'https://runtime.example', token: 'runtime-token' }, {});
 
-    const authenticated = await getHeaders(OpenAPI, REQUEST_OPTIONS);
+    const authenticated = await interceptedHeaders();
     expect(authenticated.get('Authorization')).toBe('Bearer runtime-token');
     expect(authenticated.get('X-Hagi-Client')).toBe(CLI_CLIENT_MARKER);
   });

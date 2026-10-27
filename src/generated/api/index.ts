@@ -2,10 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export { ApiError } from './core/ApiError';
-export { CancelablePromise, CancelError } from './core/CancelablePromise';
-export { OpenAPI } from './core/OpenAPI';
-export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Microsoft_AspNetCore_Mvc_ProblemDetails } from './models/Microsoft_AspNetCore_Mvc_ProblemDetails';
 export type { PCode_Application_Contracts_Dto_AdventureArchetypeWeightDto } from './models/PCode_Application_Contracts_Dto_AdventureArchetypeWeightDto';
@@ -478,43 +474,3 @@ export type { Volo_Abp_Http_RemoteServiceValidationErrorInfo } from './models/Vo
 export type { Volo_Abp_Localization_LanguageInfo } from './models/Volo_Abp_Localization_LanguageInfo';
 export type { Volo_Abp_NameValue } from './models/Volo_Abp_NameValue';
 
-export { AdventureContentPluginAssetsService } from './services/AdventureContentPluginAssetsService';
-export { AgentTemplatesService } from './services/AgentTemplatesService';
-export { AiLanguageService } from './services/AiLanguageService';
-export { AppService } from './services/AppService';
-export { CharacterTemplatesService } from './services/CharacterTemplatesService';
-export { ChatProfileService } from './services/ChatProfileService';
-export { ConcurrencyService } from './services/ConcurrencyService';
-export { DataAggregationService } from './services/DataAggregationService';
-export { DocsPresetsService } from './services/DocsPresetsService';
-export { DoubaoVoiceService } from './services/DoubaoVoiceService';
-export { FrontendConfigService } from './services/FrontendConfigService';
-export { GitService } from './services/GitService';
-export { GitHubAuthService } from './services/GitHubAuthService';
-export { HagipowerDebugService } from './services/HagipowerDebugService';
-export { HagipowerGameDriverDebugService } from './services/HagipowerGameDriverDebugService';
-export { HealthService } from './services/HealthService';
-export { HeroService } from './services/HeroService';
-export { ImagesService } from './services/ImagesService';
-export { NotificationService } from './services/NotificationService';
-export { OpenSpecService } from './services/OpenSpecService';
-export { PresetTasksService } from './services/PresetTasksService';
-export { ProjectService } from './services/ProjectService';
-export { PromptsService } from './services/PromptsService';
-export { QuickActionsService } from './services/QuickActionsService';
-export { ReportsService } from './services/ReportsService';
-export { ScheduledPlansService } from './services/ScheduledPlansService';
-export { SchemaService } from './services/SchemaService';
-export { SessionsService } from './services/SessionsService';
-export { SignalRModelsService } from './services/SignalRModelsService';
-export { SkillGalleryService } from './services/SkillGalleryService';
-export { SoulMarketplaceService } from './services/SoulMarketplaceService';
-export { SystemService } from './services/SystemService';
-export { SystemInfoService } from './services/SystemInfoService';
-export { TokenThroughputService } from './services/TokenThroughputService';
-export { TraitMarketplaceService } from './services/TraitMarketplaceService';
-export { VaultService } from './services/VaultService';
-export { VersionService } from './services/VersionService';
-export { VersionInfoService } from './services/VersionInfoService';
-export { VoiceReminderPluginAssetsService } from './services/VoiceReminderPluginAssetsService';
-export { WizardService } from './services/WizardService';

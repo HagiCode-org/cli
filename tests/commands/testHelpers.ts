@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
-import { ApiError } from '../../src/generated/api/core/ApiError';
+import { Code, ConnectError } from '@connectrpc/connect';
+import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/error_detail_pb';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import type { AppDependencies, CliIo } from '../../src/runtime/commandContext';
@@ -8,27 +9,29 @@ import type { HagiApi } from '../../src/runtime/hagiApi';
 /** Base URL injected through HAGI_API_BASE_URL so command tests never depend on a real config file. */
 export const TEST_BASE_URL = 'https://backend.test';
 
-export function createApiError(status: number, body: unknown): ApiError {
-  return new ApiError(
-    {
-      method: 'POST',
-      url: '/api/Sessions',
-      path: {},
-      query: {},
-      formData: {},
-      headers: {},
-      cookies: {},
-      errors: {},
-    },
-    {
-      url: 'https://api.example/api/Sessions',
-      ok: false,
-      status,
-      statusText: 'Error',
-      body,
-    },
-    'Backend error',
-  );
+const CODE_BY_STATUS: Record<number, Code> = {
+  400: Code.InvalidArgument,
+  401: Code.Unauthenticated,
+  403: Code.PermissionDenied,
+  404: Code.NotFound,
+  409: Code.FailedPrecondition,
+  500: Code.Internal,
+  503: Code.Unavailable,
+};
+
+/**
+ * A gRPC failure shaped like the backend sends it: the REST error body's `error` text is the status message and the other
+ * properties of the body travel as the structured data of the error detail. `status` picks the matching gRPC code.
+ */
+export function createApiError(status: number, body: unknown): ConnectError {
+  const values: Record<string, unknown> =
+    body && typeof body === 'object' && !Array.isArray(body) ? { ...(body as Record<string, unknown>) } : {};
+  const message = typeof values.error === 'string' ? values.error : 'Backend error';
+  delete values.error;
+
+  return new ConnectError(message, CODE_BY_STATUS[status] ?? Code.Unknown, undefined, [
+    { desc: ErrorDetailSchema, value: { data: values as never } },
+  ]);
 }
 
 export function createSession(sessionId: string, type: PCode_Models_SessionType = PCode_Models_SessionType.PROPOSAL) {
