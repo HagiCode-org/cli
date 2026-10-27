@@ -25,9 +25,7 @@
     "src/commands/**/*.ts",
     "src/runtime/**/*.ts",
     "src/formatters/**/*.ts",
-    "src/generated/api/core/**/*.ts",
     "src/generated/api/models/**/*.ts",
-    "src/generated/api/services/SessionsService.ts",
     "vite.config.ts"
   ],
   "exclude": [

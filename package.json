@@ -26,6 +26,8 @@
     "clean": "rimraf dist",
     "build": "export NODE_OPTIONS=\"${NODE_OPTIONS:-} --max-old-space-size=8192\"; npm run clean && vite build",
     "dev": "tsx ./src/cli.ts",
+    "generate:grpc": "node ./buildTools/generate-grpc.mjs",
+    "generate:grpc:check": "node ./buildTools/generate-grpc.mjs --check",
     "generate:api": "node ./buildTools/generate-api.cjs",
     "generate:api:once": "node ./buildTools/generate-api-once.cjs",
     "pack:check": "node ./scripts/verify-package.mjs",
@@ -54,9 +56,14 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "2.16.0",
+    "@connectrpc/connect": "2.2.0",
+    "@connectrpc/connect-node": "2.2.0",
     "commander": "^14.0.2"
   },
   "devDependencies": {
+    "@bufbuild/buf": "1.73.0",
+    "@bufbuild/protoc-gen-es": "2.16.0",
     "@types/node": "^25.0.2",
     "openapi-typescript-codegen": "^0.29.0",
     "rimraf": "^6.1.2",
