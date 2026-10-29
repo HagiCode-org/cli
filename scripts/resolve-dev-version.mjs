@@ -30,6 +30,12 @@ export function readPackageVersion(packageJsonPath = "package.json") {
   return packageJson.version;
 }
 
+// SemVer reads an all-digit identifier as a number (and refuses one with a leading zero), so a sha made only of
+// digits gets a `g` prefix, as in `git describe`. A sha with a letter in it is already a valid identifier.
+export function withSemverSafeSha(sha) {
+  return /^\d+$/.test(sha) ? `g${sha}` : sha;
+}
+
 export function resolveDevelopmentVersion({
   packageVersion = readPackageVersion(),
   runNumber = process.env.GITHUB_RUN_NUMBER ?? "0",
@@ -53,7 +59,7 @@ export function resolveDevelopmentVersion({
     throw new Error(`GITHUB_SHA must contain at least one alphanumeric character. Received: ${sha}`);
   }
 
-  return `${baseVersion}-dev.${normalizedRunNumber}.${normalizedRunAttempt}.${normalizedSha}`;
+  return `${baseVersion}-dev.${normalizedRunNumber}.${normalizedRunAttempt}.${withSemverSafeSha(normalizedSha)}`;
 }
 
 async function main() {

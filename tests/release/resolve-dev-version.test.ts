@@ -52,6 +52,15 @@ describe('resolve-dev-version', () => {
     ).toBe('0.1.0-dev.42.3.abcdef1');
   });
 
+  it('prefixes a sha made only of digits so SemVer keeps it a string identifier', () => {
+    const version = (sha: string) =>
+      resolveDevelopmentVersion({ packageVersion: '0.1.0', runNumber: '42', runAttempt: '3', sha });
+
+    expect(version('6e244291234567')).toBe('0.1.0-dev.42.3.6e24429');
+    expect(version('1008756abcdef0')).toBe('0.1.0-dev.42.3.g1008756');
+    expect(version('0123456abcdef0')).toBe('0.1.0-dev.42.3.g0123456');
+  });
+
   it('rejects invalid GitHub run metadata', () => {
     expect(() =>
       resolveDevelopmentVersion({
