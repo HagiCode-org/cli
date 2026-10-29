@@ -14,7 +14,317 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file hagicode/session/v1/session_proposal.proto.
  */
 export const file_hagicode_session_v1_session_proposal: GenFile = /*@__PURE__*/
-  fileDesc("CipoYWdpY29kZS9zZXNzaW9uL3YxL3Nlc3Npb25fcHJvcG9zYWwucHJvdG8SE2hhZ2ljb2RlLnNlc3Npb24udjEicAoeT3B0aW1pemVTZXNzaW9uUHJvcG9zYWxSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSOgoEYm9keRgCIAEoCzIsLmhhZ2ljb2RlLnNlc3Npb24udjEuT3B0aW1pemVQcm9wb3NhbFJlcXVlc3QibQofT3B0aW1pemVTZXNzaW9uUHJvcG9zYWxSZXNwb25zZRJKCgZyZXN1bHQYASABKAsyOi5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uQnVuZGxlUmVzcG9uc2VEdG8ibAoXR2VuZXJhdGVQcm9wb3NhbFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRI9CgRib2R5GAIgASgLMi8uaGFnaWNvZGUuc2Vzc2lvbi52MS5HZW5lcmF0ZVByb3Bvc2FsUmVxdWVzdER0byJZChhHZW5lcmF0ZVByb3Bvc2FsUmVzcG9uc2USPQoGcmVzdWx0GAEgASgLMi0uaGFnaWNvZGUuc2Vzc2lvbi52MS5TaW1wbGVNZXNzYWdlUmVzcG9uc2VEdG8iaAoVQXJjaGl2ZVNlc3Npb25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSOwoEYm9keRgCIAEoCzItLmhhZ2ljb2RlLnNlc3Npb24udjEuQXJjaGl2ZVNlc3Npb25SZXF1ZXN0RHRvIlEKFkFyY2hpdmVTZXNzaW9uUmVzcG9uc2USNwoGcmVzdWx0GAEgASgLMicuaGFnaWNvZGUuc2Vzc2lvbi52MS5TZXNzaW9uUmVzcG9uc2VEdG8iagoWRXhlY3V0ZVByb3Bvc2FsUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEjwKBGJvZHkYAiABKAsyLi5oYWdpY29kZS5zZXNzaW9uLnYxLkV4ZWN1dGVQcm9wb3NhbFJlcXVlc3REdG8iWAoXRXhlY3V0ZVByb3Bvc2FsUmVzcG9uc2USPQoGcmVzdWx0GAEgASgLMi0uaGFnaWNvZGUuc2Vzc2lvbi52MS5TaW1wbGVNZXNzYWdlUmVzcG9uc2VEdG8iLAoWQ29tcGxldGVTZXNzaW9uUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIlIKF0NvbXBsZXRlU2Vzc2lvblJlc3BvbnNlEjcKBnJlc3VsdBgBIAEoCzInLmhhZ2ljb2RlLnNlc3Npb24udjEuU2Vzc2lvblJlc3BvbnNlRHRvIjMKHVZhbGlkYXRlU2Vzc2lvbkV4ZWN1dGVSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiWgoeVmFsaWRhdGVTZXNzaW9uRXhlY3V0ZVJlc3BvbnNlEjgKBnJlc3VsdBgBIAEoCzIoLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvblJlc3VsdER0byIxChtWYWxpZGF0ZVNlc3Npb25TdGFydFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJYChxWYWxpZGF0ZVNlc3Npb25TdGFydFJlc3BvbnNlEjgKBnJlc3VsdBgBIAEoCzIoLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvblJlc3VsdER0byIzCh1WYWxpZGF0ZVNlc3Npb25BcmNoaXZlUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIloKHlZhbGlkYXRlU2Vzc2lvbkFyY2hpdmVSZXNwb25zZRI4CgZyZXN1bHQYASABKAsyKC5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRpb25SZXN1bHREdG8icgohUHJvcG9zYWxPcHRpbWl6YXRpb25EaWFnbm9zdGljRHRvEgwKBGNvZGUYASABKAkSEAoIc2V2ZXJpdHkYAiABKAkSDwoHbWVzc2FnZRgDIAEoCRISCgVmaWVsZBgEIAEoCUgAiAEBQggKBl9maWVsZCKOAQotUHJvcG9zYWxPcHRpbWl6YXRpb25CdW5kbGVWYWxpZGF0aW9uUmVzdWx0RHRvEhAKCGlzX3ZhbGlkGAEgASgIEksKC2RpYWdub3N0aWNzGAIgAygLMjYuaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvbkRpYWdub3N0aWNEdG8i3AMKJ1Byb3Bvc2FsT3B0aW1pemF0aW9uU2NlbmFyaW9TZXR0aW5nc0R0bxIXCgpzY3JpcHRfa2V5GAEgASgJSACIAQESHQoQc2VsZWN0ZWRfaGVyb19pZBgCIAEoCUgBiAEBEhwKD2NhcHRhaW5faGVyb19pZBgDIAEoCUgCiAEBEhYKCXJvc3Rlcl9pZBgEIAEoCUgDiAEBEmsKEGV4dGVuc2lvbl9maWVsZHMYBSADKAsyUS5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uU2NlbmFyaW9TZXR0aW5nc0R0by5FeHRlbnNpb25GaWVsZHNFbnRyeRIWCglzdGFnZV9rZXkYBiABKAlIBIgBARIdChBzZWxlY3Rpb25fc291cmNlGAcgASgJSAWIAQEaNgoURXh0ZW5zaW9uRmllbGRzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4AUINCgtfc2NyaXB0X2tleUITChFfc2VsZWN0ZWRfaGVyb19pZEISChBfY2FwdGFpbl9oZXJvX2lkQgwKCl9yb3N0ZXJfaWRCDAoKX3N0YWdlX2tleUITChFfc2VsZWN0aW9uX3NvdXJjZSK+AwojUHJvcG9zYWxPcHRpbWl6YXRpb25CdW5kbGVSZXN1bHREdG8SHAoPb3B0aW1pemVkX3RpdGxlGAEgASgJSACIAQESKAobb3B0aW1pemVkX3Byb3Bvc2FsX21hcmtkb3duGAIgASgJSAGIAQESHwoXb3B0aW1pemVkX3Byb3Bvc2FsX25hbWUYAyABKAkSHQoVb3B0aW1pemVkX2Rlc2NyaXB0aW9uGAQgASgJElcKEXNjZW5hcmlvX3NldHRpbmdzGAUgASgLMjwuaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvblNjZW5hcmlvU2V0dGluZ3NEdG8SVgoKdmFsaWRhdGlvbhgGIAEoCzJCLmhhZ2ljb2RlLnNlc3Npb24udjEuUHJvcG9zYWxPcHRpbWl6YXRpb25CdW5kbGVWYWxpZGF0aW9uUmVzdWx0RHRvEhkKDHJhd19yZXNwb25zZRgHIAEoCUgCiAEBQhIKEF9vcHRpbWl6ZWRfdGl0bGVCHgocX29wdGltaXplZF9wcm9wb3NhbF9tYXJrZG93bkIPCg1fcmF3X3Jlc3BvbnNlItIICiRQcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVN1bW1hcnlEdG8SGwoTcmVxdWVzdF9maW5nZXJwcmludBgBIAEoCRI0ChBnZW5lcmF0ZWRfYXRfdXRjGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIOCgZzb3VyY2UYAyABKAkSFQoNYXBwbGllZF90aXRsZRgEIAEoCRIdChVhcHBsaWVkX3Byb3Bvc2FsX25hbWUYBSABKAkSIAoYcHJvcG9zYWxfZHJhZnRfYXZhaWxhYmxlGAYgASgIEiAKGHNjZW5hcmlvX3NldHRpbmdzX3N0YXR1cxgHIAEoCRIaChJhcHBsaWVkX3RpdGxlX21vZGUYCCABKAkSEAoIaXNfdmFsaWQYCSABKAgSSwoLZGlhZ25vc3RpY3MYCiADKAsyNi5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uRGlhZ25vc3RpY0R0bxImChlvcHRpbWl6ZWRfdGl0bGVfY2FuZGlkYXRlGAsgASgJSACIAQESIwoWcHJvcG9zYWxfZHJhZnRfcHJldmlldxgMIAEoCUgBiAEBEhoKDWFydGlmYWN0X3BhdGgYDSABKAlIAogBARIbCg5jb3JyZWxhdGlvbl9pZBgOIAEoCUgDiAEBEh0KEHJlc29sdmVkX2hlcm9faWQYDyABKAlIBIgBARIfChJyZXNvbHZlZF9oZXJvX25hbWUYECABKAlIBYgBARIfChJyZXNvbHZlZF9oZXJvX2ljb24YESABKAlIBogBARIoChtyZXNvbHZlZF9oZXJvX2V4ZWN1dG9yX3R5cGUYEiABKAlIB4gBARIiChVoZXJvX3NlbGVjdGlvbl9zb3VyY2UYEyABKAlICIgBARIjChZoZXJvX3JvdXRpbmdfc3RhZ2Vfa2V5GBQgASgJSAmIAQESJAoXaGVyb19yb3V0aW5nX3NjcmlwdF9rZXkYFSABKAlICogBARIkChdvcHRpbWl6YXRpb25fY2Vzc2lvbl9pZBgWIAEoCUgLiAEBQhwKGl9vcHRpbWl6ZWRfdGl0bGVfY2FuZGlkYXRlQhkKF19wcm9wb3NhbF9kcmFmdF9wcmV2aWV3QhAKDl9hcnRpZmFjdF9wYXRoQhEKD19jb3JyZWxhdGlvbl9pZEITChFfcmVzb2x2ZWRfaGVyb19pZEIVChNfcmVzb2x2ZWRfaGVyb19uYW1lQhUKE19yZXNvbHZlZF9oZXJvX2ljb25CHgocX3Jlc29sdmVkX2hlcm9fZXhlY3V0b3JfdHlwZUIYChZfaGVyb19zZWxlY3Rpb25fc291cmNlQhkKF19oZXJvX3JvdXRpbmdfc3RhZ2Vfa2V5QhoKGF9oZXJvX3JvdXRpbmdfc2NyaXB0X2tleUIaChhfb3B0aW1pemF0aW9uX2Nlc3Npb25faWQi1QEKJVByb3Bvc2FsT3B0aW1pemF0aW9uQnVuZGxlUmVzcG9uc2VEdG8SSAoGcmVzdWx0GAEgASgLMjguaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVJlc3VsdER0bxJKCgdzdW1tYXJ5GAIgASgLMjkuaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVN1bW1hcnlEdG8SFgoOY29ycmVsYXRpb25faWQYAyABKAkiiQMKF09wdGltaXplUHJvcG9zYWxSZXF1ZXN0EhMKC2Rlc2NyaXB0aW9uGAEgASgJEiYKGXByb3Bvc2FsX2NvbnRlbnRfbGFuZ3VhZ2UYAiABKAlIAIgBARIjChZvcHRpbWl6YXRpb25fZGlyZWN0aW9uGAMgASgJSAGIAQESEgoFdGl0bGUYBCABKAlIAogBARIYChBpc19kZWZhdWx0X3RpdGxlGAUgASgIEiUKGG9yaWdpbmFsX2NoaWVmX2NvbXBsYWludBgGIAEoCUgDiAEBElcKEXNjZW5hcmlvX3NldHRpbmdzGAcgASgLMjwuaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvblNjZW5hcmlvU2V0dGluZ3NEdG9CHAoaX3Byb3Bvc2FsX2NvbnRlbnRfbGFuZ3VhZ2VCGQoXX29wdGltaXphdGlvbl9kaXJlY3Rpb25CCAoGX3RpdGxlQhsKGV9vcmlnaW5hbF9jaGllZl9jb21wbGFpbnQiRQoaUGxhbm5pbmdEaXJlY3Rpb25PcHRpb25EdG8SDwoCaWQYASABKAlIAIgBARIPCgdlbmFibGVkGAIgASgIQgUKA19pZCKMAgoaR2VuZXJhdGVQcm9wb3NhbFJlcXVlc3REdG8SIAoTZW5hYmxlX2V4cGxvcmVfbW9kZRgBIAEoCEgAiAEBEkwKE3BsYW5uaW5nX2RpcmVjdGlvbnMYAiADKAsyLy5oYWdpY29kZS5zZXNzaW9uLnYxLlBsYW5uaW5nRGlyZWN0aW9uT3B0aW9uRHRvEiYKGXByb3Bvc2FsX2NvbnRlbnRfbGFuZ3VhZ2UYAyABKAlIAYgBARIUCgdoZXJvX2lkGAQgASgJSAKIAQFCFgoUX2VuYWJsZV9leHBsb3JlX21vZGVCHAoaX3Byb3Bvc2FsX2NvbnRlbnRfbGFuZ3VhZ2VCCgoIX2hlcm9faWQiPAoYQXJjaGl2ZVNlc3Npb25SZXF1ZXN0RHRvEhQKB2hlcm9faWQYASABKAlIAIgBAUIKCghfaGVyb19pZCI9ChlFeGVjdXRlUHJvcG9zYWxSZXF1ZXN0RHRvEhQKB2hlcm9faWQYASABKAlIAIgBAUIKCghfaGVyb19pZCJXCgtDb25mbGljdER0bxIMCgR0eXBlGAEgASgJEhEKCWVudGl0eV9pZBgCIAEoCRITCgtkZXNjcmlwdGlvbhgDIAEoCRISCgpyZXNvbHV0aW9uGAQgASgJImsKElZhbGlkYXRpb25Jc3N1ZUR0bxIMCgRjb2RlGAEgASgJEg8KB21lc3NhZ2UYAiABKAkSEAoIc2V2ZXJpdHkYAyABKAkSFgoJZW50aXR5X2lkGAQgASgJSACIAQFCDAoKX2VudGl0eV9pZCKFAQoUVmFsaWRhdGlvblN1bW1hcnlEdG8SFQoNcHJvamVjdF9jb3VudBgBIAEoBRIVCg1zZXNzaW9uX2NvdW50GAIgASgFEh8KF2R1cGxpY2F0ZV9wcm9qZWN0X2NvdW50GAMgASgFEh4KFm9ycGhhbmVkX3Nlc3Npb25fY291bnQYBCABKAUijAIKE1ZhbGlkYXRpb25SZXN1bHREdG8SEAoIaXNfdmFsaWQYASABKAgSOQoId2FybmluZ3MYAiADKAsyJy5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRpb25Jc3N1ZUR0bxI3CgZlcnJvcnMYAyADKAsyJy5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRpb25Jc3N1ZUR0bxIzCgljb25mbGljdHMYBCADKAsyIC5oYWdpY29kZS5zZXNzaW9uLnYxLkNvbmZsaWN0RHRvEjoKB3N1bW1hcnkYBSABKAsyKS5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRpb25TdW1tYXJ5RHRvMtwHChZTZXNzaW9uUHJvcG9zYWxTZXJ2aWNlEoQBChdPcHRpbWl6ZVNlc3Npb25Qcm9wb3NhbBIzLmhhZ2ljb2RlLnNlc3Npb24udjEuT3B0aW1pemVTZXNzaW9uUHJvcG9zYWxSZXF1ZXN0GjQuaGFnaWNvZGUuc2Vzc2lvbi52MS5PcHRpbWl6ZVNlc3Npb25Qcm9wb3NhbFJlc3BvbnNlEm8KEEdlbmVyYXRlUHJvcG9zYWwSLC5oYWdpY29kZS5zZXNzaW9uLnYxLkdlbmVyYXRlUHJvcG9zYWxSZXF1ZXN0Gi0uaGFnaWNvZGUuc2Vzc2lvbi52MS5HZW5lcmF0ZVByb3Bvc2FsUmVzcG9uc2USaQoOQXJjaGl2ZVNlc3Npb24SKi5oYWdpY29kZS5zZXNzaW9uLnYxLkFyY2hpdmVTZXNzaW9uUmVxdWVzdBorLmhhZ2ljb2RlLnNlc3Npb24udjEuQXJjaGl2ZVNlc3Npb25SZXNwb25zZRJsCg9FeGVjdXRlUHJvcG9zYWwSKy5oYWdpY29kZS5zZXNzaW9uLnYxLkV4ZWN1dGVQcm9wb3NhbFJlcXVlc3QaLC5oYWdpY29kZS5zZXNzaW9uLnYxLkV4ZWN1dGVQcm9wb3NhbFJlc3BvbnNlEmwKD0NvbXBsZXRlU2Vzc2lvbhIrLmhhZ2ljb2RlLnNlc3Npb24udjEuQ29tcGxldGVTZXNzaW9uUmVxdWVzdBosLmhhZ2ljb2RlLnNlc3Npb24udjEuQ29tcGxldGVTZXNzaW9uUmVzcG9uc2USgQEKFlZhbGlkYXRlU2Vzc2lvbkV4ZWN1dGUSMi5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRlU2Vzc2lvbkV4ZWN1dGVSZXF1ZXN0GjMuaGFnaWNvZGUuc2Vzc2lvbi52MS5WYWxpZGF0ZVNlc3Npb25FeGVjdXRlUmVzcG9uc2USewoUVmFsaWRhdGVTZXNzaW9uU3RhcnQSMC5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRlU2Vzc2lvblN0YXJ0UmVxdWVzdBoxLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGVTZXNzaW9uU3RhcnRSZXNwb25zZRKBAQoWVmFsaWRhdGVTZXNzaW9uQXJjaGl2ZRIyLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGVTZXNzaW9uQXJjaGl2ZVJlcXVlc3QaMy5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRlU2Vzc2lvbkFyY2hpdmVSZXNwb25zZUIpqgImUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLlNlc3Npb24uVjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_hagicode_session_v1_sessions]);
+  fileDesc("CipoYWdpY29kZS9zZXNzaW9uL3YxL3Nlc3Npb25fcHJvcG9zYWwucHJvdG8SE2hhZ2ljb2RlLnNlc3Npb24udjEiOAoiTGlzdFVubGlua2VkT3BlblNwZWNDaGFuZ2VzUmVxdWVzdBISCgpwcm9qZWN0X2lkGAEgASgJInIKI0xpc3RVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc1Jlc3BvbnNlEksKBnJlc3VsdBgBIAEoCzI7LmhhZ2ljb2RlLnNlc3Npb24udjEuVW5saW5rZWRPcGVuU3BlY0NoYW5nZXNMaXN0UmVzcG9uc2VEdG8ijQIKGVVubGlua2VkT3BlblNwZWNDaGFuZ2VEdG8SDAoEbmFtZRgBIAEoCRINCgV0aXRsZRgCIAEoCRIPCgdzdW1tYXJ5GAMgASgJEhwKD3Rhc2tzX2NvbXBsZXRlZBgEIAEoBUgAiAEBEhgKC3Rhc2tzX3RvdGFsGAUgASgFSAGIAQESGQoRaGFzX3Byb3Bvc2FsX2ZpbGUYBiABKAgSDQoFZmlsZXMYByADKAkSIgoVbm90X2ltcG9ydGFibGVfcmVhc29uGAggASgJSAKIAQFCEgoQX3Rhc2tzX2NvbXBsZXRlZEIOCgxfdGFza3NfdG90YWxCGAoWX25vdF9pbXBvcnRhYmxlX3JlYXNvbiJpCiZVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc0xpc3RSZXNwb25zZUR0bxI/CgdjaGFuZ2VzGAEgAygLMi4uaGFnaWNvZGUuc2Vzc2lvbi52MS5VbmxpbmtlZE9wZW5TcGVjQ2hhbmdlRHRvIjkKI0NvdW50VW5saW5rZWRPcGVuU3BlY0NoYW5nZXNSZXF1ZXN0EhIKCnByb2plY3RfaWQYASABKAkiawokQ291bnRVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc1Jlc3BvbnNlEkMKBnJlc3VsdBgBIAEoCzIzLmhhZ2ljb2RlLnNlc3Npb24udjEuVW5saW5rZWRPcGVuU3BlY0NoYW5nZUNvdW50RHRvIi8KHlVubGlua2VkT3BlblNwZWNDaGFuZ2VDb3VudER0bxINCgVjb3VudBgBIAEoBSJiCiRHZXRVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlRmlsZVJlcXVlc3QSEgoKcHJvamVjdF9pZBgBIAEoCRITCgtjaGFuZ2VfbmFtZRgCIAEoCRIRCglmaWxlX3BhdGgYAyABKAkiawolR2V0VW5saW5rZWRPcGVuU3BlY0NoYW5nZUZpbGVSZXNwb25zZRJCCgZyZXN1bHQYASABKAsyMi5oYWdpY29kZS5zZXNzaW9uLnYxLlVubGlua2VkT3BlblNwZWNDaGFuZ2VGaWxlRHRvIkMKHVVubGlua2VkT3BlblNwZWNDaGFuZ2VGaWxlRHRvEhEKCWZpbGVfcGF0aBgBIAEoCRIPCgdjb250ZW50GAIgASgJIkgKHEltcG9ydE9wZW5TcGVjQ2hhbmdlc1JlcXVlc3QSEgoKcHJvamVjdF9pZBgBIAEoCRIUCgxjaGFuZ2VfbmFtZXMYAiADKAkiZAodSW1wb3J0T3BlblNwZWNDaGFuZ2VzUmVzcG9uc2USQwoGcmVzdWx0GAEgASgLMjMuaGFnaWNvZGUuc2Vzc2lvbi52MS5JbXBvcnRPcGVuU3BlY0NoYW5nZXNSZXN1bHREdG8iZAoeSW1wb3J0T3BlblNwZWNDaGFuZ2VzUmVzdWx0RHRvEkIKB3Jlc3VsdHMYASADKAsyMS5oYWdpY29kZS5zZXNzaW9uLnYxLkltcG9ydE9wZW5TcGVjQ2hhbmdlRW50cnlEdG8imAEKHEltcG9ydE9wZW5TcGVjQ2hhbmdlRW50cnlEdG8SDAoEbmFtZRgBIAEoCRIOCgZzdGF0dXMYAiABKAkSOAoHc2Vzc2lvbhgDIAEoCzInLmhhZ2ljb2RlLnNlc3Npb24udjEuU2Vzc2lvblJlc3BvbnNlRHRvEhQKB21lc3NhZ2UYBCABKAlIAIgBAUIKCghfbWVzc2FnZSJwCh5PcHRpbWl6ZVNlc3Npb25Qcm9wb3NhbFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRI6CgRib2R5GAIgASgLMiwuaGFnaWNvZGUuc2Vzc2lvbi52MS5PcHRpbWl6ZVByb3Bvc2FsUmVxdWVzdCJtCh9PcHRpbWl6ZVNlc3Npb25Qcm9wb3NhbFJlc3BvbnNlEkoKBnJlc3VsdBgBIAEoCzI6LmhhZ2ljb2RlLnNlc3Npb24udjEuUHJvcG9zYWxPcHRpbWl6YXRpb25CdW5kbGVSZXNwb25zZUR0byJsChdHZW5lcmF0ZVByb3Bvc2FsUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEj0KBGJvZHkYAiABKAsyLy5oYWdpY29kZS5zZXNzaW9uLnYxLkdlbmVyYXRlUHJvcG9zYWxSZXF1ZXN0RHRvIlkKGEdlbmVyYXRlUHJvcG9zYWxSZXNwb25zZRI9CgZyZXN1bHQYASABKAsyLS5oYWdpY29kZS5zZXNzaW9uLnYxLlNpbXBsZU1lc3NhZ2VSZXNwb25zZUR0byJoChVBcmNoaXZlU2Vzc2lvblJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRI7CgRib2R5GAIgASgLMi0uaGFnaWNvZGUuc2Vzc2lvbi52MS5BcmNoaXZlU2Vzc2lvblJlcXVlc3REdG8iUQoWQXJjaGl2ZVNlc3Npb25SZXNwb25zZRI3CgZyZXN1bHQYASABKAsyJy5oYWdpY29kZS5zZXNzaW9uLnYxLlNlc3Npb25SZXNwb25zZUR0byJqChZFeGVjdXRlUHJvcG9zYWxSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSPAoEYm9keRgCIAEoCzIuLmhhZ2ljb2RlLnNlc3Npb24udjEuRXhlY3V0ZVByb3Bvc2FsUmVxdWVzdER0byJYChdFeGVjdXRlUHJvcG9zYWxSZXNwb25zZRI9CgZyZXN1bHQYASABKAsyLS5oYWdpY29kZS5zZXNzaW9uLnYxLlNpbXBsZU1lc3NhZ2VSZXNwb25zZUR0byIsChZDb21wbGV0ZVNlc3Npb25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiUgoXQ29tcGxldGVTZXNzaW9uUmVzcG9uc2USNwoGcmVzdWx0GAEgASgLMicuaGFnaWNvZGUuc2Vzc2lvbi52MS5TZXNzaW9uUmVzcG9uc2VEdG8iMwodVmFsaWRhdGVTZXNzaW9uRXhlY3V0ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJaCh5WYWxpZGF0ZVNlc3Npb25FeGVjdXRlUmVzcG9uc2USOAoGcmVzdWx0GAEgASgLMiguaGFnaWNvZGUuc2Vzc2lvbi52MS5WYWxpZGF0aW9uUmVzdWx0RHRvIjEKG1ZhbGlkYXRlU2Vzc2lvblN0YXJ0UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIlgKHFZhbGlkYXRlU2Vzc2lvblN0YXJ0UmVzcG9uc2USOAoGcmVzdWx0GAEgASgLMiguaGFnaWNvZGUuc2Vzc2lvbi52MS5WYWxpZGF0aW9uUmVzdWx0RHRvIjMKHVZhbGlkYXRlU2Vzc2lvbkFyY2hpdmVSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiWgoeVmFsaWRhdGVTZXNzaW9uQXJjaGl2ZVJlc3BvbnNlEjgKBnJlc3VsdBgBIAEoCzIoLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvblJlc3VsdER0byJyCiFQcm9wb3NhbE9wdGltaXphdGlvbkRpYWdub3N0aWNEdG8SDAoEY29kZRgBIAEoCRIQCghzZXZlcml0eRgCIAEoCRIPCgdtZXNzYWdlGAMgASgJEhIKBWZpZWxkGAQgASgJSACIAQFCCAoGX2ZpZWxkIo4BCi1Qcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVZhbGlkYXRpb25SZXN1bHREdG8SEAoIaXNfdmFsaWQYASABKAgSSwoLZGlhZ25vc3RpY3MYAiADKAsyNi5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uRGlhZ25vc3RpY0R0byLcAwonUHJvcG9zYWxPcHRpbWl6YXRpb25TY2VuYXJpb1NldHRpbmdzRHRvEhcKCnNjcmlwdF9rZXkYASABKAlIAIgBARIdChBzZWxlY3RlZF9oZXJvX2lkGAIgASgJSAGIAQESHAoPY2FwdGFpbl9oZXJvX2lkGAMgASgJSAKIAQESFgoJcm9zdGVyX2lkGAQgASgJSAOIAQESawoQZXh0ZW5zaW9uX2ZpZWxkcxgFIAMoCzJRLmhhZ2ljb2RlLnNlc3Npb24udjEuUHJvcG9zYWxPcHRpbWl6YXRpb25TY2VuYXJpb1NldHRpbmdzRHRvLkV4dGVuc2lvbkZpZWxkc0VudHJ5EhYKCXN0YWdlX2tleRgGIAEoCUgEiAEBEh0KEHNlbGVjdGlvbl9zb3VyY2UYByABKAlIBYgBARo2ChRFeHRlbnNpb25GaWVsZHNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQg0KC19zY3JpcHRfa2V5QhMKEV9zZWxlY3RlZF9oZXJvX2lkQhIKEF9jYXB0YWluX2hlcm9faWRCDAoKX3Jvc3Rlcl9pZEIMCgpfc3RhZ2Vfa2V5QhMKEV9zZWxlY3Rpb25fc291cmNlIr4DCiNQcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVJlc3VsdER0bxIcCg9vcHRpbWl6ZWRfdGl0bGUYASABKAlIAIgBARIoChtvcHRpbWl6ZWRfcHJvcG9zYWxfbWFya2Rvd24YAiABKAlIAYgBARIfChdvcHRpbWl6ZWRfcHJvcG9zYWxfbmFtZRgDIAEoCRIdChVvcHRpbWl6ZWRfZGVzY3JpcHRpb24YBCABKAkSVwoRc2NlbmFyaW9fc2V0dGluZ3MYBSABKAsyPC5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uU2NlbmFyaW9TZXR0aW5nc0R0bxJWCgp2YWxpZGF0aW9uGAYgASgLMkIuaGFnaWNvZGUuc2Vzc2lvbi52MS5Qcm9wb3NhbE9wdGltaXphdGlvbkJ1bmRsZVZhbGlkYXRpb25SZXN1bHREdG8SGQoMcmF3X3Jlc3BvbnNlGAcgASgJSAKIAQFCEgoQX29wdGltaXplZF90aXRsZUIeChxfb3B0aW1pemVkX3Byb3Bvc2FsX21hcmtkb3duQg8KDV9yYXdfcmVzcG9uc2Ui0ggKJFByb3Bvc2FsT3B0aW1pemF0aW9uQnVuZGxlU3VtbWFyeUR0bxIbChNyZXF1ZXN0X2ZpbmdlcnByaW50GAEgASgJEjQKEGdlbmVyYXRlZF9hdF91dGMYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEg4KBnNvdXJjZRgDIAEoCRIVCg1hcHBsaWVkX3RpdGxlGAQgASgJEh0KFWFwcGxpZWRfcHJvcG9zYWxfbmFtZRgFIAEoCRIgChhwcm9wb3NhbF9kcmFmdF9hdmFpbGFibGUYBiABKAgSIAoYc2NlbmFyaW9fc2V0dGluZ3Nfc3RhdHVzGAcgASgJEhoKEmFwcGxpZWRfdGl0bGVfbW9kZRgIIAEoCRIQCghpc192YWxpZBgJIAEoCBJLCgtkaWFnbm9zdGljcxgKIAMoCzI2LmhhZ2ljb2RlLnNlc3Npb24udjEuUHJvcG9zYWxPcHRpbWl6YXRpb25EaWFnbm9zdGljRHRvEiYKGW9wdGltaXplZF90aXRsZV9jYW5kaWRhdGUYCyABKAlIAIgBARIjChZwcm9wb3NhbF9kcmFmdF9wcmV2aWV3GAwgASgJSAGIAQESGgoNYXJ0aWZhY3RfcGF0aBgNIAEoCUgCiAEBEhsKDmNvcnJlbGF0aW9uX2lkGA4gASgJSAOIAQESHQoQcmVzb2x2ZWRfaGVyb19pZBgPIAEoCUgEiAEBEh8KEnJlc29sdmVkX2hlcm9fbmFtZRgQIAEoCUgFiAEBEh8KEnJlc29sdmVkX2hlcm9faWNvbhgRIAEoCUgGiAEBEigKG3Jlc29sdmVkX2hlcm9fZXhlY3V0b3JfdHlwZRgSIAEoCUgHiAEBEiIKFWhlcm9fc2VsZWN0aW9uX3NvdXJjZRgTIAEoCUgIiAEBEiMKFmhlcm9fcm91dGluZ19zdGFnZV9rZXkYFCABKAlICYgBARIkChdoZXJvX3JvdXRpbmdfc2NyaXB0X2tleRgVIAEoCUgKiAEBEiQKF29wdGltaXphdGlvbl9jZXNzaW9uX2lkGBYgASgJSAuIAQFCHAoaX29wdGltaXplZF90aXRsZV9jYW5kaWRhdGVCGQoXX3Byb3Bvc2FsX2RyYWZ0X3ByZXZpZXdCEAoOX2FydGlmYWN0X3BhdGhCEQoPX2NvcnJlbGF0aW9uX2lkQhMKEV9yZXNvbHZlZF9oZXJvX2lkQhUKE19yZXNvbHZlZF9oZXJvX25hbWVCFQoTX3Jlc29sdmVkX2hlcm9faWNvbkIeChxfcmVzb2x2ZWRfaGVyb19leGVjdXRvcl90eXBlQhgKFl9oZXJvX3NlbGVjdGlvbl9zb3VyY2VCGQoXX2hlcm9fcm91dGluZ19zdGFnZV9rZXlCGgoYX2hlcm9fcm91dGluZ19zY3JpcHRfa2V5QhoKGF9vcHRpbWl6YXRpb25fY2Vzc2lvbl9pZCLVAQolUHJvcG9zYWxPcHRpbWl6YXRpb25CdW5kbGVSZXNwb25zZUR0bxJICgZyZXN1bHQYASABKAsyOC5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uQnVuZGxlUmVzdWx0RHRvEkoKB3N1bW1hcnkYAiABKAsyOS5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uQnVuZGxlU3VtbWFyeUR0bxIWCg5jb3JyZWxhdGlvbl9pZBgDIAEoCSKJAwoXT3B0aW1pemVQcm9wb3NhbFJlcXVlc3QSEwoLZGVzY3JpcHRpb24YASABKAkSJgoZcHJvcG9zYWxfY29udGVudF9sYW5ndWFnZRgCIAEoCUgAiAEBEiMKFm9wdGltaXphdGlvbl9kaXJlY3Rpb24YAyABKAlIAYgBARISCgV0aXRsZRgEIAEoCUgCiAEBEhgKEGlzX2RlZmF1bHRfdGl0bGUYBSABKAgSJQoYb3JpZ2luYWxfY2hpZWZfY29tcGxhaW50GAYgASgJSAOIAQESVwoRc2NlbmFyaW9fc2V0dGluZ3MYByABKAsyPC5oYWdpY29kZS5zZXNzaW9uLnYxLlByb3Bvc2FsT3B0aW1pemF0aW9uU2NlbmFyaW9TZXR0aW5nc0R0b0IcChpfcHJvcG9zYWxfY29udGVudF9sYW5ndWFnZUIZChdfb3B0aW1pemF0aW9uX2RpcmVjdGlvbkIICgZfdGl0bGVCGwoZX29yaWdpbmFsX2NoaWVmX2NvbXBsYWludCJFChpQbGFubmluZ0RpcmVjdGlvbk9wdGlvbkR0bxIPCgJpZBgBIAEoCUgAiAEBEg8KB2VuYWJsZWQYAiABKAhCBQoDX2lkIowCChpHZW5lcmF0ZVByb3Bvc2FsUmVxdWVzdER0bxIgChNlbmFibGVfZXhwbG9yZV9tb2RlGAEgASgISACIAQESTAoTcGxhbm5pbmdfZGlyZWN0aW9ucxgCIAMoCzIvLmhhZ2ljb2RlLnNlc3Npb24udjEuUGxhbm5pbmdEaXJlY3Rpb25PcHRpb25EdG8SJgoZcHJvcG9zYWxfY29udGVudF9sYW5ndWFnZRgDIAEoCUgBiAEBEhQKB2hlcm9faWQYBCABKAlIAogBAUIWChRfZW5hYmxlX2V4cGxvcmVfbW9kZUIcChpfcHJvcG9zYWxfY29udGVudF9sYW5ndWFnZUIKCghfaGVyb19pZCI8ChhBcmNoaXZlU2Vzc2lvblJlcXVlc3REdG8SFAoHaGVyb19pZBgBIAEoCUgAiAEBQgoKCF9oZXJvX2lkIj0KGUV4ZWN1dGVQcm9wb3NhbFJlcXVlc3REdG8SFAoHaGVyb19pZBgBIAEoCUgAiAEBQgoKCF9oZXJvX2lkIlcKC0NvbmZsaWN0RHRvEgwKBHR5cGUYASABKAkSEQoJZW50aXR5X2lkGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhIKCnJlc29sdXRpb24YBCABKAkiawoSVmFsaWRhdGlvbklzc3VlRHRvEgwKBGNvZGUYASABKAkSDwoHbWVzc2FnZRgCIAEoCRIQCghzZXZlcml0eRgDIAEoCRIWCgllbnRpdHlfaWQYBCABKAlIAIgBAUIMCgpfZW50aXR5X2lkIoUBChRWYWxpZGF0aW9uU3VtbWFyeUR0bxIVCg1wcm9qZWN0X2NvdW50GAEgASgFEhUKDXNlc3Npb25fY291bnQYAiABKAUSHwoXZHVwbGljYXRlX3Byb2plY3RfY291bnQYAyABKAUSHgoWb3JwaGFuZWRfc2Vzc2lvbl9jb3VudBgEIAEoBSKMAgoTVmFsaWRhdGlvblJlc3VsdER0bxIQCghpc192YWxpZBgBIAEoCBI5Cgh3YXJuaW5ncxgCIAMoCzInLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvbklzc3VlRHRvEjcKBmVycm9ycxgDIAMoCzInLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvbklzc3VlRHRvEjMKCWNvbmZsaWN0cxgEIAMoCzIgLmhhZ2ljb2RlLnNlc3Npb24udjEuQ29uZmxpY3REdG8SOgoHc3VtbWFyeRgFIAEoCzIpLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGlvblN1bW1hcnlEdG8yngwKFlNlc3Npb25Qcm9wb3NhbFNlcnZpY2UShAEKF09wdGltaXplU2Vzc2lvblByb3Bvc2FsEjMuaGFnaWNvZGUuc2Vzc2lvbi52MS5PcHRpbWl6ZVNlc3Npb25Qcm9wb3NhbFJlcXVlc3QaNC5oYWdpY29kZS5zZXNzaW9uLnYxLk9wdGltaXplU2Vzc2lvblByb3Bvc2FsUmVzcG9uc2USbwoQR2VuZXJhdGVQcm9wb3NhbBIsLmhhZ2ljb2RlLnNlc3Npb24udjEuR2VuZXJhdGVQcm9wb3NhbFJlcXVlc3QaLS5oYWdpY29kZS5zZXNzaW9uLnYxLkdlbmVyYXRlUHJvcG9zYWxSZXNwb25zZRJpCg5BcmNoaXZlU2Vzc2lvbhIqLmhhZ2ljb2RlLnNlc3Npb24udjEuQXJjaGl2ZVNlc3Npb25SZXF1ZXN0GisuaGFnaWNvZGUuc2Vzc2lvbi52MS5BcmNoaXZlU2Vzc2lvblJlc3BvbnNlEmwKD0V4ZWN1dGVQcm9wb3NhbBIrLmhhZ2ljb2RlLnNlc3Npb24udjEuRXhlY3V0ZVByb3Bvc2FsUmVxdWVzdBosLmhhZ2ljb2RlLnNlc3Npb24udjEuRXhlY3V0ZVByb3Bvc2FsUmVzcG9uc2USbAoPQ29tcGxldGVTZXNzaW9uEisuaGFnaWNvZGUuc2Vzc2lvbi52MS5Db21wbGV0ZVNlc3Npb25SZXF1ZXN0GiwuaGFnaWNvZGUuc2Vzc2lvbi52MS5Db21wbGV0ZVNlc3Npb25SZXNwb25zZRKBAQoWVmFsaWRhdGVTZXNzaW9uRXhlY3V0ZRIyLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGVTZXNzaW9uRXhlY3V0ZVJlcXVlc3QaMy5oYWdpY29kZS5zZXNzaW9uLnYxLlZhbGlkYXRlU2Vzc2lvbkV4ZWN1dGVSZXNwb25zZRJ7ChRWYWxpZGF0ZVNlc3Npb25TdGFydBIwLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGVTZXNzaW9uU3RhcnRSZXF1ZXN0GjEuaGFnaWNvZGUuc2Vzc2lvbi52MS5WYWxpZGF0ZVNlc3Npb25TdGFydFJlc3BvbnNlEoEBChZWYWxpZGF0ZVNlc3Npb25BcmNoaXZlEjIuaGFnaWNvZGUuc2Vzc2lvbi52MS5WYWxpZGF0ZVNlc3Npb25BcmNoaXZlUmVxdWVzdBozLmhhZ2ljb2RlLnNlc3Npb24udjEuVmFsaWRhdGVTZXNzaW9uQXJjaGl2ZVJlc3BvbnNlEpABChtMaXN0VW5saW5rZWRPcGVuU3BlY0NoYW5nZXMSNy5oYWdpY29kZS5zZXNzaW9uLnYxLkxpc3RVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc1JlcXVlc3QaOC5oYWdpY29kZS5zZXNzaW9uLnYxLkxpc3RVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc1Jlc3BvbnNlEpMBChxDb3VudFVubGlua2VkT3BlblNwZWNDaGFuZ2VzEjguaGFnaWNvZGUuc2Vzc2lvbi52MS5Db3VudFVubGlua2VkT3BlblNwZWNDaGFuZ2VzUmVxdWVzdBo5LmhhZ2ljb2RlLnNlc3Npb24udjEuQ291bnRVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlc1Jlc3BvbnNlEpYBCh1HZXRVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlRmlsZRI5LmhhZ2ljb2RlLnNlc3Npb24udjEuR2V0VW5saW5rZWRPcGVuU3BlY0NoYW5nZUZpbGVSZXF1ZXN0GjouaGFnaWNvZGUuc2Vzc2lvbi52MS5HZXRVbmxpbmtlZE9wZW5TcGVjQ2hhbmdlRmlsZVJlc3BvbnNlEn4KFUltcG9ydE9wZW5TcGVjQ2hhbmdlcxIxLmhhZ2ljb2RlLnNlc3Npb24udjEuSW1wb3J0T3BlblNwZWNDaGFuZ2VzUmVxdWVzdBoyLmhhZ2ljb2RlLnNlc3Npb24udjEuSW1wb3J0T3BlblNwZWNDaGFuZ2VzUmVzcG9uc2VCKaoCJlBDb2RlLkh0dHBBcGkuR3JwY0NvbnRyYWN0cy5TZXNzaW9uLlYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_hagicode_session_v1_sessions]);
+
+/**
+ * @generated from message hagicode.session.v1.ListUnlinkedOpenSpecChangesRequest
+ */
+export type ListUnlinkedOpenSpecChangesRequest = Message<"hagicode.session.v1.ListUnlinkedOpenSpecChangesRequest"> & {
+  /**
+   * @generated from field: string project_id = 1;
+   */
+  projectId: string;
+};
+
+/**
+ * Describes the message hagicode.session.v1.ListUnlinkedOpenSpecChangesRequest.
+ * Use `create(ListUnlinkedOpenSpecChangesRequestSchema)` to create a new message.
+ */
+export const ListUnlinkedOpenSpecChangesRequestSchema: GenMessage<ListUnlinkedOpenSpecChangesRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 0);
+
+/**
+ * @generated from message hagicode.session.v1.ListUnlinkedOpenSpecChangesResponse
+ */
+export type ListUnlinkedOpenSpecChangesResponse = Message<"hagicode.session.v1.ListUnlinkedOpenSpecChangesResponse"> & {
+  /**
+   * @generated from field: hagicode.session.v1.UnlinkedOpenSpecChangesListResponseDto result = 1;
+   */
+  result?: UnlinkedOpenSpecChangesListResponseDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.ListUnlinkedOpenSpecChangesResponse.
+ * Use `create(ListUnlinkedOpenSpecChangesResponseSchema)` to create a new message.
+ */
+export const ListUnlinkedOpenSpecChangesResponseSchema: GenMessage<ListUnlinkedOpenSpecChangesResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 1);
+
+/**
+ * @generated from message hagicode.session.v1.UnlinkedOpenSpecChangeDto
+ */
+export type UnlinkedOpenSpecChangeDto = Message<"hagicode.session.v1.UnlinkedOpenSpecChangeDto"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string title = 2;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string summary = 3;
+   */
+  summary: string;
+
+  /**
+   * @generated from field: optional int32 tasks_completed = 4;
+   */
+  tasksCompleted?: number | undefined;
+
+  /**
+   * @generated from field: optional int32 tasks_total = 5;
+   */
+  tasksTotal?: number | undefined;
+
+  /**
+   * @generated from field: bool has_proposal_file = 6;
+   */
+  hasProposalFile: boolean;
+
+  /**
+   * @generated from field: repeated string files = 7;
+   */
+  files: string[];
+
+  /**
+   * @generated from field: optional string not_importable_reason = 8;
+   */
+  notImportableReason?: string | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.UnlinkedOpenSpecChangeDto.
+ * Use `create(UnlinkedOpenSpecChangeDtoSchema)` to create a new message.
+ */
+export const UnlinkedOpenSpecChangeDtoSchema: GenMessage<UnlinkedOpenSpecChangeDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 2);
+
+/**
+ * @generated from message hagicode.session.v1.UnlinkedOpenSpecChangesListResponseDto
+ */
+export type UnlinkedOpenSpecChangesListResponseDto = Message<"hagicode.session.v1.UnlinkedOpenSpecChangesListResponseDto"> & {
+  /**
+   * @generated from field: repeated hagicode.session.v1.UnlinkedOpenSpecChangeDto changes = 1;
+   */
+  changes: UnlinkedOpenSpecChangeDto[];
+};
+
+/**
+ * Describes the message hagicode.session.v1.UnlinkedOpenSpecChangesListResponseDto.
+ * Use `create(UnlinkedOpenSpecChangesListResponseDtoSchema)` to create a new message.
+ */
+export const UnlinkedOpenSpecChangesListResponseDtoSchema: GenMessage<UnlinkedOpenSpecChangesListResponseDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 3);
+
+/**
+ * @generated from message hagicode.session.v1.CountUnlinkedOpenSpecChangesRequest
+ */
+export type CountUnlinkedOpenSpecChangesRequest = Message<"hagicode.session.v1.CountUnlinkedOpenSpecChangesRequest"> & {
+  /**
+   * @generated from field: string project_id = 1;
+   */
+  projectId: string;
+};
+
+/**
+ * Describes the message hagicode.session.v1.CountUnlinkedOpenSpecChangesRequest.
+ * Use `create(CountUnlinkedOpenSpecChangesRequestSchema)` to create a new message.
+ */
+export const CountUnlinkedOpenSpecChangesRequestSchema: GenMessage<CountUnlinkedOpenSpecChangesRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 4);
+
+/**
+ * @generated from message hagicode.session.v1.CountUnlinkedOpenSpecChangesResponse
+ */
+export type CountUnlinkedOpenSpecChangesResponse = Message<"hagicode.session.v1.CountUnlinkedOpenSpecChangesResponse"> & {
+  /**
+   * @generated from field: hagicode.session.v1.UnlinkedOpenSpecChangeCountDto result = 1;
+   */
+  result?: UnlinkedOpenSpecChangeCountDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.CountUnlinkedOpenSpecChangesResponse.
+ * Use `create(CountUnlinkedOpenSpecChangesResponseSchema)` to create a new message.
+ */
+export const CountUnlinkedOpenSpecChangesResponseSchema: GenMessage<CountUnlinkedOpenSpecChangesResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 5);
+
+/**
+ * @generated from message hagicode.session.v1.UnlinkedOpenSpecChangeCountDto
+ */
+export type UnlinkedOpenSpecChangeCountDto = Message<"hagicode.session.v1.UnlinkedOpenSpecChangeCountDto"> & {
+  /**
+   * @generated from field: int32 count = 1;
+   */
+  count: number;
+};
+
+/**
+ * Describes the message hagicode.session.v1.UnlinkedOpenSpecChangeCountDto.
+ * Use `create(UnlinkedOpenSpecChangeCountDtoSchema)` to create a new message.
+ */
+export const UnlinkedOpenSpecChangeCountDtoSchema: GenMessage<UnlinkedOpenSpecChangeCountDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 6);
+
+/**
+ * @generated from message hagicode.session.v1.GetUnlinkedOpenSpecChangeFileRequest
+ */
+export type GetUnlinkedOpenSpecChangeFileRequest = Message<"hagicode.session.v1.GetUnlinkedOpenSpecChangeFileRequest"> & {
+  /**
+   * @generated from field: string project_id = 1;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string change_name = 2;
+   */
+  changeName: string;
+
+  /**
+   * @generated from field: string file_path = 3;
+   */
+  filePath: string;
+};
+
+/**
+ * Describes the message hagicode.session.v1.GetUnlinkedOpenSpecChangeFileRequest.
+ * Use `create(GetUnlinkedOpenSpecChangeFileRequestSchema)` to create a new message.
+ */
+export const GetUnlinkedOpenSpecChangeFileRequestSchema: GenMessage<GetUnlinkedOpenSpecChangeFileRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 7);
+
+/**
+ * @generated from message hagicode.session.v1.GetUnlinkedOpenSpecChangeFileResponse
+ */
+export type GetUnlinkedOpenSpecChangeFileResponse = Message<"hagicode.session.v1.GetUnlinkedOpenSpecChangeFileResponse"> & {
+  /**
+   * @generated from field: hagicode.session.v1.UnlinkedOpenSpecChangeFileDto result = 1;
+   */
+  result?: UnlinkedOpenSpecChangeFileDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.GetUnlinkedOpenSpecChangeFileResponse.
+ * Use `create(GetUnlinkedOpenSpecChangeFileResponseSchema)` to create a new message.
+ */
+export const GetUnlinkedOpenSpecChangeFileResponseSchema: GenMessage<GetUnlinkedOpenSpecChangeFileResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 8);
+
+/**
+ * @generated from message hagicode.session.v1.UnlinkedOpenSpecChangeFileDto
+ */
+export type UnlinkedOpenSpecChangeFileDto = Message<"hagicode.session.v1.UnlinkedOpenSpecChangeFileDto"> & {
+  /**
+   * @generated from field: string file_path = 1;
+   */
+  filePath: string;
+
+  /**
+   * @generated from field: string content = 2;
+   */
+  content: string;
+};
+
+/**
+ * Describes the message hagicode.session.v1.UnlinkedOpenSpecChangeFileDto.
+ * Use `create(UnlinkedOpenSpecChangeFileDtoSchema)` to create a new message.
+ */
+export const UnlinkedOpenSpecChangeFileDtoSchema: GenMessage<UnlinkedOpenSpecChangeFileDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 9);
+
+/**
+ * @generated from message hagicode.session.v1.ImportOpenSpecChangesRequest
+ */
+export type ImportOpenSpecChangesRequest = Message<"hagicode.session.v1.ImportOpenSpecChangesRequest"> & {
+  /**
+   * @generated from field: string project_id = 1;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: repeated string change_names = 2;
+   */
+  changeNames: string[];
+};
+
+/**
+ * Describes the message hagicode.session.v1.ImportOpenSpecChangesRequest.
+ * Use `create(ImportOpenSpecChangesRequestSchema)` to create a new message.
+ */
+export const ImportOpenSpecChangesRequestSchema: GenMessage<ImportOpenSpecChangesRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 10);
+
+/**
+ * @generated from message hagicode.session.v1.ImportOpenSpecChangesResponse
+ */
+export type ImportOpenSpecChangesResponse = Message<"hagicode.session.v1.ImportOpenSpecChangesResponse"> & {
+  /**
+   * @generated from field: hagicode.session.v1.ImportOpenSpecChangesResultDto result = 1;
+   */
+  result?: ImportOpenSpecChangesResultDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.ImportOpenSpecChangesResponse.
+ * Use `create(ImportOpenSpecChangesResponseSchema)` to create a new message.
+ */
+export const ImportOpenSpecChangesResponseSchema: GenMessage<ImportOpenSpecChangesResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 11);
+
+/**
+ * @generated from message hagicode.session.v1.ImportOpenSpecChangesResultDto
+ */
+export type ImportOpenSpecChangesResultDto = Message<"hagicode.session.v1.ImportOpenSpecChangesResultDto"> & {
+  /**
+   * @generated from field: repeated hagicode.session.v1.ImportOpenSpecChangeEntryDto results = 1;
+   */
+  results: ImportOpenSpecChangeEntryDto[];
+};
+
+/**
+ * Describes the message hagicode.session.v1.ImportOpenSpecChangesResultDto.
+ * Use `create(ImportOpenSpecChangesResultDtoSchema)` to create a new message.
+ */
+export const ImportOpenSpecChangesResultDtoSchema: GenMessage<ImportOpenSpecChangesResultDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 12);
+
+/**
+ * One requested change and its outcome. status is one of IMPORTED, ALREADY_LINKED, NOT_FOUND, NOT_IMPORTABLE, FAILED.
+ *
+ * @generated from message hagicode.session.v1.ImportOpenSpecChangeEntryDto
+ */
+export type ImportOpenSpecChangeEntryDto = Message<"hagicode.session.v1.ImportOpenSpecChangeEntryDto"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string status = 2;
+   */
+  status: string;
+
+  /**
+   * @generated from field: hagicode.session.v1.SessionResponseDto session = 3;
+   */
+  session?: SessionResponseDto | undefined;
+
+  /**
+   * @generated from field: optional string message = 4;
+   */
+  message?: string | undefined;
+};
+
+/**
+ * Describes the message hagicode.session.v1.ImportOpenSpecChangeEntryDto.
+ * Use `create(ImportOpenSpecChangeEntryDtoSchema)` to create a new message.
+ */
+export const ImportOpenSpecChangeEntryDtoSchema: GenMessage<ImportOpenSpecChangeEntryDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_session_v1_session_proposal, 13);
 
 /**
  * @generated from message hagicode.session.v1.OptimizeSessionProposalRequest
@@ -36,7 +346,7 @@ export type OptimizeSessionProposalRequest = Message<"hagicode.session.v1.Optimi
  * Use `create(OptimizeSessionProposalRequestSchema)` to create a new message.
  */
 export const OptimizeSessionProposalRequestSchema: GenMessage<OptimizeSessionProposalRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 0);
+  messageDesc(file_hagicode_session_v1_session_proposal, 14);
 
 /**
  * @generated from message hagicode.session.v1.OptimizeSessionProposalResponse
@@ -53,7 +363,7 @@ export type OptimizeSessionProposalResponse = Message<"hagicode.session.v1.Optim
  * Use `create(OptimizeSessionProposalResponseSchema)` to create a new message.
  */
 export const OptimizeSessionProposalResponseSchema: GenMessage<OptimizeSessionProposalResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 1);
+  messageDesc(file_hagicode_session_v1_session_proposal, 15);
 
 /**
  * @generated from message hagicode.session.v1.GenerateProposalRequest
@@ -75,7 +385,7 @@ export type GenerateProposalRequest = Message<"hagicode.session.v1.GeneratePropo
  * Use `create(GenerateProposalRequestSchema)` to create a new message.
  */
 export const GenerateProposalRequestSchema: GenMessage<GenerateProposalRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 2);
+  messageDesc(file_hagicode_session_v1_session_proposal, 16);
 
 /**
  * @generated from message hagicode.session.v1.GenerateProposalResponse
@@ -92,7 +402,7 @@ export type GenerateProposalResponse = Message<"hagicode.session.v1.GenerateProp
  * Use `create(GenerateProposalResponseSchema)` to create a new message.
  */
 export const GenerateProposalResponseSchema: GenMessage<GenerateProposalResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 3);
+  messageDesc(file_hagicode_session_v1_session_proposal, 17);
 
 /**
  * @generated from message hagicode.session.v1.ArchiveSessionRequest
@@ -114,7 +424,7 @@ export type ArchiveSessionRequest = Message<"hagicode.session.v1.ArchiveSessionR
  * Use `create(ArchiveSessionRequestSchema)` to create a new message.
  */
 export const ArchiveSessionRequestSchema: GenMessage<ArchiveSessionRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 4);
+  messageDesc(file_hagicode_session_v1_session_proposal, 18);
 
 /**
  * @generated from message hagicode.session.v1.ArchiveSessionResponse
@@ -131,7 +441,7 @@ export type ArchiveSessionResponse = Message<"hagicode.session.v1.ArchiveSession
  * Use `create(ArchiveSessionResponseSchema)` to create a new message.
  */
 export const ArchiveSessionResponseSchema: GenMessage<ArchiveSessionResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 5);
+  messageDesc(file_hagicode_session_v1_session_proposal, 19);
 
 /**
  * @generated from message hagicode.session.v1.ExecuteProposalRequest
@@ -153,7 +463,7 @@ export type ExecuteProposalRequest = Message<"hagicode.session.v1.ExecuteProposa
  * Use `create(ExecuteProposalRequestSchema)` to create a new message.
  */
 export const ExecuteProposalRequestSchema: GenMessage<ExecuteProposalRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 6);
+  messageDesc(file_hagicode_session_v1_session_proposal, 20);
 
 /**
  * @generated from message hagicode.session.v1.ExecuteProposalResponse
@@ -170,7 +480,7 @@ export type ExecuteProposalResponse = Message<"hagicode.session.v1.ExecutePropos
  * Use `create(ExecuteProposalResponseSchema)` to create a new message.
  */
 export const ExecuteProposalResponseSchema: GenMessage<ExecuteProposalResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 7);
+  messageDesc(file_hagicode_session_v1_session_proposal, 21);
 
 /**
  * @generated from message hagicode.session.v1.CompleteSessionRequest
@@ -187,7 +497,7 @@ export type CompleteSessionRequest = Message<"hagicode.session.v1.CompleteSessio
  * Use `create(CompleteSessionRequestSchema)` to create a new message.
  */
 export const CompleteSessionRequestSchema: GenMessage<CompleteSessionRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 8);
+  messageDesc(file_hagicode_session_v1_session_proposal, 22);
 
 /**
  * @generated from message hagicode.session.v1.CompleteSessionResponse
@@ -204,7 +514,7 @@ export type CompleteSessionResponse = Message<"hagicode.session.v1.CompleteSessi
  * Use `create(CompleteSessionResponseSchema)` to create a new message.
  */
 export const CompleteSessionResponseSchema: GenMessage<CompleteSessionResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 9);
+  messageDesc(file_hagicode_session_v1_session_proposal, 23);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionExecuteRequest
@@ -221,7 +531,7 @@ export type ValidateSessionExecuteRequest = Message<"hagicode.session.v1.Validat
  * Use `create(ValidateSessionExecuteRequestSchema)` to create a new message.
  */
 export const ValidateSessionExecuteRequestSchema: GenMessage<ValidateSessionExecuteRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 10);
+  messageDesc(file_hagicode_session_v1_session_proposal, 24);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionExecuteResponse
@@ -238,7 +548,7 @@ export type ValidateSessionExecuteResponse = Message<"hagicode.session.v1.Valida
  * Use `create(ValidateSessionExecuteResponseSchema)` to create a new message.
  */
 export const ValidateSessionExecuteResponseSchema: GenMessage<ValidateSessionExecuteResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 11);
+  messageDesc(file_hagicode_session_v1_session_proposal, 25);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionStartRequest
@@ -255,7 +565,7 @@ export type ValidateSessionStartRequest = Message<"hagicode.session.v1.ValidateS
  * Use `create(ValidateSessionStartRequestSchema)` to create a new message.
  */
 export const ValidateSessionStartRequestSchema: GenMessage<ValidateSessionStartRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 12);
+  messageDesc(file_hagicode_session_v1_session_proposal, 26);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionStartResponse
@@ -272,7 +582,7 @@ export type ValidateSessionStartResponse = Message<"hagicode.session.v1.Validate
  * Use `create(ValidateSessionStartResponseSchema)` to create a new message.
  */
 export const ValidateSessionStartResponseSchema: GenMessage<ValidateSessionStartResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 13);
+  messageDesc(file_hagicode_session_v1_session_proposal, 27);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionArchiveRequest
@@ -289,7 +599,7 @@ export type ValidateSessionArchiveRequest = Message<"hagicode.session.v1.Validat
  * Use `create(ValidateSessionArchiveRequestSchema)` to create a new message.
  */
 export const ValidateSessionArchiveRequestSchema: GenMessage<ValidateSessionArchiveRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 14);
+  messageDesc(file_hagicode_session_v1_session_proposal, 28);
 
 /**
  * @generated from message hagicode.session.v1.ValidateSessionArchiveResponse
@@ -306,7 +616,7 @@ export type ValidateSessionArchiveResponse = Message<"hagicode.session.v1.Valida
  * Use `create(ValidateSessionArchiveResponseSchema)` to create a new message.
  */
 export const ValidateSessionArchiveResponseSchema: GenMessage<ValidateSessionArchiveResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 15);
+  messageDesc(file_hagicode_session_v1_session_proposal, 29);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationDiagnosticDto
@@ -338,7 +648,7 @@ export type ProposalOptimizationDiagnosticDto = Message<"hagicode.session.v1.Pro
  * Use `create(ProposalOptimizationDiagnosticDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationDiagnosticDtoSchema: GenMessage<ProposalOptimizationDiagnosticDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 16);
+  messageDesc(file_hagicode_session_v1_session_proposal, 30);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationBundleValidationResultDto
@@ -360,7 +670,7 @@ export type ProposalOptimizationBundleValidationResultDto = Message<"hagicode.se
  * Use `create(ProposalOptimizationBundleValidationResultDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationBundleValidationResultDtoSchema: GenMessage<ProposalOptimizationBundleValidationResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 17);
+  messageDesc(file_hagicode_session_v1_session_proposal, 31);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationScenarioSettingsDto
@@ -407,7 +717,7 @@ export type ProposalOptimizationScenarioSettingsDto = Message<"hagicode.session.
  * Use `create(ProposalOptimizationScenarioSettingsDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationScenarioSettingsDtoSchema: GenMessage<ProposalOptimizationScenarioSettingsDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 18);
+  messageDesc(file_hagicode_session_v1_session_proposal, 32);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationBundleResultDto
@@ -454,7 +764,7 @@ export type ProposalOptimizationBundleResultDto = Message<"hagicode.session.v1.P
  * Use `create(ProposalOptimizationBundleResultDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationBundleResultDtoSchema: GenMessage<ProposalOptimizationBundleResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 19);
+  messageDesc(file_hagicode_session_v1_session_proposal, 33);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationBundleSummaryDto
@@ -576,7 +886,7 @@ export type ProposalOptimizationBundleSummaryDto = Message<"hagicode.session.v1.
  * Use `create(ProposalOptimizationBundleSummaryDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationBundleSummaryDtoSchema: GenMessage<ProposalOptimizationBundleSummaryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 20);
+  messageDesc(file_hagicode_session_v1_session_proposal, 34);
 
 /**
  * @generated from message hagicode.session.v1.ProposalOptimizationBundleResponseDto
@@ -603,7 +913,7 @@ export type ProposalOptimizationBundleResponseDto = Message<"hagicode.session.v1
  * Use `create(ProposalOptimizationBundleResponseDtoSchema)` to create a new message.
  */
 export const ProposalOptimizationBundleResponseDtoSchema: GenMessage<ProposalOptimizationBundleResponseDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 21);
+  messageDesc(file_hagicode_session_v1_session_proposal, 35);
 
 /**
  * @generated from message hagicode.session.v1.OptimizeProposalRequest
@@ -650,7 +960,7 @@ export type OptimizeProposalRequest = Message<"hagicode.session.v1.OptimizePropo
  * Use `create(OptimizeProposalRequestSchema)` to create a new message.
  */
 export const OptimizeProposalRequestSchema: GenMessage<OptimizeProposalRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 22);
+  messageDesc(file_hagicode_session_v1_session_proposal, 36);
 
 /**
  * @generated from message hagicode.session.v1.PlanningDirectionOptionDto
@@ -672,7 +982,7 @@ export type PlanningDirectionOptionDto = Message<"hagicode.session.v1.PlanningDi
  * Use `create(PlanningDirectionOptionDtoSchema)` to create a new message.
  */
 export const PlanningDirectionOptionDtoSchema: GenMessage<PlanningDirectionOptionDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 23);
+  messageDesc(file_hagicode_session_v1_session_proposal, 37);
 
 /**
  * @generated from message hagicode.session.v1.GenerateProposalRequestDto
@@ -704,7 +1014,7 @@ export type GenerateProposalRequestDto = Message<"hagicode.session.v1.GeneratePr
  * Use `create(GenerateProposalRequestDtoSchema)` to create a new message.
  */
 export const GenerateProposalRequestDtoSchema: GenMessage<GenerateProposalRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 24);
+  messageDesc(file_hagicode_session_v1_session_proposal, 38);
 
 /**
  * @generated from message hagicode.session.v1.ArchiveSessionRequestDto
@@ -721,7 +1031,7 @@ export type ArchiveSessionRequestDto = Message<"hagicode.session.v1.ArchiveSessi
  * Use `create(ArchiveSessionRequestDtoSchema)` to create a new message.
  */
 export const ArchiveSessionRequestDtoSchema: GenMessage<ArchiveSessionRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 25);
+  messageDesc(file_hagicode_session_v1_session_proposal, 39);
 
 /**
  * @generated from message hagicode.session.v1.ExecuteProposalRequestDto
@@ -738,7 +1048,7 @@ export type ExecuteProposalRequestDto = Message<"hagicode.session.v1.ExecuteProp
  * Use `create(ExecuteProposalRequestDtoSchema)` to create a new message.
  */
 export const ExecuteProposalRequestDtoSchema: GenMessage<ExecuteProposalRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 26);
+  messageDesc(file_hagicode_session_v1_session_proposal, 40);
 
 /**
  * @generated from message hagicode.session.v1.ConflictDto
@@ -770,7 +1080,7 @@ export type ConflictDto = Message<"hagicode.session.v1.ConflictDto"> & {
  * Use `create(ConflictDtoSchema)` to create a new message.
  */
 export const ConflictDtoSchema: GenMessage<ConflictDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 27);
+  messageDesc(file_hagicode_session_v1_session_proposal, 41);
 
 /**
  * @generated from message hagicode.session.v1.ValidationIssueDto
@@ -802,7 +1112,7 @@ export type ValidationIssueDto = Message<"hagicode.session.v1.ValidationIssueDto
  * Use `create(ValidationIssueDtoSchema)` to create a new message.
  */
 export const ValidationIssueDtoSchema: GenMessage<ValidationIssueDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 28);
+  messageDesc(file_hagicode_session_v1_session_proposal, 42);
 
 /**
  * @generated from message hagicode.session.v1.ValidationSummaryDto
@@ -834,7 +1144,7 @@ export type ValidationSummaryDto = Message<"hagicode.session.v1.ValidationSummar
  * Use `create(ValidationSummaryDtoSchema)` to create a new message.
  */
 export const ValidationSummaryDtoSchema: GenMessage<ValidationSummaryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 29);
+  messageDesc(file_hagicode_session_v1_session_proposal, 43);
 
 /**
  * @generated from message hagicode.session.v1.ValidationResultDto
@@ -871,7 +1181,7 @@ export type ValidationResultDto = Message<"hagicode.session.v1.ValidationResultD
  * Use `create(ValidationResultDtoSchema)` to create a new message.
  */
 export const ValidationResultDtoSchema: GenMessage<ValidationResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_session_v1_session_proposal, 30);
+  messageDesc(file_hagicode_session_v1_session_proposal, 44);
 
 /**
  * @generated from service hagicode.session.v1.SessionProposalService
@@ -940,6 +1250,38 @@ export const SessionProposalService: GenService<{
     methodKind: "unary";
     input: typeof ValidateSessionArchiveRequestSchema;
     output: typeof ValidateSessionArchiveResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.session.v1.SessionProposalService.ListUnlinkedOpenSpecChanges
+   */
+  listUnlinkedOpenSpecChanges: {
+    methodKind: "unary";
+    input: typeof ListUnlinkedOpenSpecChangesRequestSchema;
+    output: typeof ListUnlinkedOpenSpecChangesResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.session.v1.SessionProposalService.CountUnlinkedOpenSpecChanges
+   */
+  countUnlinkedOpenSpecChanges: {
+    methodKind: "unary";
+    input: typeof CountUnlinkedOpenSpecChangesRequestSchema;
+    output: typeof CountUnlinkedOpenSpecChangesResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.session.v1.SessionProposalService.GetUnlinkedOpenSpecChangeFile
+   */
+  getUnlinkedOpenSpecChangeFile: {
+    methodKind: "unary";
+    input: typeof GetUnlinkedOpenSpecChangeFileRequestSchema;
+    output: typeof GetUnlinkedOpenSpecChangeFileResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.session.v1.SessionProposalService.ImportOpenSpecChanges
+   */
+  importOpenSpecChanges: {
+    methodKind: "unary";
+    input: typeof ImportOpenSpecChangesRequestSchema;
+    output: typeof ImportOpenSpecChangesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_hagicode_session_v1_session_proposal, 0);
