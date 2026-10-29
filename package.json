@@ -18,13 +18,13 @@
     "dist",
     "README.md"
   ],
-  "packageManager": "npm@10.9.2",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "export NODE_OPTIONS=\"${NODE_OPTIONS:-} --max-old-space-size=8192\"; npm run clean && vite build",
+    "build": "export NODE_OPTIONS=\"${NODE_OPTIONS:-} --max-old-space-size=8192\"; pnpm run clean && vite build",
     "dev": "tsx ./src/cli.ts",
     "generate:grpc": "node ./buildTools/generate-grpc.mjs",
     "generate:grpc:check": "node ./buildTools/generate-grpc.mjs --check",
