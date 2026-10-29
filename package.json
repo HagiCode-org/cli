@@ -35,7 +35,9 @@
     "publish:verify-release": "node ./scripts/verify-release-version.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "export NODE_OPTIONS=\"${NODE_OPTIONS:-} --max-old-space-size=8192\"; tsc --noEmit -p tsconfig.json"
+    "typecheck": "export NODE_OPTIONS=\"${NODE_OPTIONS:-} --max-old-space-size=8192\"; tsc --noEmit -p tsconfig.json",
+    "check:registry": "node scripts/check-registry-neutrality.mjs",
+    "test:registry": "node --test scripts/check-registry-neutrality.node-test.mjs"
   },
   "keywords": [
     "hagicode",
