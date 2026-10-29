@@ -21,7 +21,7 @@ Use this skill when the user asks to:
 - Prefer `npx @hagicode/cli ...` for normal usage and package-level verification.
 - Use `hagi ...` only when `@hagicode/cli` is already installed and on `PATH`.
 - Run repository-local install, build, and test commands with the working directory set to `repos/cli`.
-- Never run `npm install`, `npm run`, or other build commands at the monorepo root.
+- Never run `pnpm install`, `pnpm run`, or other build commands at the monorepo root.
 - Prioritize API invocation guidance over codebase tours unless the user explicitly wants implementation work.
 - Built-in skills can be enabled or disabled with `hagi skills local enable --skill-name <name>` and `hagi skills local disable --skill-name <name>`. They cannot be uninstalled or updated through the CLI. A change applies to agent runs that start afterwards; a run already in progress keeps the skills it started with.
 - Every proposal names its writable repositories and its read-only repositories, in a `Repository scope` section at the start of `--chief-complaint`. Both lists are always present, and an empty list is written as `none`. Take the paths from `hagi project repositories --id <project-id> --json`. When neither the user's request nor the session gives the scope, ask the user and offer those repositories as the choices; never guess a scope or widen the writable list. Details: [`references/proposal-flow.md`](references/proposal-flow.md#repository-scope).

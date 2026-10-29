@@ -21,8 +21,8 @@ Use the TypeScript entrypoint directly while changing behavior:
 
 ```bash
 cd repos/cli
-npm run dev -- proposal list --json
-npm run dev -- chat list --json
+pnpm run dev proposal list --json
+pnpm run dev chat list --json
 ```
 
 ### Release-style verification
@@ -31,7 +31,7 @@ Build the local distribution and run the bundled CLI:
 
 ```bash
 cd repos/cli
-npm run build
+pnpm run build
 node ./dist/cli.js --help
 node ./dist/cli.js proposal --help
 ```
@@ -53,8 +53,8 @@ Use these commands when a proto changes:
 
 ```bash
 cd repos/cli
-npm run generate:grpc
-npm run generate:grpc:check
+pnpm run generate:grpc
+pnpm run generate:grpc:check
 ```
 
 `HAGICODE_PROTO_DIR` points generation at another checkout of the protos.
@@ -62,8 +62,8 @@ npm run generate:grpc:check
 The DTO types in `src/generated/api/models` are still generated from the OpenAPI document (types only, no REST client):
 
 ```bash
-npm run generate:api
-npm run generate:api:once
+pnpm run generate:api
+pnpm run generate:api:once
 ```
 
 Default Swagger source:
@@ -77,10 +77,10 @@ For a stable release dry run, use:
 
 ```bash
 cd repos/cli
-version="$(npm run --silent publish:verify-release -- v0.1.0)"
+version="$(pnpm run --silent publish:verify-release -- v0.1.0)"
 npm version --no-git-tag-version "$version"
-npm run build
-npm run typecheck
-npm test
-npm run pack:check
+pnpm run build
+pnpm run typecheck
+pnpm test
+pnpm run pack:check
 ```

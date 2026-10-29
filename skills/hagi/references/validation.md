@@ -70,9 +70,9 @@ When command behavior, metadata, or packaging changes are involved, run the smal
 
 ```bash
 cd repos/cli
-npm run build
-npm run typecheck
-npm test
+pnpm run build
+pnpm run typecheck
+pnpm test
 node ./dist/cli.js --help
 node ./dist/cli.js proposal --help
 ```
@@ -85,7 +85,7 @@ Run this only when `package.json`, publish contents, or release metadata changed
 
 ```bash
 cd repos/cli
-npm run pack:check
+pnpm run pack:check
 ```
 
 The npm tarball ships `dist` and `README.md` only (`package.json` `files`), so `skills/**` is not in the package. The skill reaches users through the repository and the server's built-in skill copy, not through npm. Change `files` only if that decision changes.

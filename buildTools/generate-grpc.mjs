@@ -8,8 +8,8 @@
  * replaces src/generated/grpc only when buf succeeds, so a failed run leaves the committed output untouched.
  *
  * Commands (run from repos/cli):
- *   npm run generate:grpc         regenerate src/generated/grpc
- *   npm run generate:grpc:check   exit 1 and list the files that differ from a fresh generation
+ *   pnpm run generate:grpc         regenerate src/generated/grpc
+ *   pnpm run generate:grpc:check   exit 1 and list the files that differ from a fresh generation
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -108,7 +108,7 @@ const main = () => {
         fail([
           'src/generated/grpc is out of date with the proto contracts:',
           ...differing.map(line => `  ${line}`),
-          'Run `npm run generate:grpc` and commit the result.',
+          'Run `pnpm run generate:grpc` and commit the result.',
         ].join('\n'))
       }
       console.log('src/generated/grpc matches the proto contracts.')

@@ -15,16 +15,16 @@ Run commands from `repos/cli/`.
 ## Key Commands
 
 ```bash
-npm install
-npm run build
-npm test
-npm run typecheck
-npm run pack:check
-npm run generate:grpc   # regenerate src/generated/grpc (Connect-ES stubs) from ../hagicode-core/protos (or HAGICODE_PROTO_DIR) with the local buf
-npm run generate:grpc:check   # fail when src/generated/grpc differs from a fresh generation
-npm run generate:api   # regenerate the DTO types in src/generated/api/models from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
-npm run generate:api:once   # same, but starts (or reuses) the sibling repos/hagicode-core PCode.SwaggerHost first via dotnet
-npm run dev -- <args>  # run the CLI from source via tsx (src/cli.ts)
+pnpm install
+pnpm run build
+pnpm test
+pnpm run typecheck
+pnpm run pack:check
+pnpm run generate:grpc   # regenerate src/generated/grpc (Connect-ES stubs) from ../hagicode-core/protos (or HAGICODE_PROTO_DIR) with the local buf
+pnpm run generate:grpc:check   # fail when src/generated/grpc differs from a fresh generation
+pnpm run generate:api   # regenerate the DTO types in src/generated/api/models from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
+pnpm run generate:api:once   # same, but starts (or reuses) the sibling repos/hagicode-core PCode.SwaggerHost first via dotnet
+pnpm run dev <args>  # run the CLI from source via tsx (src/cli.ts)
 ```
 
 Requires Node.js 24+.
@@ -60,3 +60,10 @@ Requires Node.js 24+.
 
 - `README.md`
 - `skills/`
+
+## Package management
+
+- The repository uses pnpm, pinned in `package.json` `packageManager`. Run `corepack enable` once, then `pnpm install`. `pnpm-lock.yaml` is the only lockfile; do not commit `package-lock.json`.
+- Settings live in `pnpm-workspace.yaml`. `allowBuilds` lists the dependencies whose install scripts may run (reviewed individually, `false` means reviewed and denied); review any new dependency that has an install script and add it there.
+- A local registry mirror belongs in `~/.npmrc` only. Never commit a `registry=` line or a mirror URL; `pnpm run check:registry` (also run in CI) fails on any non-`registry.npmjs.org` `tarball` in the lockfile and on mirror hosts in tracked files.
+- Undeclared imports fail under pnpm's strict layout: declare the package instead of hoisting it.
