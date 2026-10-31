@@ -64,17 +64,26 @@ export function registerSkillsGalleryCommands(skills: Command, dependencies: App
     .requiredOption('--source <source>', 'Gallery skill source.')
     .action(async function skillsGalleryDetailAction(this: Command, options: SkillsGalleryDetailOptions) {
       const context = createCommandContext(this, dependencies);
-      const detail = await context.api.getSkillGalleryDetail(
-        requireOptionValue(options.id, '--id'),
-        requireOptionValue(options.source, '--source'),
-      );
+      const id = requireOptionValue(options.id, '--id');
+      const source = requireOptionValue(options.source, '--source');
+
+      // The audit is supplementary: its failure or empty result never fails the command, and never masks a detail failure.
+      const [detailResult, auditResult] = await Promise.allSettled([
+        context.api.getSkillGalleryDetail(id, source),
+        context.api.getSkillGalleryAudit(id, source),
+      ]);
+      if (detailResult.status === 'rejected') {
+        throw detailResult.reason;
+      }
+      const detail = detailResult.value;
+      const audit = { providers: auditResult.status === 'fulfilled' ? (auditResult.value?.providers ?? []) : [] };
 
       if (context.outputJson) {
-        context.io.stdout(formatJson(detail));
+        context.io.stdout(formatJson({ ...detail, audit }));
         return;
       }
 
-      context.io.stdout(formatGalleryDetailHuman(detail));
+      context.io.stdout(formatGalleryDetailHuman(detail, audit));
     });
 
   addJsonOption(

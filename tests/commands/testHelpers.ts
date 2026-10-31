@@ -535,6 +535,19 @@ export function createSkillGalleryDetail() {
   };
 }
 
+/** Two providers: `ath` supplies every value, `socket` supplies only risk and alerts, so its score and time show as `--`. */
+export function createSkillGalleryAudit() {
+  return {
+    id: 'react-best-practices',
+    source: 'vercel/skills',
+    skillSlug: 'react-best-practices',
+    providers: [
+      { provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' },
+      { provider: 'socket', risk: 'medium', alerts: 2 },
+    ],
+  };
+}
+
 export function createSkillInstallResult() {
   return {
     skillId: 'react-best-practices',
@@ -653,6 +666,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     setBuiltInSkillAvailability: vi.fn().mockResolvedValue(createBuiltInAvailabilityResult('hagi', true)),
     searchSkillGallery: vi.fn().mockResolvedValue(createSkillGallery()),
     getSkillGalleryDetail: vi.fn().mockResolvedValue(createSkillGalleryDetail()),
+    getSkillGalleryAudit: vi.fn().mockResolvedValue(createSkillGalleryAudit()),
     installGallerySkill: vi.fn().mockResolvedValue(createSkillInstallResult()),
     listTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
     upsertTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),

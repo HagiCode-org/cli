@@ -6,7 +6,11 @@ import type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from '../g
 import type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
 import type { PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto';
 import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
+import type { SkillGalleryAuditProviderDto } from '../runtime/hagiApi';
 import { renderKeyValueTable, renderTable } from './table';
+
+/** The audit part of `skills gallery detail`; `providers` is empty when no provider supplied data. */
+export type SkillGalleryAuditSummary = { providers: SkillGalleryAuditProviderDto[] };
 
 function yesNo(value: boolean | null | undefined): string {
   return value ? 'yes' : 'no';
@@ -92,9 +96,17 @@ export function formatGallerySearchHuman(response: PCode_Application_Contracts_D
   )}\n`;
 }
 
-export function formatGalleryDetailHuman(detail: PCode_Application_Contracts_Dto_SkillGalleryDetailDto): string {
+/** One line per audit provider, naming skills.sh as the data source. Values the backend did not supply show `--`. */
+function formatAuditProviderLine(provider: SkillGalleryAuditProviderDto): string {
+  return `skills.sh audit (${provider.provider}): risk=${provider.risk ?? '--'}, alerts=${provider.alerts ?? '--'}, score=${provider.score ?? '--'}, analyzedAt=${provider.analyzedAt ?? '--'}`;
+}
+
+export function formatGalleryDetailHuman(
+  detail: PCode_Application_Contracts_Dto_SkillGalleryDetailDto,
+  audit: SkillGalleryAuditSummary = { providers: [] },
+): string {
   const provider = detail.trustedProvider;
-  return renderKeyValueTable([
+  const detailTable = renderKeyValueTable([
     ['id', detail.id ?? undefined],
     ['source', detail.source ?? undefined],
     ['skillSlug', detail.skillSlug ?? undefined],
@@ -110,6 +122,8 @@ export function formatGalleryDetailHuman(detail: PCode_Application_Contracts_Dto
     ['installVersion', detail.installVersion ?? undefined],
     ['installHint', detail.installHint ?? undefined],
   ]);
+  const auditLines = audit.providers.map(item => `${formatAuditProviderLine(item)}\n`).join('');
+  return `${detailTable}${auditLines}`;
 }
 
 export function formatGalleryInstallHuman(result: PCode_Application_Contracts_Dto_InstallSkillResultDto): string {

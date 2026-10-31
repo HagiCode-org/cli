@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { createGrpcHagiApi } from '../../src/runtime/hagiApi';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createDependencies } from './testHelpers';
+import { createApiError, createDependencies, createSkillGalleryAudit, createSkillGalleryDetail } from './testHelpers';
 
 let tempDir: string;
 let restoreStdin: (() => void) | undefined;
@@ -248,6 +248,87 @@ describe('skills gallery commands', () => {
     expect(output).toContain('Vercel');
     expect(output).toContain('https://github.com/vercel/skills');
     expect(output).toContain('npx skills add vercel/skills --skill react-best-practices');
+  });
+
+  it('adds an audit object to gallery detail JSON and keeps every detail field unchanged', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    const exitCode = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(api.getSkillGalleryAudit).toHaveBeenCalledWith('react-best-practices', 'vercel/skills');
+    expect(JSON.parse(stdout.join(''))).toEqual({
+      ...createSkillGalleryDetail(),
+      audit: { providers: createSkillGalleryAudit().providers },
+    });
+  });
+
+  it('appends one skills.sh audit line per provider after the detail fields, with -- for missing values', async () => {
+    const { dependencies, stdout } = createDependencies();
+    const exitCode = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(0);
+    const output = stdout.join('');
+    expect(output).toContain('skills.sh audit (ath): risk=low, alerts=0, score=92, analyzedAt=2026-10-30T08:00:00Z');
+    expect(output).toContain('skills.sh audit (socket): risk=medium, alerts=2, score=--, analyzedAt=--');
+    expect(output.indexOf('installCommand')).toBeLessThan(output.indexOf('skills.sh audit (ath)'));
+  });
+
+  it('exits 0 with the detail output when the audit call is rejected, and keeps audit present and empty in JSON', async () => {
+    const audit = vi.fn().mockRejectedValue(createApiError(500, { error: 'Audit upstream unavailable' }));
+    const human = createDependencies({ getSkillGalleryAudit: audit });
+    const humanExit = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills'],
+      human.dependencies,
+    );
+
+    expect(humanExit).toBe(0);
+    expect(human.stdout.join('')).toContain('installable');
+    expect(human.stdout.join('')).not.toContain('skills.sh audit');
+
+    const json = createDependencies({ getSkillGalleryAudit: vi.fn().mockRejectedValue(createApiError(500, { error: 'down' })) });
+    const jsonExit = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
+      json.dependencies,
+    );
+
+    expect(jsonExit).toBe(0);
+    const payload = JSON.parse(json.stdout.join(''));
+    expect(payload.audit).toEqual({ providers: [] });
+    expect(payload.id).toBe('react-best-practices');
+  });
+
+  it('keeps audit present and empty in JSON when the audit reports no providers', async () => {
+    const { dependencies, stdout } = createDependencies({
+      getSkillGalleryAudit: vi.fn().mockResolvedValue({ ...createSkillGalleryAudit(), providers: [] }),
+    });
+    const exitCode = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(JSON.parse(stdout.join('')).audit).toEqual({ providers: [] });
+  });
+
+  it('fails with the detail error as before, and a successful audit does not mask it', async () => {
+    const detailError = createApiError(404, { error: 'Skill not found' });
+    const { dependencies, stdout, stderr } = createDependencies({
+      getSkillGalleryDetail: vi.fn().mockRejectedValue(detailError),
+    });
+    const exitCode = await runCli(
+      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'missing', '--source', 'vercel/skills'],
+      dependencies,
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.HTTP_NOT_FOUND);
+    expect(stdout.join('')).toBe('');
+    expect(stderr.join('')).toContain('Skill not found');
   });
 
   it('starts a managed install and preserves the version token in the request and output', async () => {

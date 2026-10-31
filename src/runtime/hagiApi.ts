@@ -49,6 +49,7 @@ import {
   DeleteTrustedSkillProviderRequestDtoSchema,
   DeleteTrustedSkillProviderResponseSchema,
   GetLocalSkillsResponseSchema,
+  GetSkillGalleryAuditResponseSchema,
   GetSkillGalleryDetailResponseSchema,
   GetSkillGalleryResponseSchema,
   GetTrustedSkillProvidersResponseSchema,
@@ -161,6 +162,26 @@ export type ListSessionsInput = {
   projectIds?: string[];
 };
 
+/**
+ * One provider's audit rating for a gallery skill. There is no generated REST model for it, so it is written by hand from
+ * `SkillGalleryAuditProviderDto`. A value the backend did not supply is absent (not null).
+ */
+export type SkillGalleryAuditProviderDto = {
+  provider: string;
+  risk?: string;
+  alerts?: number;
+  score?: number;
+  analyzedAt?: string;
+};
+
+/** The audit of one gallery skill. `providers` is empty when no provider supplied data. */
+export type SkillGalleryAuditDto = {
+  id: string;
+  source: string;
+  skillSlug: string;
+  providers: SkillGalleryAuditProviderDto[];
+};
+
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
@@ -250,6 +271,8 @@ export interface HagiApi {
   ): Promise<PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto>;
   searchSkillGallery(query?: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryResponseDto>;
   getSkillGalleryDetail(id: string, source: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryDetailDto>;
+  /** Third-party audit ratings for a gallery skill. Empty `providers` means no data; the backend never answers with an error for that. */
+  getSkillGalleryAudit(id: string, source: string): Promise<SkillGalleryAuditDto>;
   installGallerySkill(requestBody: PCode_Application_Contracts_Dto_InstallSkillRequestDto): Promise<PCode_Application_Contracts_Dto_InstallSkillResultDto>;
   listTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
   upsertTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
@@ -427,6 +450,8 @@ export function createGrpcHagiApi(): HagiApi {
     searchSkillGallery: async query => result(GetSkillGalleryResponseSchema, skills().getSkillGallery({ query })),
     getSkillGalleryDetail: async (id, source) =>
       result(GetSkillGalleryDetailResponseSchema, skills().getSkillGalleryDetail({ id, source })),
+    getSkillGalleryAudit: async (id, source) =>
+      result(GetSkillGalleryAuditResponseSchema, skills().getSkillGalleryAudit({ id, source })),
     installGallerySkill: async requestBody =>
       result(InstallSkillResponseSchema, skills().installSkill({ body: dtoToProto(InstallSkillRequestDtoSchema, requestBody) })),
     listTrustedSkillProviders: async () =>

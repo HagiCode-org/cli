@@ -77,6 +77,14 @@ const RESPONSES: Record<string, unknown> = {
   ListVaults: { result: VAULT_LIST_FIXTURE },
   ListPresetTaskSchemas: { result: [] },
   GetSession: { result: SESSION_FIXTURE },
+  GetSkillGalleryAudit: {
+    result: {
+      id: 'react-best-practices',
+      source: 'vercel/skills',
+      skillSlug: 'react-best-practices',
+      providers: [{ provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' }],
+    },
+  },
 };
 
 const SERVICES: DescService[] = [
@@ -385,10 +393,18 @@ describe('request paths for skills commands', () => {
     expect(recorded[0].request).toMatchObject({ query: 'react' });
   });
 
-  it('skills gallery detail sends the id and source', async () => {
-    await run(['skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetSkillGalleryDetail']);
-    expect(recorded[0].request).toMatchObject({ id: 'react-best-practices', source: 'vercel/skills' });
+  it('skills gallery detail sends the id and source to the detail and audit RPCs', async () => {
+    const { stdout } = await run(['skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json']);
+    // The two calls start together, so their order on the wire is not fixed; compare them as a set.
+    expect(recorded.map(rpcName).sort()).toEqual([
+      'SkillGalleryService/GetSkillGalleryAudit',
+      'SkillGalleryService/GetSkillGalleryDetail',
+    ]);
+    const audit = recorded.find(call => rpcName(call) === 'SkillGalleryService/GetSkillGalleryAudit');
+    expect(audit?.request).toMatchObject({ id: 'react-best-practices', source: 'vercel/skills' });
+    expect(JSON.parse(stdout).audit).toEqual({
+      providers: [{ provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' }],
+    });
   });
 
   it('skills gallery install posts the install body with the version token', async () => {
