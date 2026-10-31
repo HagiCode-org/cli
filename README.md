@@ -553,6 +553,26 @@ hagi skills gallery search --query react --json
 hagi skills gallery detail --id vercel-react-best-practices --source vercel-labs/agent-skills
 ```
 
+`gallery detail` also shows third-party audit ratings for the skill, supplied by skills.sh (providers such as `ath`, `socket` and `snyk`). In `--json` output every detail field is unchanged and an `audit` object is added. It lists one entry per provider that supplied data; `risk`, `alerts`, `score` and `analyzedAt` appear only when the backend has them:
+
+```json
+{
+  "id": "vercel-react-best-practices",
+  "source": "vercel-labs/agent-skills",
+  "...": "all other detail fields",
+  "audit": {
+    "providers": [
+      { "provider": "ath", "risk": "low", "alerts": 0, "score": 92, "analyzedAt": "2026-10-30T08:00:00Z" },
+      { "provider": "socket", "risk": "medium", "alerts": 2 }
+    ]
+  }
+}
+```
+
+In human output the detail table is followed by one line per provider, for example `skills.sh audit (socket): risk=medium, alerts=2, score=--, analyzedAt=--`, where `--` marks a value the backend did not supply.
+
+The audit is best-effort. If the audit call fails, times out or has no data, the detail still prints and the command exits `0`; in `--json` output `audit.providers` is then `[]`, never missing. The backend bounds the audit wait, and the CLI adds no timeout of its own. A failure of the detail call itself fails the command as before, and the audit never hides it. The audit does not change the install command preview or whether the skill is installable.
+
 Start a managed install of a gallery skill. This writes the skill into your local skill directories, so run it only when you intend to install it:
 
 ```bash

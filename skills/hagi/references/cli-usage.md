@@ -207,6 +207,7 @@ hagi skills local disable --skill-name hagi --json
 - `enable` and `disable` take `--skill-name` and change one built-in skill. They apply to agent runs that start afterwards.
 - `uninstall` removes a user skill. Built-in skills cannot be uninstalled; use `disable` to stop one from loading.
 - Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
+- `skills gallery detail` adds skills.sh audit ratings. `--json` keeps the detail fields and adds `audit: { providers: [...] }`, one entry per provider with `provider` and, when supplied, `risk`, `alerts`, `score` and `analyzedAt`. Human output appends one `skills.sh audit (<provider>)` line per provider, with `--` for missing values. If the audit fails or has no data, the command still exits `0` and `audit.providers` is `[]`. A detail failure fails the command as before. The audit never changes the install command preview or installability.
 
 ## Exit codes
 
