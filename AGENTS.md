@@ -22,8 +22,6 @@ pnpm run typecheck
 pnpm run pack:check
 pnpm run generate:grpc   # regenerate src/generated/grpc (Connect-ES stubs) from ../hagicode-core/protos (or HAGICODE_PROTO_DIR) with the local buf
 pnpm run generate:grpc:check   # fail when src/generated/grpc differs from a fresh generation
-pnpm run generate:api   # regenerate the DTO types in src/generated/api/models from the OpenAPI doc at swaggerUrl in openapi-ts.config.json (a Swagger host must already be running)
-pnpm run generate:api:once   # same, but starts (or reuses) the sibling repos/hagicode-core PCode.SwaggerHost first via dotnet
 pnpm run dev <args>  # run the CLI from source via tsx (src/cli.ts)
 ```
 
@@ -42,7 +40,7 @@ Requires Node.js 24+.
 - `src/formatters/`: human table and deterministic `--json` output
 - `src/runtime/`: API runtime, `HagiApi` facade (`hagiApi.ts`, one gRPC call per method), `grpc/` transport and proto-to-DTO mapper, error mapping (`ConnectError` to exit codes)
 - `src/generated/grpc/`: generated gRPC stubs (`buf generate`), committed; regenerate instead of hand-editing
-- `src/generated/api/models/`: generated DTO types only (OpenAPI); there is no REST client or runtime any more
+- `src/generated/api/models/`: DTO types only, committed and now maintained by hand. They were once generated from the backend's OpenAPI document; that generator was removed because the document now lists only the retained REST routes, so regenerating would delete the types of every removed route. There is no REST client or runtime. Edit or add a type by hand when a proto DTO changes
 - `tests/`: Vitest suites (commands, formatters, runtime, release)
 - `skills/`: canonical embedded Hagi skill for AI-oriented guidance
 - `dist/`: published build output

@@ -59,16 +59,9 @@ pnpm run generate:grpc:check
 
 `HAGICODE_PROTO_DIR` points generation at another checkout of the protos.
 
-The DTO types in `src/generated/api/models` are still generated from the OpenAPI document (types only, no REST client):
-
-```bash
-pnpm run generate:api
-pnpm run generate:api:once
-```
-
-Default Swagger source:
-
-- `http://127.0.0.1:35168/swagger/v1/swagger.json`
+The DTO types in `src/generated/api/models` are committed and maintained by hand (types only, no REST client). They are no longer
+generated: the backend's OpenAPI document now lists only the retained REST routes, so regenerating from it would delete the
+types of every removed route. When a proto DTO changes, edit or add the matching type there.
 
 ## Release automation
 
