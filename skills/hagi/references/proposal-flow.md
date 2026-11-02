@@ -29,6 +29,12 @@ Use this order when explaining or validating proposal flows:
 
 `proposal status` sets the session status directly and is not part of the sequence above.
 
+Which stage each command starts, and what it leaves behind, is in [`openspec-workflow.md`](openspec-workflow.md).
+
+Between two lifecycle commands, follow the run with `hagi proposal get --session-id <id> --wait --json` and wait until the status settles. A returned command only accepts the request. Read [`openspec-workflow.md`](openspec-workflow.md#who-drives-each-step) for what each status means.
+
+After `proposal execute` settles and the code changes are still uncommitted, a Super Commit can commit them. Start it only when the user asks; see [`super-commit.md`](super-commit.md).
+
 The CLI may suggest a next command, but it does not call later lifecycle APIs automatically.
 
 ## Repository scope

@@ -110,11 +110,11 @@ $ echo $?
 hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- hagitask  list | schema | create | send
+|-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
 `-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
@@ -260,6 +260,17 @@ hagi proposal complete --session-id "$PROPOSAL_ID"
 hagi proposal archive --session-id "$PROPOSAL_ID"
 ```
 
+### Follow a Run
+
+`proposal get` reads one session. With `--wait` it polls until the status settles, so the next lifecycle command runs at the right time. `proposal messages` reads the session's messages, newest first.
+
+```bash
+hagi proposal get --session-id "$PROPOSAL_ID" --wait --json
+hagi proposal messages --session-id "$PROPOSAL_ID" --last 1 --json
+```
+
+The options are the same as `hagitask get`. WaitingForReply counts as settled, because a person must answer. Which stage each command starts is in [references/openspec-workflow.md](skills/hagi/references/openspec-workflow.md).
+
 ### Explicit Lifecycle Sequence
 
 The CLI keeps proposal lifecycle actions explicit and non-interactive. Each command maps to one backend action:
@@ -357,8 +368,8 @@ hagi hagitask list --json
 `hagitask schema` shows one task's target scope, commands, parameters, requirements and scenes. Each required parameter is marked `yes`. The `--json` output adds the input JSON Schema and an example request body:
 
 ```bash
-hagi hagitask schema --task-id compose-commit
-hagi hagitask schema --task-id compose-commit --json
+hagi hagitask schema --task-id <task-id>
+hagi hagitask schema --task-id <task-id> --json
 ```
 
 Write the input file. Its keys are the parameter keys the schema lists under `inputs`, plus the `targets` and `targetScopes` keys when the schema's scope lists targets. For example, `input.json` for a task with one required input:
@@ -375,16 +386,27 @@ Create the session from that task and input. The new id is read from `session.se
 
 ```bash
 HAGITASK_ID=$(hagi hagitask create \
-  --title "Auto compose commit" \
+  --title "Auto task" \
   --project-id "$PROJECT_ID" \
-  --task-id compose-commit \
+  --task-id <task-id> \
   --input input.json \
+  --json | json_field '.session.sessionId')
+```
+
+Super Commit is a prompt, not a preset task. It has no schema and takes no `--input`. Start it with its prompt id, and pass the Git options it accepts:
+
+```bash
+SUPER_COMMIT_ID=$(hagi hagitask create \
+  --title "Commit the CLI changes" \
+  --project-id "$PROJECT_ID" \
+  --prompt-id auto-compose-commit.en-US \
   --repository-path repos/cli \
-  --need-push \
   --target-branch-mode new-custom \
   --target-branch-name feature/cli-completion \
   --json | json_field '.session.sessionId')
 ```
+
+Start a Super Commit only when the user asked for it. Add `--need-push` only when the user asked for a push. See [references/super-commit.md](skills/hagi/references/super-commit.md) for the options, the branch modes, the result and the explicit-request rule.
 
 Use `--prompt-id` instead of `--task-id` for a prompt template with no structured input. `--input` needs `--task-id`. Input is read from a file, or from stdin with `--input -`. The CLI only checks that the input is a JSON object. The backend checks the keys and values. It rejects a key that the schema does not list, and a missing required value. Its error is printed unchanged, and no session is reported as created. `--hero-selection-mode` takes `first` (the default) or `random`.
 
@@ -395,6 +417,15 @@ Send a follow-up message to the HagiTask session:
 ```bash
 hagi hagitask send --session-id "$HAGITASK_ID" --content "Retry with a smaller diff"
 ```
+
+Read one HagiTask session, or wait until its status settles, and read its messages:
+
+```bash
+hagi hagitask get --session-id "$SUPER_COMMIT_ID" --wait --timeout 900 --json
+hagi hagitask messages --session-id "$SUPER_COMMIT_ID" --last 1 --json
+```
+
+`hagitask get` reads one session. With `--wait` it polls every `--interval` seconds (default 5) until the status is no longer Optimizing, Openspecing, Executing or Archiving. `--timeout` (default 900) and `--grace` (default 10, `0` disables) are seconds, and `--timeout`, `--interval` and `--grace` need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31` and prints the last status. `hagitask messages --last <n>` reads the n newest messages; `--json` prints the list unchanged.
 
 **Migration from AutoTask:** `hagi hagitask create` and `hagi hagitask send` replace `hagi autotask create` and `hagi autotask send`. There is no `autotask` alias, so an `autotask` command now fails as an unknown command. Read the task schema with `hagitask schema` to find the input keys that replace the old flags.
 
@@ -624,6 +655,7 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
+| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

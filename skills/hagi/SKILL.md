@@ -1,6 +1,6 @@
 ---
 name: hagi
-description: Use when the user wants to run, verify, or update the HagiCode CLI against the Hagi API, or asks about their own projects, proposals, chat sessions, vaults, scheduled plans, or installed skills, including user skills versus built-in skills, and enabling or disabling a built-in skill. Keep package-first command guidance primary, then follow the proposal flow, local development, and validation references as needed. Inside a HagiCode session, read the session-data reference first for questions about the user's own data.
+description: Use when the user wants to run, verify, or update the HagiCode CLI against the Hagi API, or asks about their own projects, proposals, chat sessions, vaults, scheduled plans, or installed skills, including user skills versus built-in skills, and enabling or disabling a built-in skill. Also covers the OpenSpec workflow behind proposal commands and Super Commit, which commits a code repository through a HagiTask session. Keep package-first command guidance primary, then follow the proposal flow, local development, and validation references as needed. Inside a HagiCode session, read the session-data reference first for questions about the user's own data.
 ---
 
 # Hagi
@@ -12,6 +12,8 @@ Use this skill when the user asks to:
 - enable or disable a built-in skill
 - run or verify the `hagi` CLI
 - explain or execute `project`, `proposal`, `chat`, `hagitask`, `vault`, `plan`, or `skills` commands
+- explain the OpenSpec workflow behind `proposal` commands, which stage each command starts, or how to follow a run until it settles
+- run, explain or check a Super Commit, which commits the uncommitted changes of a code repository through a HagiTask session
 - inspect CLI flags, environment variables, exit codes, or JSON automation behavior
 - validate proposal-session flows against a backend API
 - modify or debug the CLI implementation in `repos/cli`
@@ -30,11 +32,13 @@ Use this skill when the user asks to:
 
 1. Published package usage -> read [`references/cli-usage.md`](references/cli-usage.md)
 2. Explicit proposal lifecycle work -> read [`references/proposal-flow.md`](references/proposal-flow.md)
-3. Source-tree development in `repos/cli` -> read [`references/local-development.md`](references/local-development.md)
-4. Post-change validation -> read [`references/validation.md`](references/validation.md)
-5. The user's own data, inside a HagiCode session -> read [`references/session-data.md`](references/session-data.md)
+3. Which OpenSpec stage a proposal command starts, or following a run to its end -> read [`references/openspec-workflow.md`](references/openspec-workflow.md)
+4. Super Commit, committing a code repository through a HagiTask session -> read [`references/super-commit.md`](references/super-commit.md)
+5. Source-tree development in `repos/cli` -> read [`references/local-development.md`](references/local-development.md)
+6. Post-change validation -> read [`references/validation.md`](references/validation.md)
+7. The user's own data, inside a HagiCode session -> read [`references/session-data.md`](references/session-data.md)
 
-When `hagi` is loaded as a built-in skill inside a HagiCode session, read item 5 first for any question about the user's own data or skills, before the other references.
+When `hagi` is loaded as a built-in skill inside a HagiCode session, read item 7 first for any question about the user's own data or skills, before the other references.
 
 ## Runtime configuration
 
@@ -84,6 +88,8 @@ Scheduled plans (`hagi plan`) save a proposal or HagiTask input with a schedule.
 
 HagiTask sessions (`hagi hagitask`) run a preset task with a structured input. `list` shows the active tasks, `schema --task-id <id>` shows one task's scope, commands, parameters and required marks, and `create --task-id <id> --input <file>` creates the session. Read the schema first, write the input from it, then create. `send` posts a follow-up message. The backend rejects any input key the schema does not list. See [`references/cli-usage.md`](references/cli-usage.md#hagitask-commands) for the flow and an input example.
 
+Each family also reads one session by id. `proposal get` and `hagitask get` read a session; with `--wait` they poll until its status settles, so a run can be followed without guessing. `proposal messages` and `hagitask messages` read a session's messages, and `--last 1` reads the final message of a run. The stage behind each proposal command is in [`references/openspec-workflow.md`](references/openspec-workflow.md). Super Commit is started with `hagitask create --prompt-id auto-compose-commit.<locale>`; see [`references/super-commit.md`](references/super-commit.md).
+
 ## Source of truth
 
 - Canonical writable skill source: `repos/cli/skills/hagi/`
@@ -94,5 +100,7 @@ HagiTask sessions (`hagi hagitask`) run a preset task with a structured input. `
 - [`references/cli-usage.md`](references/cli-usage.md) - package-first installation, quick start, runtime flags, and exit codes
 - [`references/session-data.md`](references/session-data.md) - inside a HagiCode session: read-only data commands, state-changing actions that need an explicit request, and failure handling
 - [`references/proposal-flow.md`](references/proposal-flow.md) - explicit proposal lifecycle sequence and command examples
+- [`references/openspec-workflow.md`](references/openspec-workflow.md) - the OpenSpec stage each proposal command starts, stage boundaries, who drives each step, and the monitoring rule
+- [`references/super-commit.md`](references/super-commit.md) - Super Commit: starting it by prompt id, its options, result reading and the explicit-request rule
 - [`references/local-development.md`](references/local-development.md) - maintainer-only development, build, and repository internals
 - [`references/validation.md`](references/validation.md) - targeted verification after documentation or code changes

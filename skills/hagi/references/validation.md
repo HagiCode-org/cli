@@ -41,13 +41,67 @@ Confirm also that no skill file names `--writable-repo` or `--readonly-repo`, an
 The `hagitask` command group must appear in the README and in each skill file that lists command families, and no file may document the retired `autotask` command. Run this from `repos/cli`:
 
 ```bash
-for f in README.md skills/hagi/SKILL.md skills/hagi/references/cli-usage.md skills/hagi/references/session-data.md; do
+for f in README.md skills/hagi/SKILL.md skills/hagi/references/cli-usage.md skills/hagi/references/session-data.md skills/hagi/references/super-commit.md skills/hagi/references/openspec-workflow.md; do
   grep -q "hagitask" "$f" && echo "ok   hagitask in $f" || echo "FAIL hagitask missing from $f"
 done
 grep -rniE "autotask|auto-task" README.md skills --exclude=validation.md | grep -vi "migrat" || echo "ok   no autotask command documented"
 ```
 
 Each file must print `ok`. The last grep lists only the migration notes (lines that say "migrat"), so any other match is a stale `autotask` reference and fails the check. This file is excluded from that grep because it names the pattern itself.
+
+## Workflow and Super Commit check
+
+Run this from `repos/cli` after editing `references/openspec-workflow.md`, `references/super-commit.md`, or any file that links them. Each line must print `ok`.
+
+1. Both references exist and are linked from `SKILL.md` and `skills/README.md`:
+
+```bash
+for f in skills/hagi/references/openspec-workflow.md skills/hagi/references/super-commit.md; do
+  [ -f "$f" ] && echo "ok   exists $f" || echo "FAIL missing $f"
+done
+for f in skills/hagi/SKILL.md skills/README.md; do
+  for t in openspec-workflow.md super-commit.md; do
+    grep -q "$t" "$f" && echo "ok   $f links $t" || echo "FAIL $f does not link $t"
+  done
+done
+```
+
+2. No README or skill file shows the retired `--task-id compose-commit` form. This check does not scan this file, which names the pattern itself. The id may remain as test data in `tests/commands/hagitask.test.ts`, the one allowed place, and that file is outside this scan:
+
+```bash
+grep -rn --exclude=validation.md -e "--task-id compose-commit" README.md skills
+status=$?
+if [ "$status" -eq 0 ]; then
+  echo "FAIL retired compose-commit example found above"
+elif [ "$status" -eq 1 ]; then
+  echo "ok   no --task-id compose-commit in README.md or skills"
+else
+  echo "FAIL grep could not run"
+fi
+```
+
+3. Every option the two references name is registered in the built CLI. Build first (`pnpm run build`), then run:
+
+```bash
+check() {
+  local command="$1"; shift
+  for option in "$@"; do
+    node ./dist/cli.js $command --help | grep -q -- "$option" && echo "ok   $command $option" || echo "FAIL $command $option is missing"
+  done
+}
+check "proposal get" --session-id --wait --timeout --interval --grace --json
+check "proposal messages" --session-id --last --json
+check "hagitask get" --session-id --wait --timeout --interval --grace --json
+check "hagitask messages" --session-id --last --json
+check "hagitask create" --prompt-id --repository-path --need-push --pull-rebase --target-branch-mode --target-branch-name
+```
+
+4. Both references have a "Who drives each step" section and both name `--wait`. Each count must be at least `1`:
+
+```bash
+grep -c "Who drives each step" skills/hagi/references/openspec-workflow.md skills/hagi/references/super-commit.md
+grep -l -- "--wait" skills/hagi/references/openspec-workflow.md skills/hagi/references/super-commit.md
+```
 
 ## Built-in copy consistency check
 

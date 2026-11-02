@@ -27,6 +27,8 @@ Repository-local commands under `repos/cli` are maintainer workflows only.
 - [`hagi/references/cli-usage.md`](hagi/references/cli-usage.md) - published package usage and runtime flags
 - [`hagi/references/session-data.md`](hagi/references/session-data.md) - inside a HagiCode session: read-only data commands and the actions that need an explicit request
 - [`hagi/references/proposal-flow.md`](hagi/references/proposal-flow.md) - explicit proposal lifecycle guidance
+- [`hagi/references/openspec-workflow.md`](hagi/references/openspec-workflow.md) - the OpenSpec stage each proposal command starts and how to follow a run
+- [`hagi/references/super-commit.md`](hagi/references/super-commit.md) - Super Commit through the CLI: prompt-id start, options, result and explicit-request rule
 - [`hagi/references/local-development.md`](hagi/references/local-development.md) - maintainer-only source-tree workflows
 - [`hagi/references/validation.md`](hagi/references/validation.md) - post-change validation steps
 

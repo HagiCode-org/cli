@@ -85,11 +85,11 @@ There is no default. When none of the three is set, the CLI exits with code `2` 
 hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- hagitask  list | schema | create | send
+|-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
 `-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
@@ -126,17 +126,42 @@ hagi project monospecs set --id <project-id> --add-repository repos/api --url <g
 hagi project monospecs remove-checkout --id <project-id> --path repos/api --force
 ```
 
+## Proposal commands
+
+`proposal get` reads one proposal session. With `--wait` it polls until the status settles, so a stage can be followed without guessing. `proposal messages` reads its messages, newest first.
+
+```bash
+hagi proposal get --session-id <session-id> --wait --timeout 900 --json
+hagi proposal messages --session-id <session-id> --last 1 --json
+```
+
+- `--wait` settles on any status other than Optimizing, Openspecing, Executing or Archiving. WaitingForReply counts as settled, because a person must answer.
+- `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
+- Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
+
 ## HagiTask commands
 
 A HagiTask is a preset task with a structured input. Use the schema-first flow: list the tasks, read one task's schema, write the input file from the schema, then create the session.
 
 ```bash
 hagi hagitask list --json
-hagi hagitask schema --task-id compose-commit
-hagi hagitask schema --task-id compose-commit --json
-hagi hagitask create --title "Auto compose commit" --project-id <project-id> --task-id compose-commit --input input.json --json
+hagi hagitask schema --task-id <task-id>
+hagi hagitask schema --task-id <task-id> --json
+hagi hagitask create --title "<title>" --project-id <project-id> --task-id <task-id> --input input.json --json
+hagi hagitask get --session-id <session-id> --wait --json
+hagi hagitask messages --session-id <session-id> --last 1 --json
 hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
 ```
+
+`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above.
+
+Super Commit is a prompt, not a preset task, so it has no schema and takes no `--input`. Start it with a prompt id:
+
+```bash
+hagi hagitask create --title "Commit the CLI changes" --project-id <project-id> --prompt-id auto-compose-commit.en-US --json
+```
+
+Start one only when the user asked for it. See [super-commit.md](super-commit.md) for its options, its result and when to start it.
 
 - `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
 - `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
@@ -222,6 +247,7 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
+| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

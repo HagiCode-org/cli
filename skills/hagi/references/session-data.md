@@ -57,7 +57,11 @@ hagi project repositories --id <project-id> --json
 ```bash
 hagi proposal list --json
 hagi proposal list --project-id <project-id> --active-only --json
+hagi proposal get --session-id <session-id> --json
+hagi proposal messages --session-id <session-id> --last 1 --json
 ```
+
+`proposal get` and `proposal messages` only read. `proposal get --wait` polls the status until it settles and changes nothing.
 
 ### Vaults
 
@@ -81,6 +85,8 @@ hagi chat list --project-id <project-id> --active-only --json
 ```bash
 hagi hagitask list --json
 hagi hagitask schema --task-id <task-id> --json
+hagi hagitask get --session-id <session-id> --json
+hagi hagitask messages --session-id <session-id> --last 1 --json
 ```
 
 Read the schema before creating a HagiTask session. Its `parameters` give the input keys, and `inputSchema` is the JSON Schema the input must satisfy.
@@ -125,6 +131,8 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
+
+`hagitask create` with a Super Commit prompt (`--prompt-id auto-compose-commit.<locale>`) creates commits in a code repository, and with `--need-push` publishes them. Start it only when the user asked for it in this conversation, and add `--need-push` only when the user asked for a push. See [`super-commit.md`](super-commit.md).
 
 `skills local enable` and `skills local disable` change whether a built-in skill loads. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. Built-in skills cannot be uninstalled through the CLI.
 
