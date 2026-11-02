@@ -15,7 +15,7 @@ import { createDefaultDependencies, type CliIo } from '../../src/runtime/command
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createProposalOptimizationBundle } from './testHelpers';
+import { createMessage, createMessageList, createProposalOptimizationBundle, fakeWaitClock, sessionWithStatus } from './testHelpers';
 import { createApiError, createDependencies, createSession, TEST_BASE_URL } from './testHelpers';
 
 const CLI_VERSION = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version;
@@ -424,5 +424,129 @@ describe('proposal commands', () => {
       optimizationDirection: 'Focus on risk',
       originalChiefComplaint: 'Login is slow',
     });
+  });
+});
+
+describe('proposal get', () => {
+  it('reads one session as JSON without polling', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1', '--json'], dependencies)).toBe(0);
+    expect(api.getSession).toHaveBeenCalledTimes(1);
+    expect(api.getSession).toHaveBeenCalledWith('session-1');
+    const body = JSON.parse(stdout.join(''));
+    expect(body).toEqual({ session: expect.objectContaining({ sessionId: 'session-1', status: 'Drafting', type: 'Proposal' }) });
+    expect(body).not.toHaveProperty('wait');
+  });
+
+  it('prints the session summary in human form without --json', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('status');
+    expect(stdout.join('')).not.toContain('wait:');
+  });
+
+  it('waits until a transient status settles and reports the wait', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession)
+      .mockResolvedValueOnce(sessionWithStatus('session-1', 'Openspecing') as never)
+      .mockResolvedValueOnce(sessionWithStatus('session-1', 'Reviewing') as never);
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1', '--wait', '--json'], dependencies)).toBe(0);
+    const body = JSON.parse(stdout.join(''));
+    expect(body.session.status).toBe('Reviewing');
+    expect(body.wait).toMatchObject({ settled: true, timedOut: false, transitionSeen: true, polls: 2 });
+  });
+
+  it('exits 31 at the timeout, prints the last status, and does not retry', async () => {
+    const { dependencies, api, stdout, stderr } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession).mockResolvedValue(sessionWithStatus('session-1', 'Executing') as never);
+
+    expect(await runCli(
+      ['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1', '--wait', '--timeout', '12', '--interval', '5', '--json'],
+      dependencies,
+    )).toBe(EXIT_CODES.WAIT_TIMEOUT);
+    const body = JSON.parse(stdout.join(''));
+    expect(body.session.status).toBe('Executing');
+    expect(body.wait).toMatchObject({ settled: false, timedOut: true, elapsedSeconds: 12 });
+    expect(stderr.join('')).toContain('last status Executing');
+  });
+
+  it('reports WaitingForReply as settled and says a person must answer', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession).mockResolvedValue(sessionWithStatus('session-1', 'WaitingForReply') as never);
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1', '--wait', '--grace', '0'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('a person must answer');
+  });
+
+  it('requires --session-id before any request', async () => {
+    const { dependencies, api } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--json'], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(api.getSession).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [['--timeout', '60'], '--timeout needs --wait'],
+    [['--interval', '5'], '--interval needs --wait'],
+    [['--grace', '0'], '--grace needs --wait'],
+    [['--wait', '--interval', '60', '--timeout', '60'], '--interval must be less than --timeout'],
+    [['--wait', '--timeout', '0'], '--timeout must be 1 second or more'],
+    [['--wait', '--interval', 'soon'], '--interval must be a whole number of seconds'],
+  ])('rejects %j before any request', async (extra, message) => {
+    const { dependencies, api, stderr } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'get', '--session-id', 'session-1', ...extra], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain(message);
+    expect(api.getSession).not.toHaveBeenCalled();
+  });
+});
+
+describe('proposal messages', () => {
+  it('reads the newest n messages in one page and prints them in human form', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 'session-1', '--last', '2'], dependencies)).toBe(0);
+    expect(api.getSessionMessages).toHaveBeenCalledWith('session-1', { page: 1, pageSize: 2, order: 'desc' });
+    expect(stdout.join('')).toContain('## Commits Created');
+  });
+
+  it('prints the backend message list unchanged with --json', async () => {
+    const list = createMessageList({ messages: [createMessage('m1', [{ type: 'Text', text: 'hi' }])] });
+    const { dependencies, stdout } = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(list) });
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 'session-1', '--last', '1', '--json'], dependencies)).toBe(0);
+    expect(JSON.parse(stdout.join(''))).toEqual(list);
+  });
+
+  it('reports an empty session and exits successfully', async () => {
+    const { dependencies, stdout } = createDependencies({
+      getSessionMessages: vi.fn().mockResolvedValue(createMessageList({ messages: [], totalCount: 0 })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 'session-1', '--last', '1'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('No messages found.');
+  });
+
+  it.each([['0'], ['-1'], ['many']])('rejects --last %s before any request', async last => {
+    const { dependencies, api, stderr } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 'session-1', '--last', last], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain('--last must be a positive whole number');
+    expect(api.getSessionMessages).not.toHaveBeenCalled();
+  });
+
+  it('lists get and messages in the proposal help', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'proposal', '--help'], dependencies)).toBe(0);
+    const help = stdout.join('');
+    expect(help).toMatch(/^\s+get\b/m);
+    expect(help).toMatch(/^\s+messages\b/m);
   });
 });

@@ -623,6 +623,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
   const api: HagiApi = {
     listSessions: vi.fn().mockResolvedValue({ sessions: [createSession('session-1')] }),
     getSession: vi.fn().mockResolvedValue(createSession('session-1')),
+    getSessionMessages: vi.fn().mockResolvedValue(createMessageList()),
     createProposalSession: vi.fn().mockResolvedValue(createSession('session-2')),
     createChatSession: vi.fn().mockResolvedValue(createSession('chat-1', PCode_Models_SessionType.CHAT)),
     createHagiTaskSession: vi.fn().mockResolvedValue(createSession('hagitask-1', PCode_Models_SessionType.CHAT)),
@@ -700,4 +701,50 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     stdout,
     stderr,
   };
+}
+
+/** One message in the backend response shape; each block is a `{ type, text }` pair or any other block type. */
+export function createMessage(id: string, blocks: Array<Record<string, unknown>>, type = 'Assistant') {
+  return {
+    id,
+    sessionId: { value: 'session-1' },
+    type,
+    mode: 'Plan',
+    timestamp: '2026-11-02T10:00:00Z',
+    creationTime: '2026-11-02T10:00:00Z',
+    contentBlocks: blocks,
+    model: null,
+    provider: null,
+  };
+}
+
+/** A page of messages in the backend response shape, newest first, as the RPC returns it by default. */
+export function createMessageList(
+  overrides: Partial<{ page: number; pageSize: number; totalCount: number; messages: Array<ReturnType<typeof createMessage>> }> = {},
+) {
+  const messages = overrides.messages ?? [createMessage('message-1', [{ type: 'Text', text: '## Commits Created' }])];
+  return {
+    sessionId: { value: 'session-1' },
+    page: overrides.page ?? 1,
+    pageSize: overrides.pageSize ?? 50,
+    totalCount: overrides.totalCount ?? messages.length,
+    totalPages: 1,
+    messages,
+  };
+}
+
+/** A fake clock for `--wait` tests: sleeping moves the clock forward, so a wait runs without real delays. */
+export function fakeWaitClock() {
+  let current = 0;
+  return {
+    now: () => current,
+    sleep: vi.fn(async (ms: number) => {
+      current += ms;
+    }),
+  };
+}
+
+/** A session in the given status, for scripting a sequence of `getSession` reads. */
+export function sessionWithStatus(sessionId: string, status: string, type?: PCode_Models_SessionType) {
+  return { ...createSession(sessionId, type), status: status as PCode_Models_SessionStatus };
 }

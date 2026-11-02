@@ -9,6 +9,8 @@ export const EXIT_CODES = {
   HTTP_NOT_FOUND: 24,
   HTTP_CONFLICT: 29,
   OPERATION_FAILED: 30,
+  /** A `--wait` ran out of time before the session status settled. */
+  WAIT_TIMEOUT: 31,
   HTTP_CLIENT_ERROR: 40,
   HTTP_SERVER_ERROR: 50,
   TRANSPORT: 60,
@@ -39,6 +41,17 @@ export class CliOperationFailedError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CliOperationFailedError';
+  }
+}
+
+/**
+ * A `--wait` read ended at the timeout while the session was still running. Exit code 31 tells a script that the
+ * session did not settle; it is not a success and not an HTTP failure.
+ */
+export class CliWaitTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CliWaitTimeoutError';
   }
 }
 
@@ -210,6 +223,13 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
   if (error instanceof CliOperationFailedError) {
     return {
       exitCode: EXIT_CODES.OPERATION_FAILED,
+      message: error.message,
+    };
+  }
+
+  if (error instanceof CliWaitTimeoutError) {
+    return {
+      exitCode: EXIT_CODES.WAIT_TIMEOUT,
       message: error.message,
     };
   }

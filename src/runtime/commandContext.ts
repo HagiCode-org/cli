@@ -15,7 +15,17 @@ export type AppDependencies = {
   api: HagiApi;
   env: NodeJS.ProcessEnv;
   io: CliIo;
+  /** Waits for `ms` milliseconds. Defaults to a real timer; tests inject a fake one so waits do not sleep. */
+  sleep?: (ms: number) => Promise<void>;
+  /** Current time in milliseconds. Defaults to `Date.now`; tests inject a fake clock together with `sleep`. */
+  now?: () => number;
 };
+
+export function sleepForMilliseconds(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
 
 export type GlobalCommandOptions = {
   baseUrl?: string;
@@ -66,6 +76,7 @@ export function createDefaultDependencies(
     api: createGrpcHagiApi(),
     env,
     io,
+    sleep: sleepForMilliseconds,
   };
 }
 

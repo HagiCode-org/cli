@@ -113,7 +113,7 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
     .option('--hero-selection-mode <mode>', 'Hero choice when --hero-id is not given: first (default) or random.')
     .option('--need-push', 'Request a push after commit creation when supported.')
     .option('--pull-rebase', 'Run git pull --rebase before pushing, when push is requested.')
-    .option('--target-branch-mode <mode>', 'Optional target branch mode, for example current or new-custom.')
+    .option('--target-branch-mode <mode>', 'Target branch mode: current, new-custom or ai-generated-new. new-custom needs --target-branch-name.')
     .option('--target-branch-name <name>', 'Custom target branch name. Requires --target-branch-mode new-custom.')
     .option('--script-key <key>', 'Optional stable scenario script key.')
     .action(async function hagiTaskCreateAction(this: Command, options: HagiTaskCreateOptions) {

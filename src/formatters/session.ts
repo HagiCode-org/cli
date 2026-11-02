@@ -1,4 +1,5 @@
 import type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_PostMessageResponseDto';
+import type { PCode_Application_Contracts_Dto_MessageListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MessageListResponseDto';
 import type { PCode_Application_Contracts_Dto_SessionListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionListResponseDto';
 import type { PCode_Models_SessionResponseDto } from '../generated/api/models/PCode_Models_SessionResponseDto';
 import { PCode_Models_SessionStatus } from '../generated/api/models/PCode_Models_SessionStatus';
@@ -109,4 +110,59 @@ export function formatSessionMessageHuman(
     ['message', response.message],
     ...extras,
   ])}`;
+}
+
+/** The result of a `--wait`, as the `wait` object of the JSON output and as one human line. */
+export type SessionWaitView = {
+  settled: boolean;
+  timedOut: boolean;
+  transitionSeen: boolean;
+  polls: number;
+  elapsedSeconds: number;
+};
+
+export function formatSessionWaitLine(wait: SessionWaitView, status: string): string {
+  if (wait.timedOut) {
+    return `wait: timed out after ${wait.elapsedSeconds}s; status is still ${status}\n`;
+  }
+
+  // The backend's WaitingForReply is missing from the hand-maintained PCode_Models_SessionStatus enum; a literal keeps the
+  // enum, and so the proposal status choices, unchanged.
+  if (status === 'WaitingForReply') {
+    return `wait: settled at ${status} after ${wait.elapsedSeconds}s; a person must answer\n`;
+  }
+
+  const transition = wait.transitionSeen ? 'a status change was seen' : 'no status change was seen';
+  return `wait: settled at ${status} after ${wait.polls} poll(s) in ${wait.elapsedSeconds}s; ${transition}\n`;
+}
+
+/**
+ * Human view of one page of messages: the text blocks of each message, and a count of the other blocks, which the
+ * human view does not print. The `--json` view of the same page is the DTO itself, unchanged.
+ */
+export function formatSessionMessagesHuman(list: PCode_Application_Contracts_Dto_MessageListResponseDto): string {
+  if (list.messages.length === 0) {
+    return 'No messages found.\n';
+  }
+
+  const sections = list.messages.map(message => {
+    const blocks = message.contentBlocks ?? [];
+    const textBlocks = blocks.filter(block => block.type === 'Text' && typeof (block as { text?: unknown }).text === 'string');
+    const skipped = blocks.length - textBlocks.length;
+    const lines = [`[${message.timestamp}] ${message.type}`];
+
+    for (const block of textBlocks) {
+      for (const line of (block as { text: string }).text.split('\n')) {
+        lines.push(`  ${line}`);
+      }
+    }
+
+    if (skipped > 0) {
+      lines.push(`  (${skipped} other block${skipped === 1 ? '' : 's'} not shown)`);
+    }
+
+    return lines.join('\n');
+  });
+
+  return `Messages (${list.messages.length} of ${list.totalCount})\n${sections.join('\n\n')}\n`;
 }

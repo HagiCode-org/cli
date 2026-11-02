@@ -5,12 +5,21 @@ import { createApiError } from '../commands/testHelpers';
 import {
   CliOperationFailedError,
   CliUsageError,
+  CliWaitTimeoutError,
   EXIT_CODES,
   normalizeCliError,
   renderCliError,
 } from '../../src/runtime/errors';
 
 describe('errors', () => {
+  it('maps a wait timeout to exit code 31', () => {
+    expect(EXIT_CODES.WAIT_TIMEOUT).toBe(31);
+    expect(normalizeCliError(new CliWaitTimeoutError('Wait timed out; last status Executing.'))).toMatchObject({
+      exitCode: 31,
+      message: 'Wait timed out; last status Executing.',
+    });
+  });
+
   it('maps backend HTTP errors to stable exit codes', () => {
     expect(normalizeCliError(createApiError(400, { error: 'Bad request' }))).toMatchObject({
       exitCode: EXIT_CODES.HTTP_BAD_REQUEST,

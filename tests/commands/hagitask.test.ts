@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { PCode_Models_AIProviderType } from '../../src/generated/api/models/PCode_Models_AIProviderType';
 import { PCode_Models_MessageMode } from '../../src/generated/api/models/PCode_Models_MessageMode';
+import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createApiError, createDependencies, createHagiTaskSchema, createHagiTaskSummary } from './testHelpers';
+import { createApiError, createDependencies, createHagiTaskSchema, createHagiTaskSummary, createMessage, createMessageList, fakeWaitClock, sessionWithStatus } from './testHelpers';
 
 describe('hagitask commands', () => {
   let tempDir: string;
@@ -313,5 +314,112 @@ describe('hagitask commands', () => {
       expect(await runCli(['node', 'hagi', 'hagitask', 'send', '--session-id', 'hagitask-1', '--content', 'continue'], dependencies)).toBe(0);
       expect(stdout.join('')).toContain('HagiTask message sent');
     });
+  });
+});
+
+describe('hagitask get', () => {
+  it('reads a HagiTask session by id, including a Super Commit session, as JSON', async () => {
+    const { dependencies, api, stdout } = createDependencies({
+      getSession: vi.fn().mockResolvedValue(sessionWithStatus('hagitask-1', 'ExecutionCompleted', PCode_Models_SessionType.CHAT)),
+    });
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', '--json'], dependencies)).toBe(0);
+    expect(api.getSession).toHaveBeenCalledWith('hagitask-1');
+    expect(JSON.parse(stdout.join(''))).toEqual({
+      session: expect.objectContaining({ sessionId: 'hagitask-1', status: 'ExecutionCompleted', type: 'Chat' }),
+    });
+  });
+
+  it('waits for a Super Commit run to leave Executing and reports the settled status', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession)
+      .mockResolvedValueOnce(sessionWithStatus('hagitask-1', 'Executing', PCode_Models_SessionType.CHAT) as never)
+      .mockResolvedValueOnce(sessionWithStatus('hagitask-1', 'ExecutionCompleted', PCode_Models_SessionType.CHAT) as never);
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', '--wait', '--json'], dependencies)).toBe(0);
+    const body = JSON.parse(stdout.join(''));
+    expect(body.session.status).toBe('ExecutionCompleted');
+    expect(body.wait).toMatchObject({ settled: true, timedOut: false, transitionSeen: true, polls: 2 });
+  });
+
+  it('exits 31 when the Super Commit run is still Executing at the timeout', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession).mockResolvedValue(sessionWithStatus('hagitask-1', 'Executing', PCode_Models_SessionType.CHAT) as never);
+
+    expect(await runCli(
+      ['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', '--wait', '--timeout', '10', '--interval', '5'],
+      dependencies,
+    )).toBe(EXIT_CODES.WAIT_TIMEOUT);
+    expect(stdout.join('')).toContain('status is still Executing');
+  });
+
+  it('reports WaitingForReply as settled for a HagiTask session', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+    Object.assign(dependencies, fakeWaitClock());
+    vi.mocked(api.getSession).mockResolvedValue(sessionWithStatus('hagitask-1', 'WaitingForReply', PCode_Models_SessionType.CHAT) as never);
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', '--wait', '--grace', '0'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('a person must answer');
+  });
+
+  it.each([
+    [['--timeout', '60'], '--timeout needs --wait'],
+    [['--interval', '5'], '--interval needs --wait'],
+    [['--wait', '--interval', '60', '--timeout', '60'], '--interval must be less than --timeout'],
+    [['--wait', '--timeout', '0'], '--timeout must be 1 second or more'],
+    [['--wait', '--grace', 'x'], '--grace must be a whole number of seconds'],
+  ])('rejects %j before any request', async (extra, message) => {
+    const { dependencies, api, stderr } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', ...extra], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain(message);
+    expect(api.getSession).not.toHaveBeenCalled();
+  });
+
+  it('requires --session-id and rejects a wait-only option without --wait, before any request', async () => {
+    const { dependencies, api, stderr } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--wait'], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(await runCli(['node', 'hagi', 'hagitask', 'get', '--session-id', 'hagitask-1', '--grace', '5'], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain('--grace needs --wait');
+    expect(api.getSession).not.toHaveBeenCalled();
+  });
+});
+
+describe('hagitask messages', () => {
+  it('reads the newest message of a Super Commit session with --last 1', async () => {
+    const { dependencies, api, stdout } = createDependencies({
+      getSessionMessages: vi.fn().mockResolvedValue(createMessageList({
+        messages: [createMessage('m1', [{ type: 'Text', text: '## Commits Created\n**Commits:** 1' }])],
+      })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'messages', '--session-id', 'hagitask-1', '--last', '1'], dependencies)).toBe(0);
+    expect(api.getSessionMessages).toHaveBeenCalledWith('hagitask-1', { page: 1, pageSize: 1, order: 'desc' });
+    expect(stdout.join('')).toContain('## Commits Created');
+  });
+
+  it('reports an empty session and rejects --last 0 before any request', async () => {
+    const { dependencies, api, stdout, stderr } = createDependencies({
+      getSessionMessages: vi.fn().mockResolvedValue(createMessageList({ messages: [], totalCount: 0 })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'messages', '--session-id', 'hagitask-1', '--last', '1'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('No messages found.');
+
+    expect(await runCli(['node', 'hagi', 'hagitask', 'messages', '--session-id', 'hagitask-1', '--last', '0'], dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain('--last must be a positive whole number');
+    expect(api.getSessionMessages).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists get and messages in the hagitask help', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'hagitask', '--help'], dependencies)).toBe(0);
+    const help = stdout.join('');
+    expect(help).toMatch(/^\s+get\b/m);
+    expect(help).toMatch(/^\s+messages\b/m);
   });
 });

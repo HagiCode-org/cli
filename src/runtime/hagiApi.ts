@@ -67,6 +67,7 @@ import {
 import { GetAggregatedDataResponseSchema, StatisticsService } from '../generated/grpc/hagicode/platform/v1/statistics_pb';
 import {
   AnnotationSubmissionDtoSchema,
+  GetSessionMessagesResponseSchema,
   PostMessageRequestSchema,
   PostSessionMessageResponseSchema,
   SessionMessagingService,
@@ -131,6 +132,7 @@ import type { PCode_Application_Contracts_Dto_VaultFilePreviewResponseDto } from
 import type { PCode_Application_Contracts_Dto_VaultItemDto } from '../generated/api/models/PCode_Application_Contracts_Dto_VaultItemDto';
 import type { PCode_Application_Contracts_Dto_VaultListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_VaultListResponseDto';
 import type { PCode_Models_SessionResponseDto } from '../generated/api/models/PCode_Models_SessionResponseDto';
+import type { PCode_Application_Contracts_Dto_MessageListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_MessageListResponseDto';
 import type { PCode_Models_SessionType } from '../generated/api/models/PCode_Models_SessionType';
 import type { PCode_Web_Controllers_CreateChatSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateChatSessionRequest';
 import type { PCode_Web_Controllers_CreateHagiTaskSessionRequest } from '../generated/api/models/PCode_Web_Controllers_CreateHagiTaskSessionRequest';
@@ -182,9 +184,19 @@ export type SkillGalleryAuditDto = {
   providers: SkillGalleryAuditProviderDto[];
 };
 
+/** One page of a session's messages. `order` `desc` (the backend default) returns the newest messages first. */
+export type SessionMessagesInput = {
+  page?: number;
+  pageSize?: number;
+  historyScope?: string;
+  order?: 'asc' | 'desc';
+};
+
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
+  /** Reads one page of a session's messages through the `GetSessionMessages` RPC. */
+  getSessionMessages(sessionId: string, options?: SessionMessagesInput): Promise<PCode_Application_Contracts_Dto_MessageListResponseDto>;
   createProposalSession(requestBody: PCode_Web_Controllers_CreateSessionRequest): Promise<PCode_Models_SessionResponseDto>;
   createChatSession(requestBody: PCode_Web_Controllers_CreateChatSessionRequest): Promise<PCode_Models_SessionResponseDto>;
   /** Creates a session from a HagiTask preset task id or prompt id. The backend validates the structured input. */
@@ -316,6 +328,17 @@ export function createGrpcHagiApi(): HagiApi {
         }),
       ),
     getSession: async sessionId => result(GetSessionResponseSchema, sessions().getSession({ sessionId })),
+    getSessionMessages: async (sessionId, options = {}) =>
+      result(
+        GetSessionMessagesResponseSchema,
+        sessionMessaging().getSessionMessages({
+          sessionId,
+          page: options.page,
+          pageSize: options.pageSize,
+          historyScope: options.historyScope,
+          order: options.order,
+        }),
+      ),
     createProposalSession: async requestBody =>
       result(OpenSessionResponseSchema, sessions().openSession({ body: dtoToProto(CreateSessionRequestSchema, requestBody) })),
     createChatSession: async requestBody =>

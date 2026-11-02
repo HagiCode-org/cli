@@ -5,6 +5,8 @@ import { registerProposalCompleteCommand } from './proposal/complete';
 import { registerProposalCreateCommand } from './proposal/create';
 import { registerProposalExecuteCommand } from './proposal/execute';
 import { registerProposalGenerateCommand } from './proposal/generate';
+import { registerProposalGetCommand } from './proposal/get';
+import { registerProposalMessagesCommand } from './proposal/messages';
 import { registerProposalListCommand } from './proposal/list';
 import { registerProposalOptimizeDescriptionCommand } from './proposal/optimize-description';
 import { registerProposalSendCommand } from './proposal/send';
@@ -14,7 +16,7 @@ import type { AppDependencies } from '../runtime/commandContext';
 export function registerProposalCommands(program: Command, dependencies: AppDependencies): void {
   const proposal = program
     .command('proposal')
-    .description('Manage proposal sessions through backend session APIs.');
+    .description('Manage proposal sessions through backend session APIs: create, generate, execute and archive stages, read one session with get (--wait to follow a stage), and read its messages.');
 
   registerProposalListCommand(proposal, dependencies);
   registerProposalCreateCommand(proposal, dependencies);
@@ -24,6 +26,8 @@ export function registerProposalCommands(program: Command, dependencies: AppDepe
   registerProposalExecuteCommand(proposal, dependencies);
   registerProposalArchiveCommand(proposal, dependencies);
   registerProposalStatusCommand(proposal, dependencies);
+  registerProposalGetCommand(proposal, dependencies);
+  registerProposalMessagesCommand(proposal, dependencies);
   registerProposalCompleteCommand(proposal, dependencies);
   registerProposalSendCommand(proposal, dependencies);
 }
