@@ -65,16 +65,17 @@ Explicit flags always override environment variables.
 | `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
+| `HAGI_SEND_STEER` | Turns Steer on (`1`, `true`, `yes`, `on`) or off (`0`, `false`, `no`, `off`) for `chat`, `proposal` and `hagitask send`. Any other value exits with code `2`. See [Steer for send commands](#steer-for-send-commands). |
 
 ## Config file
 
 The base URL can also be stored in a local config file:
 
 ```json
-{ "baseUrl": "https://api.example.com" }
+{ "baseUrl": "https://api.example.com", "steer": false }
 ```
 
-The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset.
+The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset. The `steer` key must be `true` or `false`; any other value exits with code `2` and names the file.
 
 Base URL precedence, highest first: `--base-url`, then `HAGI_API_BASE_URL`, then `baseUrl` in the config file.
 There is no default. When none of the three is set, the CLI exits with code `2` and names all three sources.
@@ -178,6 +179,33 @@ Example `input.json` for a task with one required input:
 ```
 
 Migration: `hagi hagitask create` and `hagi hagitask send` replace the former `autotask` commands. There is no alias, so `hagi autotask` fails as an unknown command.
+
+## Steer for send commands
+
+`hagi chat send`, `hagi proposal send` and `hagi hagitask send` have two delivery modes. A normal send waits behind the running turn, as before. A Steer inserts the text into the running turn through one `SteerSession` call. Steer is off by default.
+
+Options: `--steer` requests Steer for one call; `--no-steer` forces a normal send for one call. Without either flag, the first set source decides: `HAGI_SEND_STEER` (values above), then the `steer` config key, then `false`. `--no-steer` overrides `HAGI_SEND_STEER=1`.
+
+Outcomes:
+
+- `steered`: a running task took the message. It is not proof the text was used; the backend can requeue it when the run ends.
+- `queued`: no running task took it, so it was sent as the next message. Exit code `0`. An idle session also answers `queued`, and the message then starts a run at once, so do not read `queued` as "waiting".
+
+```bash
+hagi chat send --session-id <session-id> --content "Check the diff" --steer --json
+```
+
+The `--json` output keeps `sessionId`, `message` and `requested`, and adds a `steer` object: `{ requested, source, effective, outcome?, messageId?, reason? }`. `source` is `flag`, `env`, `config` or `default`. On the Steer path `message` is `Steered` or `Queued`. `reason` appears only when Steer was requested but not used.
+
+Conflicts and fallback:
+
+- `--steer` with `--mode` or `--executor-type` exits with code `2` and sends nothing.
+- Steer from `HAGI_SEND_STEER` or the config file, combined with `--mode` or `--executor-type`, sends a normal message with those options and sets `reason`.
+- Steer from `HAGI_SEND_STEER` or the config file, against a backend without `SteerSession`, sends a normal message with the reason `the backend does not support Steer`. An explicit `--steer` returns the backend error instead.
+
+A queued Steer is always sent in `Edit` mode. To keep another mode, use `--no-steer --mode <mode>`.
+
+For unattended session-to-session messages, set `HAGI_SEND_STEER=1` in the orchestrator's environment. Use `--no-steer` on a single call that must take the normal queue.
 
 ## Plan commands
 

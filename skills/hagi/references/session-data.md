@@ -132,6 +132,8 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
 
+A `send` with Steer (`--steer`, or `HAGI_SEND_STEER` set in the calling shell) inserts its text into a running turn. The result says which happened: `steered` means a running task took it, and `queued` means no running task did, so it went out as the next message. `HAGI_SEND_STEER` belongs to the calling shell; the backend does not set it inside agent sessions.
+
 `hagitask create` with a Super Commit prompt (`--prompt-id auto-compose-commit.<locale>`) creates commits in a code repository, and with `--need-push` publishes them. Start it only when the user asked for it in this conversation, and add `--need-push` only when the user asked for a push. See [`super-commit.md`](super-commit.md).
 
 `skills local enable` and `skills local disable` change whether a built-in skill loads. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. Built-in skills cannot be uninstalled through the CLI.
