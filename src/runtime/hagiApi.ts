@@ -71,6 +71,8 @@ import {
   PostMessageRequestSchema,
   PostSessionMessageResponseSchema,
   SessionMessagingService,
+  SessionSteerRequestDtoSchema,
+  SteerSessionResponseSchema,
   SubmitSessionAnnotationsResponseSchema,
 } from '../generated/grpc/hagicode/session/v1/session_messaging_pb';
 import {
@@ -119,6 +121,8 @@ import type { PCode_Application_Contracts_Dto_UpdateMonoSpecsManagementRequestDt
 import type { PCode_Application_Contracts_Dto_ValidateMonoSpecsRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ValidateMonoSpecsRequestDto';
 import type { PCode_Application_Contracts_Dto_ValidateMonoSpecsResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ValidateMonoSpecsResponseDto';
 import type { PCode_Application_Contracts_Dto_PostMessageResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_PostMessageResponseDto';
+import type { PCode_Application_Contracts_Dto_SessionSteerRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionSteerRequestDto';
+import type { PCode_Application_Contracts_Dto_SessionSteerResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionSteerResponseDto';
 import type { PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProposalOptimizationBundleResponseDto';
 import type { PCode_Application_Contracts_Dto_ProjectDto } from '../generated/api/models/PCode_Application_Contracts_Dto_ProjectDto';
 import type { PCode_Application_Contracts_Dto_SessionListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionListResponseDto';
@@ -208,6 +212,8 @@ export interface HagiApi {
   updateSession(sessionId: string, requestBody: PCode_Web_Controllers_UpdateSessionRequest): Promise<unknown>;
   deleteSession(sessionId: string, deleteFiles?: boolean): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   sendMessage(sessionId: string, requestBody: PCode_Web_Controllers_PostMessageRequest): Promise<PCode_Application_Contracts_Dto_PostMessageResponseDto>;
+  /** Hands the content to the session's running task through the `SteerSession` RPC. One call; the outcome is `steered` or `queued`. */
+  steerSession(sessionId: string, requestBody: PCode_Application_Contracts_Dto_SessionSteerRequestDto): Promise<PCode_Application_Contracts_Dto_SessionSteerResponseDto>;
   /** Optimizes the proposal description and, in the same backend step, the proposal title and name. */
   optimizeProposal(
     sessionId: string,
@@ -365,6 +371,11 @@ export function createGrpcHagiApi(): HagiApi {
       result(
         PostSessionMessageResponseSchema,
         sessionMessaging().postSessionMessage({ sessionId, body: dtoToProto(PostMessageRequestSchema, requestBody) }),
+      ),
+    steerSession: async (sessionId, requestBody) =>
+      result(
+        SteerSessionResponseSchema,
+        sessionMessaging().steerSession({ sessionId, body: dtoToProto(SessionSteerRequestDtoSchema, requestBody) }),
       ),
     optimizeProposal: async (sessionId, requestBody) =>
       result(

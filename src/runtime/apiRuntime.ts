@@ -34,10 +34,10 @@ export function resolveConfigFilePath(env: NodeJS.ProcessEnv = process.env): str
 }
 
 /**
- * Reads the base URL from the local config file. A missing file means no value; an unreadable
- * or malformed file is a usage error that names the file.
+ * Reads the local config file as a JSON object. A missing file means no object (undefined); an unreadable or malformed
+ * file is a usage error that names the file. A file whose top level is not an object reads as an empty object.
  */
-export function readConfigFileBaseUrl(env: NodeJS.ProcessEnv = process.env): string | undefined {
+function readConfigFileObject(env: NodeJS.ProcessEnv): Record<string, unknown> | undefined {
   const configPath = resolveConfigFilePath(env);
 
   let raw: string;
@@ -59,12 +59,31 @@ export function readConfigFileBaseUrl(env: NodeJS.ProcessEnv = process.env): str
     throw new CliUsageError(`CLI config file ${configPath} is not valid JSON.`);
   }
 
-  const value =
-    parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>).baseUrl
-      : undefined;
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+}
 
+/**
+ * Reads the base URL from the local config file. A missing file means no value; an unreadable
+ * or malformed file is a usage error that names the file.
+ */
+export function readConfigFileBaseUrl(env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const value = readConfigFileObject(env)?.baseUrl;
   return typeof value === 'string' ? normalizeRuntimeValue(value) : undefined;
+}
+
+/**
+ * Reads the `steer` key from the local config file. A missing file or key means no value. Any value other than a JSON
+ * boolean is a usage error that names the file.
+ */
+export function readConfigFileSteer(env: NodeJS.ProcessEnv = process.env): boolean | undefined {
+  const value = readConfigFileObject(env)?.steer;
+  if (value === undefined || typeof value === 'boolean') {
+    return value;
+  }
+
+  throw new CliUsageError(
+    `CLI config file ${resolveConfigFilePath(env)} has a "steer" value that is not true or false.`,
+  );
 }
 
 export function resolveApiRuntimeConfig(

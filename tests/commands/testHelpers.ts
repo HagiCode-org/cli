@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { vi } from 'vitest';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/error_detail_pb';
@@ -632,6 +634,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     updateSession: vi.fn().mockResolvedValue(undefined),
     deleteSession: vi.fn().mockResolvedValue({ message: 'Deleted' }),
     sendMessage: vi.fn().mockResolvedValue({ message: 'Queued' }),
+    steerSession: vi.fn().mockResolvedValue({ outcome: 'steered' }),
     optimizeProposal: vi.fn().mockResolvedValue(createProposalOptimizationBundle()),
     generateProposal: vi.fn().mockResolvedValue({ message: 'Proposal generation started' }),
     executeProposal: vi.fn().mockResolvedValue({ message: 'Proposal execution started' }),
@@ -691,7 +694,8 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
 
   const dependencies: AppDependencies = {
     api,
-    env: { HAGI_API_BASE_URL: TEST_BASE_URL },
+    // XDG_CONFIG_HOME points at a directory that does not exist, so no test reads the developer's own config file.
+    env: { HAGI_API_BASE_URL: TEST_BASE_URL, XDG_CONFIG_HOME: join(tmpdir(), `hagi-test-no-config-${process.pid}`) },
     io,
   };
 

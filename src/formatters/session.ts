@@ -99,17 +99,69 @@ export function formatSessionSummaryHuman(
   ]);
 }
 
+/** How a send's Steer setting was resolved and what happened to it. `reason` is set only when Steer was requested but not used. */
+export type SteerView = {
+  requested: boolean;
+  source: 'flag' | 'env' | 'config' | 'default';
+  effective: boolean;
+  outcome?: string;
+  messageId?: string;
+  reason?: string;
+};
+
+/** The `steer` object of the `--json` output. Optional fields are left out when they do not apply. */
+export type SteerJson = {
+  requested: boolean;
+  source: SteerView['source'];
+  effective: boolean;
+  outcome?: string;
+  messageId?: string;
+  reason?: string;
+};
+
+/**
+ * One line for a `queued` Steer. It does not say the message is waiting: the backend also answers `queued` for an idle
+ * session, where the message starts a run at once.
+ */
+export const STEER_QUEUED_NOTE = 'No running task took the message, so it was sent as the next message.';
+
+export function toSteerJson(steer: SteerView): SteerJson {
+  return {
+    requested: steer.requested,
+    source: steer.source,
+    effective: steer.effective,
+    ...(steer.outcome !== undefined ? { outcome: steer.outcome } : {}),
+    ...(steer.messageId !== undefined ? { messageId: steer.messageId } : {}),
+    ...(steer.reason !== undefined ? { reason: steer.reason } : {}),
+  };
+}
+
 export function formatSessionMessageHuman(
   label: string,
   sessionId: string,
   response: PCode_Application_Contracts_Dto_PostMessageResponseDto,
   extras: Array<[string, string | undefined]> = [],
+  steer?: SteerView,
 ): string {
+  // Steer rows appear only when a source set the setting, so a send with no Steer setting keeps its original output.
+  const steerRows: Array<[string, string | undefined]> =
+    steer && steer.source !== 'default'
+      ? [
+          ['steer', `${steer.requested ? 'on' : 'off'} (${steer.source})`],
+          ['effective', steer.effective ? 'yes' : 'no'],
+          ['outcome', steer.outcome],
+          ['messageId', steer.messageId],
+          ['reason', steer.reason],
+        ]
+      : [];
+  const queuedNote = steer?.effective && steer.outcome === 'queued' ? `${STEER_QUEUED_NOTE}\n` : '';
+
   return `${label}\n${renderKeyValueTable([
     ['sessionId', sessionId],
     ['message', response.message],
     ...extras,
-  ])}`;
+    ...steerRows,
+  ])}${queuedNote}`;
 }
 
 /** The result of a `--wait`, as the `wait` object of the JSON output and as one human line. */
