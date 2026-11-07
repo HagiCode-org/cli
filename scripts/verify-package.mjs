@@ -13,6 +13,8 @@ const IMPLICIT_FILE_PATTERNS = [
 ];
 
 const ALLOWED_SHARED_CHUNK_PATTERN = /^dist\/chunks\/[^/]+\.js$/i;
+// Embedded skill files; allowed only when package.json `files` publishes the `skills` directory.
+const PUBLISHED_SKILLS_PATTERN = /^skills\/.+$/i;
 const FORBIDDEN_PUBLISH_PATTERNS = [
   /\.map$/i,
   /^dist\/commands\//i,
@@ -48,6 +50,9 @@ export function getRequiredPublishFiles(packageJson) {
 export function getAllowedPublishEntries(packageJson) {
   const allowedEntries = new Set(getRequiredPublishFiles(packageJson));
   allowedEntries.add('dist/chunks/*.js');
+  if (publishesSkills(packageJson)) {
+    allowedEntries.add('skills/**');
+  }
 
   return [...allowedEntries];
 }
@@ -67,7 +72,15 @@ export function isAllowedBundledFile(filePath, packageJson) {
     return true;
   }
 
+  if (publishesSkills(packageJson) && PUBLISHED_SKILLS_PATTERN.test(normalizedPath)) {
+    return true;
+  }
+
   return ALLOWED_SHARED_CHUNK_PATTERN.test(normalizedPath);
+}
+
+function publishesSkills(packageJson) {
+  return Array.isArray(packageJson.files) && packageJson.files.some(entry => normalizePublishPath(entry) === "skills");
 }
 
 export function isImplicitPackedFile(filePath) {
@@ -122,7 +135,9 @@ function runNpmPack(repoRoot) {
     cwd: repoRoot,
     encoding: "utf8",
   });
-  const [packSummary] = JSON.parse(packOutput);
+  // Older npm printed an array of pack summaries; npm 12 prints an object keyed by package name. Accept both.
+  const parsedPackOutput = JSON.parse(packOutput);
+  const [packSummary] = Array.isArray(parsedPackOutput) ? parsedPackOutput : Object.values(parsedPackOutput);
 
   if (!packSummary?.files) {
     throw new Error("npm pack did not return a file manifest to inspect.");

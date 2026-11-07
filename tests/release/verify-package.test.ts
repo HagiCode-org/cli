@@ -48,6 +48,28 @@ describe('verify-package', () => {
     expect(isAllowedBundledFile('dist/chunks/runtime-abc123.js.map', manifest)).toBe(false);
   });
 
+  it('allows the skills directory only when the manifest publishes it', () => {
+    const withSkills = { ...manifest, files: ['dist', 'README.md', 'skills'] };
+
+    expect(getAllowedPublishEntries(withSkills)).toContain('skills/**');
+    expect(isAllowedBundledFile('skills/hagi/SKILL.md', withSkills)).toBe(true);
+    expect(isAllowedBundledFile('skills/hagi/references/cli-usage.md', withSkills)).toBe(true);
+    expect(isAllowedBundledFile('skills/hagi/SKILL.md', manifest)).toBe(false);
+    expect(getAllowedPublishEntries(manifest)).not.toContain('skills/**');
+    expect(
+      inspectPackedFiles(withSkills, [
+        'package.json',
+        'README.md',
+        'dist/cli.js',
+        'dist/main.js',
+        'skills/hagi/SKILL.md',
+      ]),
+    ).toMatchObject({ missingFiles: [], unexpectedFiles: [] });
+    expect(
+      inspectPackedFiles(manifest, ['package.json', 'README.md', 'dist/cli.js', 'dist/main.js', 'skills/hagi/SKILL.md']),
+    ).toMatchObject({ unexpectedFiles: ['skills/hagi/SKILL.md'] });
+  });
+
   it('reports missing entrypoints and unexpected files', () => {
     expect(
       inspectPackedFiles(manifest, [
