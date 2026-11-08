@@ -23,7 +23,6 @@ const sagaResources = [
   'resources/saga/prompts/plan.md',
   'resources/saga/prompts/research.md',
   'resources/saga/prompts/run.md',
-  'resources/saga/tools/saga.mjs',
 ];
 
 describe('verify-package', () => {
@@ -94,6 +93,30 @@ describe('verify-package', () => {
     const withoutSagaResources = { ...manifest, files: ['dist', 'README.md'] };
     expect(isAllowedBundledFile('resources/saga/tools/saga.mjs', withoutSagaResources)).toBe(false);
     expect(getRequiredPublishFiles(withoutSagaResources)).not.toContain('resources/saga/.gitignore');
+  });
+
+  it('rejects a packed standalone Saga tool and its source map by name', () => {
+    const base = ['package.json', 'README.md', 'dist/cli.js', 'dist/main.js', ...sagaResources];
+    expect(
+      inspectPackedFiles(manifest, [...base, 'resources/saga/tools/saga.mjs', 'resources/saga/tools/saga.mjs.map']),
+    ).toMatchObject({
+      missingFiles: [],
+      unexpectedFiles: ['resources/saga/tools/saga.mjs', 'resources/saga/tools/saga.mjs.map'],
+    });
+  });
+
+  it('reports a missing managed Saga resource by name', () => {
+    const packed = ['package.json', 'README.md', 'dist/cli.js', 'dist/main.js', ...sagaResources]
+      .filter(file => file !== 'resources/saga/prompts/goal.md');
+    expect(inspectPackedFiles(manifest, packed)).toMatchObject({
+      missingFiles: ['resources/saga/prompts/goal.md'],
+      unexpectedFiles: [],
+    });
+  });
+
+  it('passes a clean package that contains only the managed Saga resources', () => {
+    const packed = ['package.json', 'README.md', 'dist/cli.js', 'dist/main.js', ...sagaResources];
+    expect(inspectPackedFiles(manifest, packed)).toMatchObject({ missingFiles: [], unexpectedFiles: [] });
   });
 
   it('reports missing entrypoints and unexpected files', () => {

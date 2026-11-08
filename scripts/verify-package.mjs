@@ -24,7 +24,6 @@ const PUBLISHED_SAGA_RESOURCE_FILES = [
   'resources/saga/prompts/plan.md',
   'resources/saga/prompts/research.md',
   'resources/saga/prompts/run.md',
-  'resources/saga/tools/saga.mjs',
 ];
 const FORBIDDEN_PUBLISH_PATTERNS = [
   /\.map$/i,

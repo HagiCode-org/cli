@@ -31,22 +31,26 @@ describe('Saga asset maintenance guidance', () => {
   });
 
   it('documents the canonical source, raw bytes, and manifest contract', () => {
-    expect(localDevelopment).toContain('../personal-agent-skills/long-running-orchestration/');
     expect(localDevelopment).toContain('resources/saga/');
-    expect(localDevelopment).toContain('tools/saga.mjs');
+    expect(localDevelopment).toContain('there is no standalone Saga tool and no sync step');
     expect(localDevelopment).toContain('.gitignore');
     expect(localDevelopment).toContain('manifest.json');
-    expect(localDevelopment).toMatch(/raw bytes.*do not render templates or normalize line endings/s);
+    expect(localDevelopment).toMatch(/Keep the bytes raw.*do not render templates or\s+normalize line endings/s);
     expect(localDevelopment).toMatch(/schema version `1`.*sorted POSIX.*SHA-256/s);
   });
 
-  it('documents the registered offline synchronization and check commands', () => {
-    for (const command of ['saga:assets:sync', 'saga:assets:check']) {
-      expect(localDevelopment).toContain(`pnpm run ${command}`);
-      expect(packageJson.scripts[command]).toContain('sync-saga-assets.mjs');
+  it('describes native-only usage and never names the standalone tool', () => {
+    for (const documentation of [readme, cliUsage, sagaReference, localDevelopment, sessionData, validation]) {
+      expect(documentation).not.toContain('saga.mjs');
+      expect(documentation).not.toMatch(/\bnode\s+\S*tools\/saga/);
     }
-    expect(packageJson.scripts['saga:assets:check']).toContain('--check');
-    expect(validation).toContain('pnpm run saga:assets:check');
+    expect(readme).toMatch(/six (bundled )?method prompts/);
+    expect(sagaReference).toMatch(/six (bundled )?method prompts/);
+  });
+
+  it('documents the offline manifest and package checks without a sync step', () => {
+    expect(Object.keys(packageJson.scripts).filter(name => name.startsWith('saga:'))).toEqual([]);
+    expect(validation).toContain('tests/runtime/saga/assets.test.ts');
     expect(validation).toContain('pnpm run pack:check');
     expect(validation).toContain('hidden `.gitignore` template');
   });
@@ -107,8 +111,8 @@ describe('Saga asset maintenance guidance', () => {
     expect(sagaReference).toContain('ends in `-<saga-id>`');
     expect(sagaReference).toContain('code `30`');
     expect(sagaReference).toContain('identifies the Saga directory and includes the metadata written to `saga.json`');
-    expect(sagaReference).toMatch(/writes no runtime file and does not run the installed tool/);
-    expect(sagaReference).toContain('node .hagicode/sagas/tools/saga.mjs instructions demo goal');
+    expect(sagaReference).toMatch(/writes no runtime file/);
+    expect(sagaReference).toContain('.hagicode/sagas/prompts/goal.md');
 
     const example = sagaReference.match(/```json\n([\s\S]*?)\n```/)?.[1];
     expect(example).toBeDefined();
