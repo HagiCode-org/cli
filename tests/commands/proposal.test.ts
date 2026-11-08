@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { fromJson, type JsonValue } from '@bufbuild/protobuf';
-import type { HandlerContext } from '@connectrpc/connect';
+import { Code, ConnectError, type HandlerContext } from '@connectrpc/connect';
 import { connectNodeAdapter } from '@connectrpc/connect-node';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SessionsService } from '../../src/generated/grpc/hagicode/session/v1/sessions_pb';
@@ -20,12 +20,19 @@ import { createApiError, createDependencies, createSession, TEST_BASE_URL } from
 
 const CLI_VERSION = JSON.parse(readFileSync(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8')).version;
 
-type StubBackend = { url: string; calls: Array<{ rpc: string; client: string | null }>; server: Server };
+type StubBackend = {
+  url: string;
+  calls: Array<{ rpc: string; client: string | null }>;
+  /** The OpenSession requests as the backend received them (protobuf messages). */
+  openSessionRequests: Array<{ metadata: Record<string, string> }>;
+  server: Server;
+};
 const runningBackends: Server[] = [];
 
 /** A gRPC-Web endpoint under /grpc that answers OpenSession and ListSessions with `session`, and records each call. */
-async function stubBackend(session: Record<string, unknown>): Promise<StubBackend> {
+async function stubBackend(session: Record<string, unknown>, openSessionFailure?: ConnectError): Promise<StubBackend> {
   const calls: StubBackend['calls'] = [];
+  const openSessionRequests: StubBackend['openSessionRequests'] = [];
   const answer = (rpc: string, context: HandlerContext, response: JsonValue, schemaOf: 'open' | 'list') => {
     calls.push({ rpc, client: context.requestHeader.get('x-hagi-client') });
     const method = SessionsService.methods.find(candidate => candidate.name === (schemaOf === 'open' ? 'OpenSession' : 'ListSessions'))!;
@@ -35,8 +42,13 @@ async function stubBackend(session: Record<string, unknown>): Promise<StubBacken
     requestPathPrefix: '/grpc',
     routes: router => {
       router.service(SessionsService, {
-        openSession: (_request: unknown, context: HandlerContext) =>
-          answer('OpenSession', context, { result: session } as JsonValue, 'open'),
+        openSession: (request: { metadata: Record<string, string> }, context: HandlerContext) => {
+          openSessionRequests.push({ metadata: { ...request.metadata } });
+          if (openSessionFailure) {
+            throw openSessionFailure;
+          }
+          return answer('OpenSession', context, { result: session } as JsonValue, 'open');
+        },
         listSessions: (_request: unknown, context: HandlerContext) =>
           answer('ListSessions', context, { result: { sessions: [session] } } as JsonValue, 'list'),
       } as never);
@@ -45,7 +57,7 @@ async function stubBackend(session: Record<string, unknown>): Promise<StubBacken
   const server = createServer(handler);
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   runningBackends.push(server);
-  return { url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, calls, server };
+  return { url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`, calls, openSessionRequests, server };
 }
 
 /** The session as protobuf JSON: ids are plain strings on the wire. */
@@ -107,6 +119,41 @@ describe('proposal commands over the wire', () => {
     ]);
   });
 
+  it('sends the metadata map on the OpenSession request and shows the returned userMetadata', async () => {
+    const backend = await stubBackend({ ...createWireSession('session-2'), userMetadata: { role: 'worker', master: 'abc' } });
+    const env = { HAGI_API_BASE_URL: backend.url };
+    const { io, stdout } = captureIo();
+
+    await expect(runCli([...createArgs, '--metadata', 'role=worker', '--metadata', 'master=abc', '--json'], createDefaultDependencies(env, io))).resolves.toBe(0);
+
+    expect(backend.openSessionRequests[0].metadata).toEqual({ role: 'worker', master: 'abc' });
+    expect(JSON.parse(stdout.join('')).session.userMetadata).toEqual({ role: 'worker', master: 'abc' });
+  });
+
+  it('sends no metadata on the OpenSession request when no metadata option is given', async () => {
+    const backend = await stubBackend(createWireSession('session-2'));
+    const env = { HAGI_API_BASE_URL: backend.url };
+    const { io, stdout } = captureIo();
+
+    await expect(runCli([...createArgs, '--json'], createDefaultDependencies(env, io))).resolves.toBe(0);
+
+    expect(backend.openSessionRequests[0].metadata).toEqual({});
+    expect(stdout.join('')).not.toContain('userMetadata');
+  });
+
+  it('shows the backend INVALID_ARGUMENT message when it rejects the metadata', async () => {
+    const message = "Metadata key 'Role' is invalid: use 1-64 characters, starting with a lowercase letter, then lowercase letters, digits, '.', '_' or '-'.";
+    const backend = await stubBackend(createWireSession('session-2'), new ConnectError(message, Code.InvalidArgument));
+    const env = { HAGI_API_BASE_URL: backend.url };
+    const stderr: string[] = [];
+    const io: CliIo = { stdout: () => undefined, stderr: value => { stderr.push(value); } };
+
+    await expect(runCli([...createArgs, '--metadata', 'Role=x'], createDefaultDependencies(env, io))).resolves.toBe(EXIT_CODES.HTTP_BAD_REQUEST);
+
+    expect(stderr.join('')).toContain(message);
+    expect(backend.openSessionRequests).toHaveLength(1);
+  });
+
   it('keeps the proposal create --json output keys unchanged and free of client or achievement fields', async () => {
     const backend = await stubBackend(createWireSession('session-2'));
     const env = { HAGI_API_BASE_URL: backend.url };
@@ -119,7 +166,7 @@ describe('proposal commands over the wire', () => {
     expect(output).not.toMatch(/client|achievement/i);
   });
 
-  it('keeps the proposal create option list unchanged', async () => {
+  it('keeps the proposal create option list unchanged apart from the metadata options', async () => {
     const env = { HAGI_API_BASE_URL: TEST_BASE_URL };
     const { io, stdout } = captureIo();
 
@@ -135,6 +182,8 @@ describe('proposal commands over the wire', () => {
       '--default-title',
       '--enable-independent-workspace',
       '--base-branch <branch>',
+      '--metadata <key=value>',
+      '--metadata-json <file|->',
       '-h, --help',
     ]);
     expect(stdout.join('')).not.toMatch(/--(target|repo)/i);

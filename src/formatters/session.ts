@@ -23,7 +23,14 @@ export type SessionView = {
   enableIndependentWorkspace: boolean;
   baseBranch?: string;
   metadata?: string;
+  /** The write-once user metadata entries. Set only when the session has some; the human view shows them sorted by key. */
+  userMetadata?: Record<string, string>;
   chatExecutorType?: string;
+};
+
+/** A session response, plus the `user_metadata` map the OpenAPI session model does not carry. */
+export type SessionResponseWithUserMetadata = PCode_Models_SessionResponseDto & {
+  userMetadata?: Record<string, string> | null;
 };
 
 export type SessionListPayload = {
@@ -38,7 +45,22 @@ function readIdValue(identifier?: IdLike | null): string {
   return identifier?.value?.trim() ?? '';
 }
 
-export function toSessionView(session: PCode_Models_SessionResponseDto): SessionView {
+/** The user metadata of a response, or undefined when it has no entries (the output then omits the field). */
+function readUserMetadata(session: SessionResponseWithUserMetadata): Record<string, string> | undefined {
+  const entries = session.userMetadata;
+  return entries && Object.keys(entries).length > 0 ? { ...entries } : undefined;
+}
+
+/** `key=value` pairs, sorted by key and joined with ", ". */
+export function formatUserMetadata(entries: Record<string, string>): string {
+  return Object.keys(entries)
+    .sort()
+    .map(key => `${key}=${entries[key]}`)
+    .join(', ');
+}
+
+export function toSessionView(session: SessionResponseWithUserMetadata): SessionView {
+  const userMetadata = readUserMetadata(session);
   return {
     sessionId: readIdValue(session.sessionId),
     title: session.title,
@@ -51,6 +73,7 @@ export function toSessionView(session: PCode_Models_SessionResponseDto): Session
     enableIndependentWorkspace: session.enableIndependentWorkspace,
     baseBranch: session.baseBranch ?? undefined,
     metadata: session.metadata ?? undefined,
+    ...(userMetadata ? { userMetadata } : {}),
     chatExecutorType: session.chatExecutorType ?? undefined,
   };
 }
@@ -95,6 +118,7 @@ export function formatSessionSummaryHuman(
     ['baseBranch', session.baseBranch],
     ['chatExecutorType', session.chatExecutorType],
     ['metadata', session.metadata],
+    ['userMetadata', session.userMetadata ? formatUserMetadata(session.userMetadata) : undefined],
     ...extras,
   ]);
 }

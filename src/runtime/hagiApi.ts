@@ -196,13 +196,22 @@ export type SessionMessagesInput = {
   order?: 'asc' | 'desc';
 };
 
+/**
+ * Session metadata: write-once user entries (`key` to `value`) that travel as the `metadata` map of the create requests and
+ * come back as `userMetadata`. The OpenAPI request models do not carry the map, so the typed bodies add it here.
+ */
+export type SessionMetadataMap = Record<string, string>;
+
+export type CreateChatSessionBody = PCode_Web_Controllers_CreateChatSessionRequest & { metadata?: SessionMetadataMap };
+export type CreateProposalSessionBody = PCode_Web_Controllers_CreateSessionRequest & { metadata?: SessionMetadataMap };
+
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
   /** Reads one page of a session's messages through the `GetSessionMessages` RPC. */
   getSessionMessages(sessionId: string, options?: SessionMessagesInput): Promise<PCode_Application_Contracts_Dto_MessageListResponseDto>;
-  createProposalSession(requestBody: PCode_Web_Controllers_CreateSessionRequest): Promise<PCode_Models_SessionResponseDto>;
-  createChatSession(requestBody: PCode_Web_Controllers_CreateChatSessionRequest): Promise<PCode_Models_SessionResponseDto>;
+  createProposalSession(requestBody: CreateProposalSessionBody): Promise<PCode_Models_SessionResponseDto>;
+  createChatSession(requestBody: CreateChatSessionBody): Promise<PCode_Models_SessionResponseDto>;
   /** Creates a session from a HagiTask preset task id or prompt id. The backend validates the structured input. */
   createHagiTaskSession(requestBody: PCode_Web_Controllers_CreateHagiTaskSessionRequest): Promise<PCode_Models_SessionResponseDto>;
   /** Lists the creation schema summary of every active HagiTask. */

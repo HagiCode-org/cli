@@ -11,6 +11,7 @@ import {
   type AppDependencies,
 } from '../../runtime/commandContext';
 import { CliUsageError } from '../../runtime/errors';
+import { addMetadataOptions, resolveMetadataOptions } from '../../runtime/metadataOptions';
 import { PCode_Models_SessionType } from '../../generated/api/models/PCode_Models_SessionType';
 
 const DEFAULT_PROPOSAL_TITLE = 'New Proposal';
@@ -23,6 +24,8 @@ type ProposalCreateOptions = {
   enableIndependentWorkspace?: boolean;
   baseBranch?: string;
   defaultTitle?: boolean;
+  metadata?: string[];
+  metadataJson?: string[];
   json?: boolean;
 };
 
@@ -40,11 +43,11 @@ function resolveCreateTitle(options: ProposalCreateOptions): string {
 }
 
 export function registerProposalCreateCommand(parent: Command, dependencies: AppDependencies): void {
-  const command = addJsonOption(
+  const command = addMetadataOptions(addJsonOption(
     parent
       .command('create')
       .description('Create a proposal session only. This command does not trigger later lifecycle APIs.'),
-  );
+  ));
 
   command
     .requiredOption('--project-id <id>', 'Project id that owns the new proposal session.')
@@ -57,6 +60,8 @@ export function registerProposalCreateCommand(parent: Command, dependencies: App
     .action(async function proposalCreateAction(this: Command, options: ProposalCreateOptions) {
       const context = createCommandContext(this, dependencies);
       const title = resolveCreateTitle(options);
+      // Parsed before the call, so a usage error never reaches the backend.
+      const metadata = resolveMetadataOptions({ entries: options.metadata, jsonSources: options.metadataJson });
 
       const session = await context.api.createProposalSession({
         title,
@@ -67,6 +72,7 @@ export function registerProposalCreateCommand(parent: Command, dependencies: App
         enableIndependentWorkspace: options.enableIndependentWorkspace ? true : undefined,
         baseBranch: normalizeOptionalString(options.baseBranch),
         isDefaultTitle: options.defaultTitle ? true : false,
+        ...(metadata ? { metadata } : {}),
       });
 
       const view = toProposalSessionView(session);

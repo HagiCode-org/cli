@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { formatSessionMessagesHuman, formatSessionWaitLine } from '../../src/formatters/session';
-import { createMessage, createMessageList } from '../commands/testHelpers';
+import { formatSessionMessagesHuman, formatSessionSummaryHuman, formatSessionWaitLine, toSessionView } from '../../src/formatters/session';
+import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
+import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
+import { createMessage, createMessageList, createSession } from '../commands/testHelpers';
 
 describe('formatSessionMessagesHuman', () => {
   it('prints the text blocks of a text-only list', () => {
@@ -56,5 +58,50 @@ describe('formatSessionWaitLine', () => {
     expect(formatSessionWaitLine({ ...base, settled: false, timedOut: true, elapsedSeconds: 900 }, 'Executing')).toBe(
       'wait: timed out after 900s; status is still Executing\n',
     );
+  });
+});
+
+describe('userMetadata in session views', () => {
+  const session = createSession('session-1', PCode_Models_SessionType.CHAT);
+
+  it('leaves userMetadata out of the view when the session has no entries', () => {
+    const view = toSessionView(session);
+    expect(view).not.toHaveProperty('userMetadata');
+    expect(toSessionView({ ...session, userMetadata: {} })).toEqual(view);
+    expect(toSessionView({ ...session, userMetadata: null })).toEqual(view);
+  });
+
+  it('keeps the view identical to the snapshot for a session without metadata', () => {
+    expect(JSON.stringify(toSessionView(session), null, 2)).toBe(JSON.stringify({
+      sessionId: 'session-1',
+      title: 'CLI chat session',
+      type: PCode_Models_SessionType.CHAT,
+      status: PCode_Models_SessionStatus.DRAFTING,
+      projectId: 'project-1',
+      archived: false,
+      lastActiveAt: '2026-03-30T00:00:00Z',
+      enableIndependentWorkspace: false,
+      baseBranch: 'main',
+    }, null, 2));
+  });
+
+  it('sets userMetadata when the session has entries', () => {
+    expect(toSessionView({ ...session, userMetadata: { role: 'worker' } }).userMetadata).toEqual({ role: 'worker' });
+  });
+
+  it('shows userMetadata in the JSON view', () => {
+    const json = JSON.parse(JSON.stringify(toSessionView({ ...session, userMetadata: { role: 'worker', batch: '2' } })));
+    expect(json.userMetadata).toEqual({ role: 'worker', batch: '2' });
+  });
+
+  it('adds one userMetadata line to the human summary, keys sorted, only when present', () => {
+    const withMetadata = formatSessionSummaryHuman(toSessionView({ ...session, userMetadata: { role: 'master', batch: '3' } }));
+    const lines = withMetadata.split('\n').filter(line => line.startsWith('userMetadata'));
+    expect(lines.map(line => line.replace(/\s+/g, ' '))).toEqual(['userMetadata batch=3, role=master']);
+    expect(withMetadata.indexOf('userMetadata')).toBeGreaterThan(withMetadata.indexOf('metadata'));
+
+    const without = formatSessionSummaryHuman(toSessionView(session));
+    expect(without).not.toContain('userMetadata');
+    expect(formatSessionSummaryHuman(toSessionView({ ...session, userMetadata: {} }))).toBe(without);
   });
 });
