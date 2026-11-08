@@ -35,30 +35,37 @@ const METADATA_JSON_HELP = [
   'Keys and values follow the same rules as --metadata.',
 ].join(' ');
 
-const METADATA_LIMITS_HELP = [
-  'Metadata limits (the backend checks them and reports a violation as an error):',
-  '  - at most 16 entries in total;',
-  '  - key: 1 to 64 characters matching ^[a-z][a-z0-9._-]{0,63}$ (lowercase letters, digits, "." "_" "-", starting with a letter);',
-  '  - value: 1 to 512 characters, with no control characters;',
-  '  - each key may appear once across --metadata and --metadata-json.',
-  'The metadata is returned as userMetadata in --json output and is shown in the human output when present.',
-  '',
-  'Example (a master session and a worker session that both carry a batch marker):',
-  '  hagi chat create --title "Master" --project-id <id> --metadata role=master --metadata batch=2026-11-07',
-  '  hagi chat create --title "Worker 1" --project-id <id> --metadata role=worker --metadata master=<master-session-id>',
-].join('\n');
-
-/** Commander collector for a repeatable option. */
-export function collectMetadataOption(value: string, previous: string[] = []): string[] {
-  return [...previous, value];
+/** The limits and an orchestration example, for the help of a command that takes the metadata options. */
+function metadataLimitsHelp(commandName: string, requiredArgs: string): string {
+  return [
+    'Metadata limits (the backend checks them and reports a violation as an error):',
+    '  - at most 16 entries in total;',
+    '  - key: 1 to 64 characters matching ^[a-z][a-z0-9._-]{0,63}$ (lowercase letters, digits, "." "_" "-", starting with a letter);',
+    '  - value: 1 to 512 characters, with no control characters;',
+    '  - each key may appear once across --metadata and --metadata-json.',
+    '',
+    'The metadata is returned as userMetadata in --json output and is shown in the human output when present.',
+    '',
+    'Example (a master session and a worker session that carry role markers, the worker naming its master):',
+    `  hagi ${commandName} ${requiredArgs} --metadata role=master --metadata batch=2026-11-07`,
+    `  hagi ${commandName} ${requiredArgs} --metadata role=worker --metadata master=<master-session-id>`,
+  ].join('\n');
 }
 
-/** Registers `--metadata` and `--metadata-json`, and the limits in the command's help. */
-export function addMetadataOptions(command: Command): Command {
+/** Commander collector for a repeatable option. */
+export function collectMetadataOption(value: string, previous?: string[]): string[] {
+  return [...(previous ?? []), value];
+}
+
+/**
+ * Registers `--metadata` and `--metadata-json`, and the limits in the command's help. `commandName` and `requiredArgs` shape
+ * the example in that help.
+ */
+export function addMetadataOptions(command: Command, commandName: string, requiredArgs: string): Command {
   return command
-    .option('--metadata <key=value>', METADATA_HELP, collectMetadataOption, [])
-    .option('--metadata-json <file|->', METADATA_JSON_HELP, collectMetadataOption, [])
-    .addHelpText('after', `\n${METADATA_LIMITS_HELP}\n`);
+    .option('--metadata <key=value>', METADATA_HELP, collectMetadataOption)
+    .option('--metadata-json <file|->', METADATA_JSON_HELP, collectMetadataOption)
+    .addHelpText('after', `\n${metadataLimitsHelp(commandName, requiredArgs)}\n`);
 }
 
 /** Splits one `key=value` at its first `=`. A missing `=` or an empty key is a usage error. */

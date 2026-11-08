@@ -42,8 +42,8 @@ async function stubBackend(session: Record<string, unknown>, openSessionFailure?
     requestPathPrefix: '/grpc',
     routes: router => {
       router.service(SessionsService, {
-        openSession: (request: { metadata: Record<string, string> }, context: HandlerContext) => {
-          openSessionRequests.push({ metadata: { ...request.metadata } });
+        openSession: (request: { body: { metadata: Record<string, string> } }, context: HandlerContext) => {
+          openSessionRequests.push({ metadata: { ...request.body.metadata } });
           if (openSessionFailure) {
             throw openSessionFailure;
           }

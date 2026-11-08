@@ -43,20 +43,20 @@ function resolveCreateTitle(options: ProposalCreateOptions): string {
 }
 
 export function registerProposalCreateCommand(parent: Command, dependencies: AppDependencies): void {
-  const command = addMetadataOptions(addJsonOption(
+  const command = addJsonOption(
     parent
       .command('create')
       .description('Create a proposal session only. This command does not trigger later lifecycle APIs.'),
-  ));
+  );
 
-  command
+  addMetadataOptions(command
     .requiredOption('--project-id <id>', 'Project id that owns the new proposal session.')
     .requiredOption('--chief-complaint <text>', 'Proposal chief complaint to store on the new session.')
     .option('--original-chief-complaint <text>', 'Optional raw chief complaint text to keep alongside the stitched content.')
     .option('--title <title>', 'Explicit proposal session title.')
     .option('--default-title', `Mark the title as the placeholder title (${DEFAULT_PROPOSAL_TITLE}).`)
     .option('--enable-independent-workspace', 'Request an independent workspace for the proposal session.')
-    .option('--base-branch <branch>', 'Optional base branch for the independent workspace.')
+    .option('--base-branch <branch>', 'Optional base branch for the independent workspace.'), 'proposal create', '--project-id <id> --chief-complaint "<text>" --default-title')
     .action(async function proposalCreateAction(this: Command, options: ProposalCreateOptions) {
       const context = createCommandContext(this, dependencies);
       const title = resolveCreateTitle(options);

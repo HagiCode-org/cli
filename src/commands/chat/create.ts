@@ -36,7 +36,7 @@ export function registerChatCreateCommand(parent: Command, dependencies: AppDepe
     .addOption(
       new Option('--executor-type <type>', 'Optional executor override.')
         .choices(Object.values(PCode_Models_AIProviderType)),
-    ))
+    ), 'chat create', '--title "<title>" --project-id <id>')
     .action(async function chatCreateAction(this: Command, options: ChatCreateOptions) {
       const context = createCommandContext(this, dependencies);
       const title = requireOptionValue(options.title, '--title');
