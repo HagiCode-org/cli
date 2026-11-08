@@ -1,6 +1,12 @@
 import { lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { CliHttpError, CliOperationFailedError } from '../errors';
+import {
+  parseAcceptanceCommands,
+  parseAmendmentMergedIn,
+  parseLock,
+  parseProgressPlan,
+} from './contract';
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
 const RESERVED_IDS = new Set(['prompts', 'tools', 'archive', 'runtime', 'amendments', 'revisions']);
@@ -10,8 +16,6 @@ const ARTIFACTS = [
   ['acceptance', 'acceptance.md'],
   ['plan', 'progress.md'],
 ] as const;
-const ITEM_PATTERN = /^- \[( |x)\] (\S+) (.*?)\s*\|\s*(.*)$/;
-const SUPERSEDED_PATTERN = /^- ~ (\S+) (.*?)\s*\|\s*(.*)$/;
 
 export type SagaPlanRows = {
   active: Array<{ id: string; title: string; done: boolean; note: string }>;
@@ -37,7 +41,7 @@ export type SagaStatus = {
   schema: 'saga-status/2';
   sagaId: string;
   revision: number;
-  state: 'draft' | 'planned' | 'running' | 'done';
+  state: 'draft' | 'planned' | 'running' | 'paused' | 'done';
   updatedAt: string;
   note: string;
   artifacts: SagaArtifacts;
@@ -77,49 +81,16 @@ function readRegularFile(filePath: string): string | undefined {
   }
 }
 
-function readLines(filePath: string): string[] {
-  const text = readRegularFile(filePath) ?? '';
-  if (!text) {
-    return [];
-  }
-  const lines = text.split(/\r?\n/);
-  if (lines.at(-1) === '') {
-    lines.pop();
-  }
-  return lines;
-}
-
 export function readSagaPlanRows(sagaDirectory: string): SagaPlanRows {
-  const active: SagaPlanRows['active'] = [];
-  const superseded: SagaPlanRows['superseded'] = [];
-  for (const line of readLines(path.join(sagaDirectory, 'progress.md'))) {
-    const item = ITEM_PATTERN.exec(line);
-    if (item) {
-      active.push({ id: item[2], title: item[3], done: item[1] === 'x', note: item[4].trim() });
-      continue;
-    }
-    const oldItem = SUPERSEDED_PATTERN.exec(line);
-    if (oldItem) {
-      superseded.push({ id: oldItem[1], title: oldItem[2] });
-    }
-  }
-  return { active, superseded };
+  const plan = parseProgressPlan(readRegularFile(path.join(sagaDirectory, 'progress.md')) ?? '');
+  return {
+    active: plan.active.map(({ id, title, done, note }) => ({ id, title, done, note })),
+    superseded: plan.superseded,
+  };
 }
 
 export function readSagaAcceptanceCommands(sagaDirectory: string): Record<string, string> {
-  const commands: Record<string, string> = {};
-  let currentItem: string | undefined;
-  for (const line of readLines(path.join(sagaDirectory, 'acceptance.md'))) {
-    const heading = /^## (\S+)/.exec(line);
-    if (heading) {
-      currentItem = heading[1];
-    }
-    const command = /^cmd:\s*(.+)$/.exec(line);
-    if (command && currentItem) {
-      commands[currentItem] = command[1].trim();
-    }
-  }
-  return commands;
+  return parseAcceptanceCommands(readRegularFile(path.join(sagaDirectory, 'acceptance.md')) ?? '');
 }
 
 export function readSagaBlockedEntries(sagaDirectory: string): Record<string, unknown> {
@@ -146,19 +117,7 @@ export function readSagaRevision(sagaDirectory: string): number {
   if (contents === undefined) {
     return 0;
   }
-
-  const revision = /^revision:\s*(\d+)/m.exec(contents);
-  const hashes = /^hashes:\r?\n/m.exec(contents);
-  const acceptance = /^acceptance-by-item:\r?\n/m.exec(contents);
-  const items = /^items:[ \t]*(.*)$/m.exec(contents);
-  if (!revision || !hashes || !acceptance || !items) {
-    throw new CliOperationFailedError(`Invalid Saga data in "${filePath}": malformed contract lock.`);
-  }
-  const parsedRevision = Number(revision[1]);
-  if (!Number.isSafeInteger(parsedRevision)) {
-    throw new CliOperationFailedError(`Invalid Saga data in "${filePath}": invalid revision.`);
-  }
-  return parsedRevision;
+  return parseLock(contents, filePath).revision;
 }
 
 export function readSagaAmendments(sagaDirectory: string): Array<{ name: string; mergedIn: string }> {
@@ -182,8 +141,7 @@ export function readSagaAmendments(sagaDirectory: string): Array<{ name: string;
     if (contents === undefined) {
       throw new CliOperationFailedError(`Cannot read Saga amendment "${filePath}": not a regular file.`);
     }
-    const merged = /^merged-in:[ \t]*(\S*)[ \t]*$/m.exec(contents);
-    return { name, mergedIn: merged ? merged[1] : '' };
+    return { name, mergedIn: parseAmendmentMergedIn(contents) };
   });
 }
 

@@ -1,8 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import { lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { CliOperationFailedError, CliUsageError } from '../errors';
+import { utcTimestamp } from './contract';
 import type { SagaSelector } from './project';
+import { assertContained, writeFileExclusive } from './safeWrite';
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
 const RESERVED_IDS = new Set(['prompts', 'tools', 'archive', 'runtime', 'amendments', 'revisions']);
@@ -107,53 +108,28 @@ export type SagaMetadata = {
   method: 1;
 };
 
-function isSagaMetadata(value: unknown): value is SagaMetadata {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return false;
-  }
-  const record = value as Record<string, unknown>;
-  return typeof record.id === 'string' && typeof record.createdAt === 'string' && record.method === 1;
-}
-
-export function createSagaWithCanonicalTool(
-  sagaId: string,
-  projectDirectory: string,
-  sagaRoot: string,
-  toolPath: string,
-  env: NodeJS.ProcessEnv,
-): SagaMetadata {
-  const result = spawnSync(
-    process.execPath,
-    [toolPath, '--root', sagaRoot, 'new', sagaId],
-    {
-      cwd: projectDirectory,
-      env: { ...process.env, ...env, SAGA_ROOT: sagaRoot },
-      encoding: 'utf8',
-      shell: false,
-    },
-  );
-  if (result.error) {
-    throw new CliOperationFailedError(`Could not run the installed Saga tool: ${result.error.message}`);
-  }
-  if (result.status !== 0) {
-    const output = [result.stderr, result.stdout].filter(Boolean).join('\n').trim();
-    const reason = output || `the process exited with code ${result.status ?? `signal ${result.signal}`}`;
-    throw new CliOperationFailedError(`The Saga tool could not create "${sagaId}": ${reason}`);
-  }
-
-  const metadataPath = path.join(sagaRoot, sagaId, 'saga.json');
-  let metadata: unknown;
+/**
+ * Creates `<sagaRoot>/<sagaId>/saga.json` natively. The directory is reserved with an exclusive `mkdir`, so concurrent
+ * creations of one ID leave exactly one Saga. No runtime file is written.
+ */
+export function createSagaNatively(sagaId: string, sagaRoot: string): SagaMetadata {
+  const directory = assertContained(sagaRoot, path.join(sagaRoot, sagaId));
   try {
-    metadata = JSON.parse(readFileSync(metadataPath, 'utf8'));
+    mkdirSync(directory);
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new CliOperationFailedError(`The Saga tool created invalid metadata at ${metadataPath}: ${error.message}`);
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+      throw new CliOperationFailedError(`Saga "${sagaId}" already exists at ${directory}.`);
     }
     throw error;
   }
 
-  if (!isSagaMetadata(metadata) || metadata.id !== sagaId) {
-    throw new CliOperationFailedError(`The Saga tool created invalid metadata at ${metadataPath}.`);
+  const metadata: SagaMetadata = { id: sagaId, createdAt: utcTimestamp(), method: 1 };
+  try {
+    writeFileExclusive(sagaRoot, path.join(directory, 'saga.json'), `${JSON.stringify(metadata, null, 2)}\n`);
+  } catch (error) {
+    // Release the reservation so a failed creation never leaves an unreadable Saga behind.
+    rmSync(directory, { recursive: true, force: true });
+    throw error;
   }
-  return { id: metadata.id, createdAt: metadata.createdAt, method: metadata.method };
+  return metadata;
 }

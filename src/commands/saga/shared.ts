@@ -39,6 +39,24 @@ export function parseSagaSelector(options: SagaSelectorOptions): SagaSelector {
   return { kind: 'project-id', value: projectId };
 }
 
+/**
+ * Execution token of a mutating Saga command: `--token`, else `SAGA_EXECUTION_TOKEN`. With `--project-id` the root
+ * `--token` is the backend bearer token, so it is rejected there and only the environment variable is used.
+ */
+export function resolveExecutionToken(command: Command, env: NodeJS.ProcessEnv): string | undefined {
+  const flagToken = command.opts<{ token?: string }>().token ?? command.optsWithGlobals<{ token?: string }>().token;
+  const projectId = command.optsWithGlobals<SagaSelectorOptions>().projectId;
+  if (projectId !== undefined && flagToken !== undefined) {
+    throw new CliUsageError(
+      '--token is the backend bearer token with --project-id; set SAGA_EXECUTION_TOKEN to pass the execution token.',
+    );
+  }
+  if (flagToken !== undefined && flagToken !== '') {
+    return flagToken;
+  }
+  return env.SAGA_EXECUTION_TOKEN || undefined;
+}
+
 export async function resolveSagaCommandContext(
   command: Command,
   dependencies: AppDependencies,

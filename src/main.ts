@@ -14,7 +14,7 @@ import {
   type AppDependencies,
 } from './runtime/commandContext';
 import { getActiveBaseUrl } from './runtime/apiRuntime';
-import { CliLockLostError, EXIT_CODES, normalizeCliError, renderCliError } from './runtime/errors';
+import { CliLockLostError, CliSagaRefusalError, EXIT_CODES, normalizeCliError, renderCliError } from './runtime/errors';
 
 function inferJsonMode(argv: readonly string[]): boolean {
   return argv.includes('--json');
@@ -100,7 +100,8 @@ export async function runCli(
 
     const cliError = normalizeCliError(error, { baseUrl: getActiveBaseUrl() });
     // A lock command that already printed its own reason line (the heartbeat watcher) is not reported a second time.
-    if (!(error instanceof CliLockLostError && error.reported)) {
+    const alreadyReported = (error instanceof CliLockLostError || error instanceof CliSagaRefusalError) && error.reported;
+    if (!alreadyReported) {
       dependencies.io.stderr(renderCliError(cliError, { json: jsonMode }));
     }
     return cliError.exitCode;

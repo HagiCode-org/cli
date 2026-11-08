@@ -2,6 +2,8 @@ import { Code, ConnectError } from '@connectrpc/connect';
 import { ErrorDetailSchema } from '../generated/grpc/hagicode/common/v1/error_detail_pb';
 
 export const EXIT_CODES = {
+  /** A Saga write or check was refused, or a check failed; the reasons are printed and nothing was changed. */
+  REFUSED: 1,
   USAGE: 2,
   SAGA_RESOURCE_CONFLICT: 4,
   HTTP_BAD_REQUEST: 20,
@@ -51,6 +53,22 @@ export class SagaResourceConflictError extends Error {
   constructor(conflicts: string[]) {
     super(`Saga resources conflict with existing files: ${conflicts.join(', ')}. Re-run with --force to replace them.`);
     this.name = 'SagaResourceConflictError';
+  }
+}
+
+/**
+ * A Saga write or check refused to act (ownership, token, gate or failed check). Exit code 1; `reasons` lists every
+ * failed rule. `reported` is set when the command already printed the outcome and reasons, so they are not printed twice.
+ */
+export class CliSagaRefusalError extends Error {
+  readonly reasons: string[];
+  reported: boolean;
+
+  constructor(reasons: string[], options: { reported?: boolean } = {}) {
+    super(reasons.join('; '));
+    this.name = 'CliSagaRefusalError';
+    this.reasons = reasons;
+    this.reported = options.reported ?? false;
   }
 }
 
@@ -286,6 +304,14 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
     return {
       exitCode: EXIT_CODES.SAGA_RESOURCE_CONFLICT,
       message: error.message,
+    };
+  }
+
+  if (error instanceof CliSagaRefusalError) {
+    return {
+      exitCode: EXIT_CODES.REFUSED,
+      message: [error.reasons.length > 1 ? 'Refused:' : 'Refused.', ...error.reasons.map(reason => `  - ${reason}`)].join('\n'),
+      details: { errors: error.reasons },
     };
   }
 

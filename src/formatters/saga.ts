@@ -89,3 +89,62 @@ export function formatSagaItemsHuman(payload: { sagaId: string; items: SagaItem[
     '',
   ].join('\n');
 }
+
+/** Outcome line plus one line per refusal reason; the reasons are never folded into the outcome line. */
+export function formatSagaRefusalHuman(command: string, sagaId: string, reasons: string[]): string {
+  return [
+    `refused: ${command} ${sagaId}`,
+    ...reasons.map(reason => `  - ${reason}`),
+    '',
+  ].join('\n');
+}
+
+function formatList(value: unknown): string {
+  const items = Array.isArray(value) ? value.map(String) : [];
+  return items.length > 0 ? `[${items.map(item => `'${item}'`).join(', ')}]` : 'none';
+}
+
+/** Human output of a successful write or check; `result` is the same object the `--json` mode prints. */
+export function formatSagaWriteHuman(command: string, result: Record<string, unknown>): string {
+  const sagaId = String(result.sagaId);
+  switch (command) {
+    case 'claim':
+      return [
+        `claimed: ${sagaId}`,
+        `owner session  ${String(result.ownerSession)}`,
+        `token          ${String(result.token)}`,
+        `created at     ${String(result.createdAt)}`,
+        '',
+      ].join('\n');
+    case 'assert-owner':
+      return result.locked
+        ? `owner ok: ${sagaId} is owned by session ${String(result.ownerSession)}\n`
+        : `no owner: ${sagaId} has no execution lock\n`;
+    case 'release':
+      return `released: ${sagaId} (owner session ${String(result.ownerSession)})\n`;
+    case 'check':
+      return `check passed: ${sagaId} (${String(result.phase)})\n`;
+    case 'set-status':
+      return `status set: ${sagaId} ${String(result.state)} (revision ${String(result.revision)})\n`;
+    case 'tick':
+      return `ticked: ${sagaId} ${String(result.itemId)} (${String(result.evidence)})\n`;
+    case 'block':
+      return `blocked: ${sagaId} ${String(result.itemId)}: ${String(result.reason)}\n`;
+    case 'amend':
+      return `amendment: ${sagaId} ${String(result.name)} (open)\n`;
+    case 'archive':
+      return `archived: ${sagaId} -> ${String(result.destination)}\n`;
+    case 'freeze':
+      if (result.unchanged) {
+        return `freeze unchanged: ${sagaId} stays at revision ${String(result.revision)}\n`;
+      }
+      return [
+        `frozen: ${sagaId} revision ${String(result.revision)}`
+          + (result.previousRevision === null ? '' : ` (revised from ${String(result.previousRevision)})`),
+        `reopened: ${formatList(result.reopened)}  added: ${formatList(result.added)}`,
+        '',
+      ].join('\n');
+    default:
+      return `${command}: ${sagaId}\n`;
+  }
+}

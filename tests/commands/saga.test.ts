@@ -470,16 +470,18 @@ describe('Saga command registration', () => {
         path.join(failingProject, '.hagicode/sagas/tools/saga.mjs'),
         "console.error('child failure detail'); process.exitCode = 7;\n",
       );
-      const refused = createDependencies();
+      // Creation is native: a broken installed tool neither blocks nor changes `saga new`.
+      const native = createDependencies();
       expect(
         await runCli(
           ['node', 'hagi', 'saga', 'new', 'demo', '--path', failingProject, '--json'],
-          refused.dependencies,
+          native.dependencies,
         ),
-      ).toBe(EXIT_CODES.OPERATION_FAILED);
-      expect(refused.stdout).toEqual([]);
-      expect(refused.stderr.join('')).toContain('child failure detail');
-      expect(existsSync(path.join(failingProject, '.hagicode/sagas/demo'))).toBe(false);
+      ).toBe(0);
+      expect(JSON.parse(native.stdout.join('')).metadata).toMatchObject({ id: 'demo', method: 1 });
+      expect(native.stderr).toEqual([]);
+      expect(existsSync(path.join(failingProject, '.hagicode/sagas/demo/saga.json'))).toBe(true);
+      expect(existsSync(path.join(failingProject, '.hagicode/sagas/demo/runtime'))).toBe(false);
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }

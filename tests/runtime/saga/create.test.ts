@@ -7,18 +7,21 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { spawnSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CliOperationFailedError, CliUsageError } from '../../../src/runtime/errors';
 import {
-  createSagaWithCanonicalTool,
+  createSagaNatively,
   requireSagaResources,
   validateSagaId,
 } from '../../../src/runtime/saga/create';
 import { loadSagaAssets } from '../../../src/runtime/saga/assets';
 import { installSagaResources } from '../../../src/runtime/saga/install';
+
+const run = promisify(execFile);
 
 const promptPaths = ['goal', 'research', 'acceptance', 'plan', 'amend', 'run']
   .map(name => `prompts/${name}.md`);
@@ -150,51 +153,40 @@ describe('Saga ID validation', () => {
     expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
   });
 
-  it('creates canonical metadata and runs instructions with an isolated Saga root', () => {
+  it('creates canonical metadata natively with no runtime file and without running the installed tool', () => {
     const report = installSagaResources(projectPath, loadSagaAssets());
-    const toolPath = requireSagaResources(report.root, { kind: 'path', value: projectPath });
-    const unrelatedRoot = path.join(temporaryRoot, 'unrelated Saga root');
-    const metadata = createSagaWithCanonicalTool(
-      'demo',
-      projectPath,
-      report.root,
-      toolPath,
-      { ...process.env, SAGA_ROOT: unrelatedRoot },
-    );
+    const toolPath = path.join(report.root, 'tools', 'saga.mjs');
+    writeFileSync(toolPath, "throw new Error('the installed tool must not run');\n");
+
+    const metadata = createSagaNatively('demo', report.root);
 
     expect(metadata.id).toBe('demo');
     expect(metadata.createdAt).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
     expect(metadata.method).toBe(1);
     expect(JSON.parse(readFileSync(path.join(report.root, 'demo', 'saga.json'), 'utf8'))).toEqual(metadata);
-    expect(existsSync(path.join(unrelatedRoot, 'demo'))).toBe(false);
-
-    const instructions = spawnSync(
-      process.execPath,
-      [toolPath, '--root', report.root, 'instructions', 'demo', 'goal'],
-      {
-        cwd: projectPath,
-        env: { ...process.env, SAGA_ROOT: unrelatedRoot },
-        encoding: 'utf8',
-        shell: false,
-      },
-    );
-    expect(instructions.status).toBe(0);
-    expect(instructions.stdout).toBe(`${readFileSync(path.join(report.root, 'prompts', 'goal.md'), 'utf8')}\n`);
-    expect(existsSync(unrelatedRoot)).toBe(false);
+    expect(existsSync(path.join(report.root, 'demo', 'runtime'))).toBe(false);
   });
 
-  it('surfaces actionable failures from the installed tool', () => {
-    installFixtureLayout(sagaRoot);
-    const toolPath = path.join(sagaRoot, 'tools', 'saga.mjs');
-    writeFileSync(toolPath, "console.error('child failure detail'); process.exitCode = 7;\n");
+  it('lets exactly one of many concurrent processes create the same Saga ID', async () => {
+    installSagaResources(projectPath, loadSagaAssets());
+    const workerPath = path.join(__dirname, 'fixtures', 'create-worker.ts');
+    const results = await Promise.all(Array.from({ length: 5 }, () =>
+      run(process.execPath, ['--import', 'tsx', workerPath, sagaRoot, 'race'], {
+        cwd: path.resolve(__dirname, '..', '..', '..'),
+      }).then(() => 0, (error: { code: number }) => error.code),
+    ));
 
-    expect(() => createSagaWithCanonicalTool(
-      'demo',
-      projectPath,
-      sagaRoot,
-      toolPath,
-      process.env,
-    )).toThrow('child failure detail');
-    expect(existsSync(path.join(sagaRoot, 'demo'))).toBe(false);
+    expect(results.filter(code => code === 0)).toHaveLength(1);
+    expect(results.filter(code => code === 1)).toHaveLength(4);
+    expect(JSON.parse(readFileSync(path.join(sagaRoot, 'race', 'saga.json'), 'utf8')).id).toBe('race');
+  }, 120_000);
+
+  it('refuses a collision and leaves the existing Saga unchanged', () => {
+    installSagaResources(projectPath, loadSagaAssets());
+    createSagaNatively('demo', sagaRoot);
+    const before = readFileSync(path.join(sagaRoot, 'demo', 'saga.json'), 'utf8');
+
+    expect(() => createSagaNatively('demo', sagaRoot)).toThrow('already exists');
+    expect(readFileSync(path.join(sagaRoot, 'demo', 'saga.json'), 'utf8')).toBe(before);
   });
 });

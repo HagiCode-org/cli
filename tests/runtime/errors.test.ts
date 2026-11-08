@@ -5,6 +5,7 @@ import { createApiError } from '../commands/testHelpers';
 import {
   CliLockLostError,
   CliOperationFailedError,
+  CliSagaRefusalError,
   CliUsageError,
   CliWaitTimeoutError,
   SagaResourceConflictError,
@@ -16,6 +17,20 @@ import {
 } from '../../src/runtime/errors';
 
 describe('errors', () => {
+  it('maps a Saga refusal to exit code 1 and prints every reason in human and JSON modes', () => {
+    expect(EXIT_CODES.REFUSED).toBe(1);
+    const payload = normalizeCliError(new CliSagaRefusalError(['open question A', 'open question B']));
+    expect(payload).toMatchObject({ exitCode: 1, details: { errors: ['open question A', 'open question B'] } });
+    expect(renderCliError(payload)).toContain('  - open question A\n  - open question B');
+    expect(JSON.parse(renderCliError(payload, { json: true })).error).toMatchObject({ exitCode: 1 });
+  });
+
+  it('keeps the existing exit codes for usage, operation and conflict failures', () => {
+    expect(normalizeCliError(new CliUsageError('bad'))).toMatchObject({ exitCode: 2 });
+    expect(normalizeCliError(new CliOperationFailedError('failed'))).toMatchObject({ exitCode: 30 });
+    expect(normalizeCliError(new SagaResourceConflictError(['x']))).toMatchObject({ exitCode: 4 });
+  });
+
   it('maps a wait timeout to exit code 31', () => {
     expect(EXIT_CODES.WAIT_TIMEOUT).toBe(31);
     expect(normalizeCliError(new CliWaitTimeoutError('Wait timed out; last status Executing.'))).toMatchObject({
