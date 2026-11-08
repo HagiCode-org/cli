@@ -65,7 +65,11 @@ import {
   UpsertTrustedSkillProviderRequestDtoSchema,
   UpsertTrustedSkillProviderResponseSchema,
 } from '../generated/grpc/hagicode/community/v1/skill_gallery_pb';
-import { GetAggregatedDataResponseSchema, StatisticsService } from '../generated/grpc/hagicode/platform/v1/statistics_pb';
+import {
+  GetAggregatedDataResponseSchema,
+  GetTokenMonitorUsageResponseSchema,
+  StatisticsService,
+} from '../generated/grpc/hagicode/platform/v1/statistics_pb';
 import {
   AnnotationSubmissionDtoSchema,
   GetSessionMessagesResponseSchema,
@@ -330,6 +334,39 @@ export function mapLockList(message: ListLocksResponse): LockSummaryDto[] {
   return message.locks.map(mapLockSummary);
 }
 
+/** One limit window of a provider as the backend reports it. Percentages are 0-100; times are RFC 3339 UTC strings. */
+export type TokenMonitorLimitWindow = {
+  kind: string;
+  label?: string;
+  usedPercent?: number;
+  remainingPercent?: number;
+  resetsAtUtc?: string;
+  windowMinutes?: number;
+  resetDescription?: string;
+};
+
+export type TokenMonitorLimitProvider = {
+  provider: string;
+  status: string;
+  planLabel?: string;
+  windows?: TokenMonitorLimitWindow[];
+};
+
+/** Token Monitor snapshot. `totalTokens` is a 64-bit field, so protobuf JSON carries it as a string. */
+export type TokenMonitorUsageSnapshot = {
+  status: string;
+  source: string;
+  failureReason?: string;
+  dateKey?: string;
+  totalTokens?: string | number;
+  costUsd?: number;
+  readAtUtc?: string;
+  limits?: {
+    updatedAtUtc?: string;
+    providers?: TokenMonitorLimitProvider[];
+  };
+};
+
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
@@ -371,6 +408,8 @@ export interface HagiApi {
     requestBody: PCode_Application_Contracts_Dto_AnnotationSubmissionDto,
   ): Promise<PCode_Application_Contracts_Dto_AnnotationSubmissionResponseDto>;
   listProjects(): Promise<PCode_Application_Contracts_Dto_DataAggregationResponseDto>;
+  /** Reads the Token Monitor snapshot: today's token use and each provider's limit windows with their reset times. Read-only. */
+  getTokenMonitorUsage(): Promise<TokenMonitorUsageSnapshot>;
   createProject(requestBody: PCode_Application_Contracts_Dto_CreateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   updateProject(id: string, requestBody: PCode_Application_Contracts_Dto_UpdateProjectDto): Promise<PCode_Application_Contracts_Dto_ProjectDto>;
   deleteProject(id: string): Promise<unknown>;
@@ -550,6 +589,8 @@ export function createGrpcHagiApi(): HagiApi {
       ),
     listProjects: async () =>
       result(GetAggregatedDataResponseSchema, statistics().getAggregatedData({ forceRefresh: false })),
+    getTokenMonitorUsage: async () =>
+      result(GetTokenMonitorUsageResponseSchema, statistics().getTokenMonitorUsage({})),
     createProject: async requestBody =>
       result(CreateProjectResponseSchema, projects().createProject({ body: dtoToProto(CreateProjectDtoSchema, requestBody) })),
     updateProject: async (id, requestBody) =>

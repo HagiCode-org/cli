@@ -6,7 +6,7 @@ import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/e
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import type { AppDependencies, CliIo } from '../../src/runtime/commandContext';
-import type { HagiApi, LockStatusDto } from '../../src/runtime/hagiApi';
+import type { HagiApi, LockStatusDto, TokenMonitorUsageSnapshot } from '../../src/runtime/hagiApi';
 
 /** Base URL injected through HAGI_API_BASE_URL so command tests never depend on a real config file. */
 export const TEST_BASE_URL = 'https://backend.test';
@@ -65,6 +65,38 @@ export function createSession(sessionId: string, type: PCode_Models_SessionType 
     chatHero: undefined,
     stageExecutorMap: null,
     stageHeroSelectionMap: null,
+  };
+}
+
+/** A Token Monitor snapshot shaped like the protobuf JSON the backend returns: camelCase keys, RFC 3339 times. */
+export function createTokenMonitorSnapshot(overrides: Partial<TokenMonitorUsageSnapshot> = {}): TokenMonitorUsageSnapshot {
+  return {
+    status: 'ok',
+    source: 'hostHub',
+    dateKey: '2026-11-08',
+    totalTokens: '12345',
+    costUsd: 1.5,
+    readAtUtc: '2026-11-08T22:00:00Z',
+    limits: {
+      updatedAtUtc: '2026-11-08T22:00:00Z',
+      providers: [
+        {
+          provider: 'claude',
+          status: 'ok',
+          planLabel: 'Max',
+          windows: [
+            { kind: 'session', label: '5h', remainingPercent: 43, resetsAtUtc: '2026-11-08T23:10:00Z', windowMinutes: 300 },
+            { kind: 'weekly', label: '7d', remainingPercent: 81, resetsAtUtc: '2026-11-14T00:00:00Z', windowMinutes: 10080 },
+          ],
+        },
+        {
+          provider: 'codex',
+          status: 'ok',
+          windows: [{ kind: 'session', usedPercent: 30, resetsAtUtc: '2026-11-08T22:40:00Z', windowMinutes: 300 }],
+        },
+      ],
+    },
+    ...overrides,
   };
 }
 
@@ -642,6 +674,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     completeProposal: vi.fn().mockResolvedValue({ ...createSession('session-1'), status: PCode_Models_SessionStatus.COMPLETED }),
     submitAnnotations: vi.fn().mockResolvedValue({ message: 'Annotations submitted', annotationCount: 1, fileCount: 1 }),
     listProjects: vi.fn().mockResolvedValue({ projects: [createProject('project-1')] }),
+    getTokenMonitorUsage: vi.fn().mockResolvedValue(createTokenMonitorSnapshot()),
     createProject: vi.fn().mockResolvedValue(createProject('project-2')),
     updateProject: vi.fn().mockResolvedValue({ ...createProject('project-1'), description: 'updated' }),
     deleteProject: vi.fn().mockResolvedValue(undefined),

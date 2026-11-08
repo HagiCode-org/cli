@@ -16,6 +16,8 @@ export const EXIT_CODES = {
   WAIT_TIMEOUT: 31,
   /** A resource lock command learned that the owner no longer holds the lock (expired, taken back, stale epoch, requisitioned). */
   LOCK_LOST: 32,
+  /** `usage limits` could not read a usable quota figure (plain read, or after a wait's retries). Nothing is known, so nothing is claimed. */
+  QUOTA_UNKNOWN: 34,
   HTTP_CLIENT_ERROR: 40,
   HTTP_SERVER_ERROR: 50,
   TRANSPORT: 60,
@@ -72,6 +74,14 @@ export class CliSagaRefusalError extends Error {
     this.reasons = reasons;
     this.details = options.details ?? {};
     this.reported = options.reported ?? false;
+  }
+}
+
+/** `usage limits` read no usable quota figure. The payload is printed first; this sets exit code 34. Low quota is not an error. */
+export class CliQuotaUnknownError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CliQuotaUnknownError';
   }
 }
 
@@ -315,6 +325,13 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
       exitCode: EXIT_CODES.REFUSED,
       message: [error.reasons.length > 1 ? 'Refused:' : 'Refused.', ...error.reasons.map(reason => `  - ${reason}`)].join('\n'),
       details: { errors: error.reasons },
+    };
+  }
+
+  if (error instanceof CliQuotaUnknownError) {
+    return {
+      exitCode: EXIT_CODES.QUOTA_UNKNOWN,
+      message: error.message,
     };
   }
 
