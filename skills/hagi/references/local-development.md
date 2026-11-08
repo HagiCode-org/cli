@@ -65,21 +65,13 @@ types of every removed route. When a proto DTO changes, edit or add the matching
 
 ## Saga asset bundle
 
-The canonical Saga source is read-only at `../personal-agent-skills/long-running-orchestration/`. The CLI bundle lives in
-`resources/saga/` and contains the six prompt files, `tools/saga.mjs`, `.gitignore`, and `manifest.json`. Copy assets as
-raw bytes: do not render templates or normalize line endings. The manifest uses schema version `1` and sorted POSIX
-relative paths mapped to lowercase SHA-256 digests; it does not hash itself.
+The Saga resources are owned by this repository. `resources/saga/` contains the six method prompt files, `.gitignore`,
+and `manifest.json`; there is no standalone Saga tool and no sync step. Keep the bytes raw: do not render templates or
+normalize line endings. The manifest uses schema version `1` and sorted POSIX relative paths mapped to lowercase SHA-256
+digests; it does not hash itself.
 
-Run the offline synchronization commands from `repos/cli`:
-
-```bash
-pnpm run saga:assets:sync
-pnpm run saga:assets:check
-```
-
-Synchronization changes only the CLI bundle and leaves identical files untouched. The check reports missing, differing,
-unexpected, or incorrectly hashed resources without writing. To check a separate local source checkout, invoke
-`node scripts/sync-saga-assets.mjs --skill <directory> --check` from `repos/cli`.
+After editing a prompt, update its digest in `manifest.json`. `tests/runtime/saga/assets.test.ts` fails on any mismatch
+between the files and the manifest, and `pnpm run pack:check` verifies the published contents.
 
 ## Release automation
 

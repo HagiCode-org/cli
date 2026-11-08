@@ -135,16 +135,15 @@ If only a specific command changed, also verify that command's help directly.
 
 ## Package publish-surface check
 
-Run this when `package.json`, publish contents, or release metadata changed. Saga asset sync and package checks are
-offline and use the read-only canonical source checkout:
+Run this when `package.json`, publish contents, or release metadata changed. The Saga asset check and the package check
+are offline:
 
 ```bash
 cd repos/cli
-pnpm run saga:assets:check
+pnpm exec vitest run tests/runtime/saga/assets.test.ts
 pnpm run pack:check
 ```
 
-To intentionally refresh the Saga bundle first, run `pnpm run saga:assets:sync`; use `pnpm run saga:assets:check` to
-confirm byte and manifest consistency without writing. The npm tarball ships `dist`, `README.md`, `skills/**`, and only
+The npm tarball ships `dist`, `README.md`, `skills/**`, and only
 the allowlisted Saga resources, including the hidden `.gitignore` template. `pack:check` verifies the actual package
 contents and rejects source maps or unexpected resource files.

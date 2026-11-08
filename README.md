@@ -95,7 +95,7 @@ hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --j
 ```
 
 Write and check commands (`claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`,
-`archive`) run in the CLI itself and never execute the bundled `tools/saga.mjs`. Mutating commands read the execution token
+`archive`) run in the CLI itself; the CLI installs only the six method prompts and the ignore rule, and no standalone Saga tool. Mutating commands read the execution token
 from `--token` or `SAGA_EXECUTION_TOKEN`; with `--project-id`, `--token` is rejected because it is the backend token, so use
 `SAGA_EXECUTION_TOKEN` there. Exit code `0` means success, `1` a refusal or failed check, and `2` a usage error.
 

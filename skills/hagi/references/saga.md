@@ -12,7 +12,7 @@ hagi saga init --path "./My Project"
 hagi saga init --path "./My Project" --force --json
 ```
 
-Initialization installs the bundled prompts, Saga tool, and ignore template under `.hagicode/sagas`. It does not repair
+Initialization installs the six bundled method prompts and the ignore template under `.hagicode/sagas`. It does not repair
 or overwrite existing Saga contracts, metadata, or runtime records.
 
 By default, differing managed resources are preserved as conflicts while missing nonconflicting resources are still
@@ -34,7 +34,7 @@ conflicts. A conflict report is still emitted before the command reports the cod
 ## Create and inspect Sagas
 
 `new <saga-id>` creates the Saga natively: it reserves `<saga-id>/` with an exclusive directory creation and writes
-`saga.json` with `id`, `createdAt`, and `method`. It writes no runtime file and does not run the installed tool. IDs must
+`saga.json` with `id`, `createdAt`, and `method`. It writes no runtime file. IDs must
 match `^[a-z0-9][a-z0-9-]{0,62}$`: one to 63 lowercase letters, digits, or hyphens, beginning with a letter or digit. The
 reserved names are `prompts`, `tools`, `archive`, `runtime`, `amendments`, and `revisions`. Invalid IDs are usage errors
 (code `2`). An existing active path or an archive entry whose name ends in `-<saga-id>` is a collision; creation is
@@ -54,11 +54,8 @@ The `--json` result identifies the Saga directory and includes the metadata writ
 }
 ```
 
-The human result shows the next prompt command. From the project root, it has this form:
-
-```bash
-node .hagicode/sagas/tools/saga.mjs instructions demo goal
-```
+The human result names the installed goal prompt and the four planning files to write. From the project root, the prompt is
+`.hagicode/sagas/prompts/goal.md`; the planning files are `goal.md`, `research.md`, `acceptance.md`, and `progress.md`.
 
 Then inspect the Saga with the read-only commands:
 
@@ -187,6 +184,6 @@ Before any command writes a file under a Saga's `runtime/` directory (`claim`, `
 `*/runtime/` or `**/runtime/` line is kept byte for byte; otherwise `**/runtime/` is appended with the file's line endings.
 If the ignore file cannot be written, the command stops before `runtime/` is created.
 
-## Read-only projection and ownership of the tool
+## Read-only projection and ownership
 
-Every write and check command is implemented by the CLI and never executes `tools/saga.mjs`. The installed tool stays in the project and reads the same Saga files, so both can advance a Saga in turn.
+Every write and check command is implemented by the CLI and never executes a separate tool. The CLI installs only the method prompts and the ignore rule; there is no installed tool to run.

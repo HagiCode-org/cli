@@ -3,11 +3,11 @@
   "files": {
     ".gitignore": "49f38d5fe88ca07cdf13680b2d4f8a8f55d9b871e88192ad25db08e5ec1476fa",
     "prompts/acceptance.md": "11ca06794d0ec19e87d1a4e883a67014563e9750b9fa62a8bedd43a69d52ca65",
-    "prompts/amend.md": "198b9099610b574d385ad316a8fc34d6c8971696242d473b6b94295483e6e405",
+    "prompts/amend.md": "be621d1221a85656851548aee1e9e9d78480288bd856baf1bdbf50cb3317f49b",
     "prompts/goal.md": "a545b01c9f6010df661f02cf62ef9bcae527ccf329f304ea82ffdda239b118df",
     "prompts/plan.md": "bcc4c0509f2971083775db2b3678f41c55f16e69deba2d994d3ed636f314d917",
     "prompts/research.md": "2504283ea845440c7909ff1da20bfb70f846d55ca16565740168848cfb8060b1",
-    "prompts/run.md": "22dc980007d4ebf9832b13e4c8a9de526a499c9668b3c25ad1bc5c6d6eb28180",
+    "prompts/run.md": "1193fbc45645b513bbd6e1017513b62a53286d1d60fd00df479cff15de7c785b",
     "tools/saga.mjs": "7ab06c046ec2037f71182a7226f5d0799be5fab15cee1dd4d1a5830f5b2a43cb"
   }
 }
