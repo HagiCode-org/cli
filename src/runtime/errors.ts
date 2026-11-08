@@ -11,6 +11,8 @@ export const EXIT_CODES = {
   OPERATION_FAILED: 30,
   /** A `--wait` ran out of time before the session status settled. */
   WAIT_TIMEOUT: 31,
+  /** A resource lock command learned that the owner no longer holds the lock (expired, taken back, stale epoch, requisitioned). */
+  LOCK_LOST: 32,
   HTTP_CLIENT_ERROR: 40,
   HTTP_SERVER_ERROR: 50,
   TRANSPORT: 60,
@@ -52,6 +54,22 @@ export class CliWaitTimeoutError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CliWaitTimeoutError';
+  }
+}
+
+/**
+ * A lock command learned that the owner does not (or no longer) hold the lock. Exit code 32 tells a script or a watcher to
+ * stop using the resource. `reported` is set when the command already printed the reason itself, so it is not printed twice.
+ */
+export class CliLockLostError extends Error {
+  errorCode?: string;
+  reported: boolean;
+
+  constructor(message: string, options: { errorCode?: string; reported?: boolean } = {}) {
+    super(message);
+    this.name = 'CliLockLostError';
+    this.errorCode = options.errorCode;
+    this.reported = options.reported ?? false;
   }
 }
 
@@ -197,6 +215,35 @@ export function readBackendFailure(error: unknown): BackendFailure | undefined {
   };
 }
 
+/**
+ * Lock commands read a backend `FailedPrecondition` (not the holder, expired, stale epoch, requisitioned) as a lost lock.
+ * Returns the error to throw instead, or undefined when the failure is of another kind.
+ */
+export function toLockLostError(error: unknown): CliLockLostError | undefined {
+  if (!(error instanceof ConnectError) || error.code !== Code.FailedPrecondition) {
+    return undefined;
+  }
+
+  const failure = readBackendFailure(error);
+  return new CliLockLostError(failure?.message ?? error.rawMessage, { errorCode: failure?.code });
+}
+
+/**
+ * True for a failure that proves nothing about the lock: the backend could not be reached or did not answer in time.
+ * Lock waits and heartbeats retry these; only a backend answer can show a lost lock.
+ */
+export function isTransientLockFailure(error: unknown): boolean {
+  if (error instanceof ConnectError) {
+    return (
+      error.code === Code.Unavailable ||
+      error.code === Code.DeadlineExceeded ||
+      (error.code !== Code.Canceled && readBackendFailure(error) === undefined)
+    );
+  }
+
+  return error instanceof Error && inferTransportError(error.message);
+}
+
 export type CliErrorContext = {
   /** Base URL the failed invocation resolved to, named in connection failures. */
   baseUrl?: string;
@@ -231,6 +278,14 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
     return {
       exitCode: EXIT_CODES.WAIT_TIMEOUT,
       message: error.message,
+    };
+  }
+
+  if (error instanceof CliLockLostError) {
+    return {
+      exitCode: EXIT_CODES.LOCK_LOST,
+      message: error.message,
+      errorCode: error.errorCode,
     };
   }
 

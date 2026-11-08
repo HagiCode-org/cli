@@ -1,5 +1,6 @@
 import { createClient } from '@connectrpc/connect';
 import type { Message } from '@bufbuild/protobuf';
+import { timestampDate, type Timestamp } from '@bufbuild/protobuf/wkt';
 import type { GenMessage } from '@bufbuild/protobuf/codegenv2';
 import {
   CreateProjectDtoSchema,
@@ -102,6 +103,12 @@ import {
   StartHagiTaskSessionResponseSchema,
   UpdateSessionRequestSchema,
 } from '../generated/grpc/hagicode/session/v1/sessions_pb';
+import {
+  ResourceLockService,
+  type ListLocksResponse,
+  type LockStatus,
+  type LockSummary,
+} from '../generated/grpc/hagicode/coordination/v1/resource_lock_pb';
 import { dtoToProto, resultOf } from './grpc/mappers';
 import { getGrpcTransport } from './grpc/transport';
 import type { PCode_Application_Contracts_Dto_AnnotationSubmissionDto } from '../generated/api/models/PCode_Application_Contracts_Dto_AnnotationSubmissionDto';
@@ -205,6 +212,124 @@ export type SessionMetadataMap = Record<string, string>;
 export type CreateChatSessionBody = PCode_Web_Controllers_CreateChatSessionRequest & { metadata?: SessionMetadataMap };
 export type CreateProposalSessionBody = PCode_Web_Controllers_CreateSessionRequest & { metadata?: SessionMetadataMap };
 
+/** An expected-time window of a lock answer. Earliest is guidance, latest is a bound; either may be absent. */
+export type LockWindowDto = {
+  earliestAt: string | null;
+  latestAt: string | null;
+};
+
+/**
+ * One owner's state on one lock, as the CLI shows it. Times are ISO-8601 UTC text, absent values are null.
+ * `leaseExpiresAt` is the valid-until time without a heartbeat and `maxHoldExpiresAt` is the hard cap. `myTurn` is true only
+ * for `Holding`.
+ */
+export type LockStatusDto = {
+  lockId: string;
+  ownerId: string;
+  /** Holding | Queued | Expired | Requisitioned | None */
+  status: string;
+  myTurn: boolean;
+  position: number;
+  epoch: number;
+  leaseExpiresAt: string | null;
+  maxHoldExpiresAt: string | null;
+  holder: { ownerId: string; label: string | null } | null;
+  queueLength: number;
+  suggestedPollIntervalMs: number;
+  suggestedHeartbeatIntervalMs: number;
+  serverTime: string | null;
+  /** Set when status is Requisitioned. */
+  requisition: { byOwnerId: string; reason: string; at: string | null } | null;
+  /** When to check in (renew or poll): a holder's heartbeat window, a waiter's next poll window. */
+  checkInWindow: LockWindowDto | null;
+  /** For a queued owner: when its turn can come. The latest value is a bound, never a promise. */
+  turnWindow: LockWindowDto | null;
+};
+
+export type LockReleaseDto = {
+  lockId: string;
+  ownerId: string;
+  released: boolean;
+  previousStatus: string;
+  holderOwnerId: string | null;
+};
+
+export type LockSummaryDto = {
+  lockId: string;
+  holderOwnerId: string | null;
+  holderLabel: string | null;
+  epoch: number;
+  leaseExpiresAt: string | null;
+  holdStartedAt: string | null;
+  queueLength: number;
+};
+
+export type LockOwnerInput = { lockId: string; ownerId: string };
+export type AcquireLockInput = LockOwnerInput & { leaseSeconds?: number; label?: string; sessionId?: string };
+export type LockStatusInput = LockOwnerInput & { waitSeconds?: number };
+export type RenewLockInput = LockOwnerInput & { leaseSeconds?: number; epoch?: number };
+export type ReleaseLockInput = LockOwnerInput & { epoch?: number };
+export type RequisitionLockInput = LockOwnerInput & { reason: string; label?: string; sessionId?: string };
+
+function lockTime(value?: Timestamp): string | null {
+  return value ? timestampDate(value).toISOString() : null;
+}
+
+function lockText(value: string): string | null {
+  return value.length > 0 ? value : null;
+}
+
+function lockWindow(earliest?: Timestamp, latest?: Timestamp): LockWindowDto | null {
+  const window = { earliestAt: lockTime(earliest), latestAt: lockTime(latest) };
+  return window.earliestAt || window.latestAt ? window : null;
+}
+
+/** The CLI view of a `LockStatus` message: ISO times, plain numbers, `myTurn`, and the two windows grouped. */
+export function mapLockStatus(message: LockStatus): LockStatusDto {
+  return {
+    lockId: message.lockId,
+    ownerId: message.ownerId,
+    status: message.status,
+    myTurn: message.status === 'Holding',
+    position: message.position,
+    epoch: Number(message.epoch),
+    leaseExpiresAt: lockTime(message.leaseExpiresAt),
+    maxHoldExpiresAt: lockTime(message.maxHoldExpiresAt),
+    holder: message.holderOwnerId.length > 0
+      ? { ownerId: message.holderOwnerId, label: lockText(message.holderLabel) }
+      : null,
+    queueLength: message.queueLength,
+    suggestedPollIntervalMs: message.suggestedPollIntervalMs,
+    suggestedHeartbeatIntervalMs: message.suggestedHeartbeatIntervalMs,
+    serverTime: lockTime(message.serverTime),
+    requisition: message.requisitionedByOwnerId.length > 0
+      ? {
+          byOwnerId: message.requisitionedByOwnerId,
+          reason: message.requisitionReason,
+          at: lockTime(message.requisitionedAt),
+        }
+      : null,
+    checkInWindow: lockWindow(message.checkInEarliestAt, message.checkInLatestAt),
+    turnWindow: lockWindow(message.turnEarliestAt, message.turnLatestAt),
+  };
+}
+
+export function mapLockSummary(message: LockSummary): LockSummaryDto {
+  return {
+    lockId: message.lockId,
+    holderOwnerId: lockText(message.holderOwnerId),
+    holderLabel: lockText(message.holderLabel),
+    epoch: Number(message.epoch),
+    leaseExpiresAt: lockTime(message.leaseExpiresAt),
+    holdStartedAt: lockTime(message.holdStartedAt),
+    queueLength: message.queueLength,
+  };
+}
+
+export function mapLockList(message: ListLocksResponse): LockSummaryDto[] {
+  return message.locks.map(mapLockSummary);
+}
+
 export interface HagiApi {
   listSessions(input: ListSessionsInput): Promise<PCode_Application_Contracts_Dto_SessionListResponseDto>;
   getSession(sessionId: string): Promise<PCode_Models_SessionResponseDto>;
@@ -305,6 +430,16 @@ export interface HagiApi {
   upsertTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
   deleteTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
   resetTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
+  /** Takes a free lock or joins the queue. A repeated acquire by the holder changes nothing. */
+  acquireLock(input: AcquireLockInput): Promise<LockStatusDto>;
+  /** Reads the owner's lock state; `waitSeconds` long-polls. `signal` cancels the call. */
+  getLockStatus(input: LockStatusInput, signal?: AbortSignal): Promise<LockStatusDto>;
+  /** The heartbeat: refreshes the lease. A backend `FailedPrecondition` means the lock is lost. */
+  renewLock(input: RenewLockInput, signal?: AbortSignal): Promise<LockStatusDto>;
+  releaseLock(input: ReleaseLockInput): Promise<LockReleaseDto>;
+  /** Emergency take that displaces the holder; only for an explicit user order. */
+  requisitionLock(input: RequisitionLockInput): Promise<LockStatusDto>;
+  listLocks(prefix?: string): Promise<LockSummaryDto[]>;
 }
 
 
@@ -318,6 +453,7 @@ const statistics = () => createClient(StatisticsService, getGrpcTransport());
 const sessions = () => createClient(SessionsService, getGrpcTransport());
 const sessionMessaging = () => createClient(SessionMessagingService, getGrpcTransport());
 const sessionProposal = () => createClient(SessionProposalService, getGrpcTransport());
+const resourceLocks = () => createClient(ResourceLockService, getGrpcTransport());
 
 /** Every RPC answers `{ result }`; this returns that result as the DTO the facade promises. */
 async function result<T>(schema: GenMessage<Message>, response: Promise<Message>): Promise<T> {
@@ -511,5 +647,59 @@ export function createGrpcHagiApi(): HagiApi {
       ),
     resetTrustedSkillProviders: async () =>
       result(ResetTrustedSkillProvidersResponseSchema, skills().resetTrustedSkillProviders({})),
+    acquireLock: async input => {
+      const response = await resourceLocks().acquireLock({
+        lockId: input.lockId,
+        ownerId: input.ownerId,
+        leaseSeconds: input.leaseSeconds,
+        label: input.label,
+        sessionId: input.sessionId,
+      });
+      return mapLockStatus(response.result!);
+    },
+    getLockStatus: async (input, signal) => {
+      const response = await resourceLocks().getLockStatus(
+        { lockId: input.lockId, ownerId: input.ownerId, waitSeconds: input.waitSeconds },
+        { signal },
+      );
+      return mapLockStatus(response.result!);
+    },
+    renewLock: async (input, signal) => {
+      const response = await resourceLocks().renewLock(
+        {
+          lockId: input.lockId,
+          ownerId: input.ownerId,
+          leaseSeconds: input.leaseSeconds,
+          epoch: input.epoch === undefined ? undefined : BigInt(input.epoch),
+        },
+        { signal },
+      );
+      return mapLockStatus(response.result!);
+    },
+    releaseLock: async input => {
+      const response = await resourceLocks().releaseLock({
+        lockId: input.lockId,
+        ownerId: input.ownerId,
+        epoch: input.epoch === undefined ? undefined : BigInt(input.epoch),
+      });
+      return {
+        lockId: input.lockId,
+        ownerId: input.ownerId,
+        released: response.released,
+        previousStatus: response.previousStatus,
+        holderOwnerId: lockText(response.holderOwnerId),
+      };
+    },
+    requisitionLock: async input => {
+      const response = await resourceLocks().requisitionLock({
+        lockId: input.lockId,
+        ownerId: input.ownerId,
+        reason: input.reason,
+        label: input.label,
+        sessionId: input.sessionId,
+      });
+      return mapLockStatus(response.result!);
+    },
+    listLocks: async prefix => mapLockList(await resourceLocks().listLocks({ prefix })),
   };
 }

@@ -3,12 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/error_detail_pb';
 import { createApiError } from '../commands/testHelpers';
 import {
+  CliLockLostError,
   CliOperationFailedError,
   CliUsageError,
   CliWaitTimeoutError,
   EXIT_CODES,
+  isTransientLockFailure,
   normalizeCliError,
   renderCliError,
+  toLockLostError,
 } from '../../src/runtime/errors';
 
 describe('errors', () => {
@@ -212,6 +215,50 @@ describe('errors', () => {
         exitCode: EXIT_CODES.UNKNOWN,
         message: 'The request was cancelled.',
       });
+    });
+  });
+
+  describe('lock exit codes', () => {
+    it('gives a lost lock exit code 32, distinct from 31 and from every other code', () => {
+      expect(EXIT_CODES.LOCK_LOST).toBe(32);
+      expect(EXIT_CODES.LOCK_LOST).not.toBe(EXIT_CODES.WAIT_TIMEOUT);
+
+      const codes = Object.values(EXIT_CODES);
+      expect(codes.filter(code => code === EXIT_CODES.LOCK_LOST)).toHaveLength(1);
+      expect(new Set(codes).size).toBe(codes.length);
+    });
+
+    it('normalizes a lock-lost error to exit code 32 and keeps its business code', () => {
+      expect(normalizeCliError(new CliLockLostError('gone', { errorCode: 'PCode.Lock.NotHolder' }))).toEqual({
+        exitCode: 32,
+        message: 'gone',
+        errorCode: 'PCode.Lock.NotHolder',
+      });
+    });
+
+    it('reads FailedPrecondition as a lost lock for lock commands only', () => {
+      const failed = new ConnectError('Not the holder.', Code.FailedPrecondition, undefined, [
+        { desc: ErrorDetailSchema, value: { code: 'PCode.Lock.NotHolder' } },
+      ]);
+      const lost = toLockLostError(failed);
+
+      expect(lost).toBeInstanceOf(CliLockLostError);
+      expect(lost).toMatchObject({ message: 'Not the holder.', errorCode: 'PCode.Lock.NotHolder' });
+      expect(normalizeCliError(lost)).toMatchObject({ exitCode: EXIT_CODES.LOCK_LOST });
+      // Other commands keep the generic mapping of the same failure.
+      expect(normalizeCliError(failed)).toMatchObject({ exitCode: EXIT_CODES.HTTP_CONFLICT });
+      expect(toLockLostError(new ConnectError('bad', Code.InvalidArgument))).toBeUndefined();
+      expect(toLockLostError(new Error('boom'))).toBeUndefined();
+    });
+
+    it('treats Unavailable and a failed connection as transient, and a backend refusal as not', () => {
+      expect(isTransientLockFailure(new ConnectError('down', Code.Unavailable))).toBe(true);
+      expect(isTransientLockFailure(new ConnectError('slow', Code.DeadlineExceeded))).toBe(true);
+      expect(isTransientLockFailure(new ConnectError('refused', Code.Unknown, undefined, undefined, new Error('fetch failed')))).toBe(true);
+      expect(isTransientLockFailure(new Error('fetch failed'))).toBe(true);
+      expect(isTransientLockFailure(new ConnectError('no', Code.FailedPrecondition))).toBe(false);
+      expect(isTransientLockFailure(new ConnectError('bad', Code.InvalidArgument))).toBe(false);
+      expect(isTransientLockFailure(new ConnectError('cancelled', Code.Canceled))).toBe(false);
     });
   });
 });

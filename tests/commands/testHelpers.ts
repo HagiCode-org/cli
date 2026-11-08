@@ -6,7 +6,7 @@ import { ErrorDetailSchema } from '../../src/generated/grpc/hagicode/common/v1/e
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
 import type { AppDependencies, CliIo } from '../../src/runtime/commandContext';
-import type { HagiApi } from '../../src/runtime/hagiApi';
+import type { HagiApi, LockStatusDto } from '../../src/runtime/hagiApi';
 
 /** Base URL injected through HAGI_API_BASE_URL so command tests never depend on a real config file. */
 export const TEST_BASE_URL = 'https://backend.test';
@@ -689,6 +689,18 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
       removed: true,
       message: 'Removed.',
     }),
+    acquireLock: vi.fn().mockResolvedValue(createLockStatus()),
+    getLockStatus: vi.fn().mockResolvedValue(createLockStatus()),
+    renewLock: vi.fn().mockResolvedValue(createLockStatus()),
+    releaseLock: vi.fn().mockResolvedValue({
+      lockId: 'eu-1/duckov',
+      ownerId: 'sess-a',
+      released: true,
+      previousStatus: 'Holding',
+      holderOwnerId: null,
+    }),
+    requisitionLock: vi.fn().mockResolvedValue(createLockStatus()),
+    listLocks: vi.fn().mockResolvedValue([]),
     ...apiOverrides,
   };
 
@@ -751,4 +763,28 @@ export function fakeWaitClock() {
 /** A session in the given status, for scripting a sequence of `getSession` reads. */
 export function sessionWithStatus(sessionId: string, status: string, type?: PCode_Models_SessionType) {
   return { ...createSession(sessionId, type), status: status as PCode_Models_SessionStatus };
+}
+
+/** A lock status in the CLI view: a holder `sess-a` at epoch 3 with a 10-minute lease, unless overridden. */
+export function createLockStatus(overrides: Partial<LockStatusDto> = {}): LockStatusDto {
+  const status = overrides.status ?? 'Holding';
+  return {
+    lockId: 'eu-1/duckov',
+    ownerId: 'sess-a',
+    status,
+    myTurn: status === 'Holding',
+    position: 0,
+    epoch: 3,
+    leaseExpiresAt: '2026-11-07T10:10:00.000Z',
+    maxHoldExpiresAt: '2026-11-08T10:00:00.000Z',
+    holder: { ownerId: 'sess-a', label: null },
+    queueLength: 0,
+    suggestedPollIntervalMs: 5000,
+    suggestedHeartbeatIntervalMs: 120000,
+    serverTime: '2026-11-07T10:00:00.000Z',
+    requisition: null,
+    checkInWindow: { earliestAt: '2026-11-07T10:02:00.000Z', latestAt: '2026-11-07T10:10:00.000Z' },
+    turnWindow: null,
+    ...overrides,
+  };
 }

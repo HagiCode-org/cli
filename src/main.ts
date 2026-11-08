@@ -1,4 +1,5 @@
 import { Command, CommanderError } from 'commander';
+import { registerAgentCommands } from './commands/agent';
 import { registerChatCommands } from './commands/chat';
 import { registerHagiTaskCommands } from './commands/hagitask';
 import { registerPlanCommands } from './commands/plan';
@@ -12,7 +13,7 @@ import {
   type AppDependencies,
 } from './runtime/commandContext';
 import { getActiveBaseUrl } from './runtime/apiRuntime';
-import { EXIT_CODES, normalizeCliError, renderCliError } from './runtime/errors';
+import { CliLockLostError, EXIT_CODES, normalizeCliError, renderCliError } from './runtime/errors';
 
 function inferJsonMode(argv: readonly string[]): boolean {
   return argv.includes('--json');
@@ -26,7 +27,7 @@ export function createCliApp(
 
   program
     .name('hagi')
-    .description('HagiCode CLI for project, proposal, vault, chat, HagiTask, and scheduled plan management.')
+    .description('HagiCode CLI for project, proposal, vault, chat, HagiTask, and scheduled plan management, plus agent-facing capabilities.')
     .showHelpAfterError()
     .exitOverride();
 
@@ -51,6 +52,7 @@ export function createCliApp(
   registerHagiTaskCommands(program, dependencies);
   registerPlanCommands(program, dependencies);
   registerSkillsCommands(program, dependencies);
+  registerAgentCommands(program, dependencies);
 
   return program;
 }
@@ -95,7 +97,10 @@ export async function runCli(
     }
 
     const cliError = normalizeCliError(error, { baseUrl: getActiveBaseUrl() });
-    dependencies.io.stderr(renderCliError(cliError, { json: jsonMode }));
+    // A lock command that already printed its own reason line (the heartbeat watcher) is not reported a second time.
+    if (!(error instanceof CliLockLostError && error.reported)) {
+      dependencies.io.stderr(renderCliError(cliError, { json: jsonMode }));
+    }
     return cliError.exitCode;
   }
 }

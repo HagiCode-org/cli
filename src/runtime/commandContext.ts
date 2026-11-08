@@ -19,7 +19,21 @@ export type AppDependencies = {
   sleep?: (ms: number) => Promise<void>;
   /** Current time in milliseconds. Defaults to `Date.now`; tests inject a fake clock together with `sleep`. */
   now?: () => number;
+  /**
+   * Registers a handler for SIGINT and SIGTERM and returns a function that removes it. Long-running lock commands use it to
+   * stop cleanly. Defaults to the process signals; tests inject their own trigger.
+   */
+  onInterrupt?: (handler: () => void) => () => void;
 };
+
+export function onProcessInterrupt(handler: () => void): () => void {
+  process.on('SIGINT', handler);
+  process.on('SIGTERM', handler);
+  return () => {
+    process.off('SIGINT', handler);
+    process.off('SIGTERM', handler);
+  };
+}
 
 export function sleepForMilliseconds(ms: number): Promise<void> {
   return new Promise(resolve => {
