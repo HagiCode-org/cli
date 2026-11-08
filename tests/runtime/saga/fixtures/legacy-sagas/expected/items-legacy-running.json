@@ -1,0 +1,40 @@
+{
+  "sagaId": "legacy-running",
+  "items": [
+    {
+      "id": "T1",
+      "title": "First item",
+      "state": "done",
+      "cmd": "node -e \"process.exit(0)\"",
+      "note": "evidence/T1.log"
+    },
+    {
+      "id": "T2",
+      "title": "Second item",
+      "state": "blocked",
+      "cmd": "node -e \"process.exit(0)\"",
+      "note": ""
+    },
+    {
+      "id": "T3",
+      "title": "Third item",
+      "state": "pending",
+      "cmd": "node -e \"process.exit(0)\"",
+      "note": ""
+    },
+    {
+      "id": "T4",
+      "title": "Fourth item",
+      "state": "pending",
+      "cmd": "node -e \"process.exit(0)\"",
+      "note": ""
+    },
+    {
+      "id": "T0",
+      "title": "Retired item",
+      "state": "superseded",
+      "cmd": "",
+      "note": ""
+    }
+  ]
+}

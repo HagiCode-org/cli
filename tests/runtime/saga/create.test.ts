@@ -27,7 +27,7 @@ const promptPaths = ['goal', 'research', 'acceptance', 'plan', 'amend', 'run']
   .map(name => `prompts/${name}.md`);
 
 function installFixtureLayout(sagaRoot: string, ignoreContent = '*/runtime/\n'): void {
-  for (const relativePath of [...promptPaths, 'tools/saga.mjs', '.gitignore']) {
+  for (const relativePath of [...promptPaths, '.gitignore']) {
     const target = path.join(sagaRoot, ...relativePath.split('/'));
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(target, relativePath === '.gitignore' ? ignoreContent : `custom:${relativePath}`);
@@ -112,7 +112,7 @@ describe('Saga ID validation', () => {
     expect(readFileSync(sentinel, 'utf8')).toBe('keep archived');
   });
 
-  it.each([...promptPaths, 'tools/saga.mjs', '.gitignore (runtime ignore rule)'])(
+  it.each([...promptPaths, '.gitignore (runtime ignore rule)'])(
     'refuses an incomplete installation missing %s without writing',
     missingPath => {
       installFixtureLayout(sagaRoot);
@@ -135,16 +135,16 @@ describe('Saga ID validation', () => {
     installFixtureLayout(sagaRoot, '# custom\r\n*/runtime/\r\n');
     const before = snapshot(path.join(projectPath, '.hagicode'));
     expect(requireSagaResources(sagaRoot, { kind: 'project-id', value: 'project id' })).toBe(
-      path.join(sagaRoot, 'tools', 'saga.mjs'),
+      path.join(sagaRoot, 'prompts'),
     );
     expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
   });
 
-  it('refuses a nonregular tool and preserves the original project-id selector in guidance', () => {
+  it('refuses a nonregular prompt and preserves the original project-id selector in guidance', () => {
     installFixtureLayout(sagaRoot);
-    const toolPath = path.join(sagaRoot, 'tools', 'saga.mjs');
-    rmSync(toolPath);
-    mkdirSync(toolPath);
+    const promptPath = path.join(sagaRoot, 'prompts', 'run.md');
+    rmSync(promptPath);
+    mkdirSync(promptPath);
     const before = snapshot(path.join(projectPath, '.hagicode'));
 
     expect(() => requireSagaResources(sagaRoot, { kind: 'project-id', value: 'project-1' })).toThrow(
@@ -153,10 +153,9 @@ describe('Saga ID validation', () => {
     expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
   });
 
-  it('creates canonical metadata natively with no runtime file and without running the installed tool', () => {
+  it('creates canonical metadata natively with no runtime file and no installed tool', () => {
     const report = installSagaResources(projectPath, loadSagaAssets());
-    const toolPath = path.join(report.root, 'tools', 'saga.mjs');
-    writeFileSync(toolPath, "throw new Error('the installed tool must not run');\n");
+    expect(existsSync(path.join(report.root, 'tools'))).toBe(false);
 
     const metadata = createSagaNatively('demo', report.root);
 

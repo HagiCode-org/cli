@@ -11,7 +11,6 @@ const ASSET_PATHS = [
   'prompts/plan.md',
   'prompts/research.md',
   'prompts/run.md',
-  'tools/saga.mjs',
 ];
 
 type SagaAssetManifest = {
@@ -81,7 +80,7 @@ function parseManifest(bytes: Buffer, manifestPath: string): SagaAssetManifest {
 
   const paths = Object.keys(manifest.files).sort();
   if (paths.length !== ASSET_PATHS.length || paths.some((assetPath, index) => assetPath !== ASSET_PATHS[index])) {
-    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: expected exactly the eight managed assets`);
+    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: expected exactly the seven managed assets`);
   }
   return manifest as SagaAssetManifest;
 }

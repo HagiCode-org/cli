@@ -26,7 +26,6 @@ const resourcePaths = [
   'resources/saga/prompts/plan.md',
   'resources/saga/prompts/research.md',
   'resources/saga/prompts/run.md',
-  'resources/saga/tools/saga.mjs',
 ];
 
 function runNode(script: string, args: string[], cwd: string, env: NodeJS.ProcessEnv) {
@@ -69,18 +68,6 @@ function snapshotTree(root: string) {
   }
   visit(root, '.');
   return snapshot;
-}
-
-function normalizeTimes<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map(normalizeTimes) as T;
-  }
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, child]) => [key, key === 'updatedAt' ? '<observation-time>' : normalizeTimes(child)]),
-    ) as T;
-  }
-  return value;
 }
 
 describe('packed Saga acceptance', () => {
@@ -153,7 +140,6 @@ describe('packed Saga acceptance', () => {
       'prompts/plan.md',
       'prompts/research.md',
       'prompts/run.md',
-      'tools/saga.mjs',
     ]);
     for (const [relativePath, expectedHash] of Object.entries(packagedManifest.files)) {
       const source = readFileSync(path.join(repoRoot, 'resources/saga', relativePath));
@@ -179,7 +165,7 @@ describe('packed Saga acceptance', () => {
     const initial = invoke('saga', 'init', '--path', projectPath, '--json');
     expect(initial.code, `${initial.stderr}\n${initial.stdout}`).toBe(0);
     const initialReport = JSON.parse(initial.stdout);
-    expect(initialReport.files).toHaveLength(8);
+    expect(initialReport.files).toHaveLength(7);
     expect(initialReport.files.find((file: { path: string }) => file.path === '.gitignore')?.outcome).toBe('created');
 
     const repeated = invoke('saga', 'init', '--path', projectPath, '--json');
@@ -215,14 +201,8 @@ describe('packed Saga acceptance', () => {
     expect(separatorQuery.code).toBe(0);
     expect(JSON.parse(separatorQuery.stdout).sagas).toHaveLength(1);
 
-    const instructions = runNode(
-      path.join(sagaRoot, 'tools/saga.mjs'),
-      ['--root', sagaRoot, 'instructions', 'demo', 'goal'],
-      unrelatedDirectory,
-      runtimeEnv,
-    );
-    expect(instructions.code).toBe(0);
-    expect(instructions.stdout).toBe(`${readFileSync(goalPath, 'utf8')}\n`);
+    expect(existsSync(path.join(sagaRoot, 'prompts', 'goal.md'))).toBe(true);
+    expect(existsSync(path.join(sagaRoot, 'tools'))).toBe(false);
 
     if (process.platform === 'win32') {
       const redirectedProject = path.join(temporaryRoot, 'Redirected Project');
@@ -257,23 +237,17 @@ describe('packed Saga acceptance', () => {
     }
     writeProjectFile(subjectSagaRoot, 'demo/runtime/status.json', '{"state":"paused","note":"stale","updatedAt":"2000-01-01T00:00:00Z"}');
     const subjectBefore = snapshotTree(subjectProject);
-    const packagedTool = path.join(extractedPackage, 'resources/saga/tools/saga.mjs');
     const packagedJson = (command: string, ...args: string[]) => {
       const result = invoke('saga', command, ...args, '--path', subjectProject, '--json');
       expect(result.code, result.stderr).toBe(0);
       return JSON.parse(result.stdout);
     };
-    const canonicalJson = (...args: string[]) => {
-      const result = runNode(packagedTool, ['--root', referenceSagaRoot, ...args], unrelatedDirectory, runtimeEnv);
-      expect(result.code, result.stderr).toBe(0);
-      return JSON.parse(result.stdout);
-    };
 
-    expect(normalizeTimes(packagedJson('list'))).toEqual(normalizeTimes(canonicalJson('list')));
-    expect(packagedJson('items', 'demo')).toEqual(canonicalJson('items', 'demo'));
-    expect(normalizeTimes(packagedJson('status', 'demo'))).toEqual(
-      normalizeTimes(canonicalJson('status', 'demo')),
+    expect(packagedJson('list').sagas.map((row: { sagaId: string }) => row.sagaId)).toEqual(['demo']);
+    expect(packagedJson('items', 'demo').items.map((item: { id: string }) => item.id)).toEqual(
+      expect.arrayContaining(['pending', 'done']),
     );
+    expect(packagedJson('status', 'demo')).toMatchObject({ sagaId: 'demo' });
     expect(snapshotTree(subjectProject)).toEqual(subjectBefore);
   }, 120_000);
 });

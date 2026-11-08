@@ -7,7 +7,6 @@
     "prompts/goal.md": "a545b01c9f6010df661f02cf62ef9bcae527ccf329f304ea82ffdda239b118df",
     "prompts/plan.md": "bcc4c0509f2971083775db2b3678f41c55f16e69deba2d994d3ed636f314d917",
     "prompts/research.md": "2504283ea845440c7909ff1da20bfb70f846d55ca16565740168848cfb8060b1",
-    "prompts/run.md": "1193fbc45645b513bbd6e1017513b62a53286d1d60fd00df479cff15de7c785b",
-    "tools/saga.mjs": "7ab06c046ec2037f71182a7226f5d0799be5fab15cee1dd4d1a5830f5b2a43cb"
+    "prompts/run.md": "1193fbc45645b513bbd6e1017513b62a53286d1d60fd00df479cff15de7c785b"
   }
 }

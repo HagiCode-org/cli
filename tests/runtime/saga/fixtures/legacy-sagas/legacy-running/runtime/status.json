@@ -1,0 +1,50 @@
+{
+  "schema": "saga-status/2",
+  "sagaId": "legacy-running",
+  "revision": 2,
+  "state": "running",
+  "updatedAt": "2026-11-08T08:12:19Z",
+  "note": "fixture",
+  "artifacts": {
+    "goal": true,
+    "research": true,
+    "acceptance": true,
+    "plan": true
+  },
+  "nextArtifact": null,
+  "counts": {
+    "total": 4,
+    "done": 1,
+    "blocked": 1,
+    "pending": 2,
+    "superseded": 1
+  },
+  "openAmendments": 1,
+  "items": [
+    {
+      "id": "T1",
+      "title": "First item",
+      "state": "done"
+    },
+    {
+      "id": "T2",
+      "title": "Second item",
+      "state": "blocked"
+    },
+    {
+      "id": "T3",
+      "title": "Third item",
+      "state": "pending"
+    },
+    {
+      "id": "T4",
+      "title": "Fourth item",
+      "state": "pending"
+    },
+    {
+      "id": "T0",
+      "title": "Retired item",
+      "state": "superseded"
+    }
+  ]
+}

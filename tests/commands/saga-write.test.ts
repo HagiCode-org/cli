@@ -236,29 +236,6 @@ describe('saga check and freeze', () => {
     expect(right.exitCode).toBe(0);
   });
 
-  it('produces the same contract.lock as the bundled tool after normalizing frozen-at', async () => {
-    const otherRoot = mkdtempSync(path.join(os.tmpdir(), 'hagi-saga-parity-'));
-    try {
-      createPlannedSaga();
-      const otherProject = path.join(otherRoot, 'parity');
-      mkdirSync(otherProject);
-      installSagaResources(otherProject, loadSagaAssets());
-      const otherSagaRoot = path.join(otherProject, '.hagicode', 'sagas');
-      createPlannedSagaAt(otherSagaRoot);
-
-      expect((await saga(['freeze', 'demo', '--path', projectPath])).exitCode).toBe(0);
-      const bundled = spawnSync(process.execPath, [path.join(otherSagaRoot, 'tools', 'saga.mjs'), '--root', otherSagaRoot, 'freeze', 'demo'], {
-        encoding: 'utf8',
-      });
-      expect(bundled.status).toBe(0);
-
-      const normalize = (text: string) => text.replace(/^frozen-at: .*$/m, 'frozen-at: NORMALIZED');
-      expect(normalize(readFileSync(path.join(sagaDirectory(), 'contract.lock'), 'utf8')))
-        .toBe(normalize(readFileSync(path.join(otherSagaRoot, 'demo', 'contract.lock'), 'utf8')));
-    } finally {
-      rmSync(otherRoot, { recursive: true, force: true });
-    }
-  });
 });
 
 describe('saga tick, block, amend and archive', () => {
@@ -333,42 +310,6 @@ describe('saga tick, block, amend and archive', () => {
     expect(snapshotFiles(sagaRoot)).toEqual(before);
   });
 
-  it('writes progress.md and blocked.json identical to the bundled tool on the same fixture', async () => {
-    const otherRoot = mkdtempSync(path.join(os.tmpdir(), 'hagi-saga-tick-parity-'));
-    try {
-      createPlannedSaga();
-      const otherProject = path.join(otherRoot, 'parity');
-      mkdirSync(otherProject);
-      installSagaResources(otherProject, loadSagaAssets());
-      const otherSagaRoot = path.join(otherProject, '.hagicode', 'sagas');
-      createPlannedSagaAt(otherSagaRoot);
-      const bundled = (args: string[]) => spawnSync(
-        process.execPath,
-        [path.join(otherSagaRoot, 'tools', 'saga.mjs'), '--root', otherSagaRoot, ...args],
-        { encoding: 'utf8' },
-      );
-
-      for (const [dir, run] of [
-        [sagaDirectory(), (args: string[]) => saga([...args, '--path', projectPath])],
-        [path.join(otherSagaRoot, 'demo'), async (args: string[]) => bundled(args)],
-      ] as const) {
-        const freeze = await run(['freeze', 'demo']);
-        expect(freeze.status ?? freeze.exitCode).toBe(0);
-        writeProof(dir, 'T1');
-        const tick = await run(['tick', 'demo', 'T1']);
-        expect(tick.status ?? tick.exitCode).toBe(0);
-        const block = await run(['block', 'demo', 'T2', 'waiting on review']);
-        expect(block.status ?? block.exitCode).toBe(0);
-      }
-
-      expect(readFileSync(path.join(sagaDirectory(), 'progress.md'), 'utf8'))
-        .toBe(readFileSync(path.join(otherSagaRoot, 'demo', 'progress.md'), 'utf8'));
-      expect(readFileSync(path.join(sagaDirectory(), 'runtime', 'blocked.json'), 'utf8'))
-        .toBe(readFileSync(path.join(otherSagaRoot, 'demo', 'runtime', 'blocked.json'), 'utf8'));
-    } finally {
-      rmSync(otherRoot, { recursive: true, force: true });
-    }
-  });
 });
 
 describe('saga set-status and contention', () => {
@@ -435,32 +376,12 @@ describe('saga set-status and contention', () => {
   }, 120_000);
 });
 
-describe('saga new with the installed tool', () => {
-  it('creates a Saga natively that the installed tool still reads for its goal prompt', async () => {
-    installSagaResources(projectPath, loadSagaAssets());
-    const created = await saga(['new', 'native-demo', '--path', projectPath, '--json']);
-    expect(created.exitCode).toBe(0);
-    expect(JSON.parse(created.stdout).metadata).toMatchObject({ id: 'native-demo', method: 1 });
-    expect(existsSync(path.join(sagaRoot, 'native-demo', 'runtime'))).toBe(false);
-
-    const toolPath = path.join(sagaRoot, 'tools', 'saga.mjs');
-    const instructions = spawnSync(process.execPath, [toolPath, '--root', sagaRoot, 'instructions', 'native-demo', 'goal'], {
-      cwd: projectPath,
-      encoding: 'utf8',
-    });
-    expect(instructions.status).toBe(0);
-    expect(instructions.stdout).toBe(`${readFileSync(path.join(sagaRoot, 'prompts', 'goal.md'), 'utf8')}\n`);
-  });
-});
-
 describe('end-to-end Saga lifecycle', () => {
-  async function runLifecycle(removeBundledTool: boolean) {
+  async function runLifecycle() {
     installSagaResources(projectPath, loadSagaAssets());
     const created = await saga(['new', 'e2e', '--path', projectPath]);
     expect(created.exitCode).toBe(0);
-    if (removeBundledTool) {
-      rmSync(path.join(sagaRoot, 'tools', 'saga.mjs'));
-    }
+    expect(existsSync(path.join(sagaRoot, 'tools'))).toBe(false);
 
     const directory = path.join(sagaRoot, 'e2e');
     writeFileSync(path.join(directory, 'goal.md'), '# Goal\n\nShip the lifecycle.\n');
@@ -505,11 +426,7 @@ describe('end-to-end Saga lifecycle', () => {
     expect(existsSync(directory)).toBe(false);
   }
 
-  it('runs the whole lifecycle through hagi saga with the bundled tool present', async () => {
-    await runLifecycle(false);
-  });
-
-  it('runs the whole lifecycle through hagi saga with the bundled tool removed', async () => {
-    await runLifecycle(true);
+  it('runs the whole lifecycle through hagi saga alone, with no installed tool', async () => {
+    await runLifecycle();
   });
 });

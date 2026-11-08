@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { SagaInstallOutcome, SagaInstallReport } from '../runtime/saga/install';
 import type { SagaMetadata } from '../runtime/saga/create';
 import type { SagaItem, SagaListRow, SagaStatus } from '../runtime/saga/read';
@@ -24,14 +25,14 @@ export function formatSagaInitHuman(report: SagaInstallReport): string {
   return `${lines.join('\n')}\n`;
 }
 
-export function formatSagaNewHuman(result: SagaCreationResult, toolPath: string): string {
+export function formatSagaNewHuman(result: SagaCreationResult, promptsPath: string): string {
   return [
     'Saga created',
     `id         ${result.id}`,
     `directory  ${result.directory}`,
     `createdAt  ${result.metadata.createdAt}`,
     `method     ${result.metadata.method}`,
-    `next       node ${JSON.stringify(toolPath)} instructions ${result.id} goal`,
+    `next       read ${JSON.stringify(path.join(promptsPath, 'goal.md'))}, then write goal.md, research.md, acceptance.md and progress.md`,
     '',
   ].join('\n');
 }
@@ -53,12 +54,12 @@ export function formatSagaListHuman(payload: { sagas: SagaListRow[] }): string {
   ].join('\n');
 }
 
-export function formatSagaStatusHuman(status: SagaStatus, toolPath: string): string {
+export function formatSagaStatusHuman(status: SagaStatus, promptsPath: string): string {
   const artifactSummary = Object.entries(status.artifacts)
     .map(([name, present]) => `${name}=${present ? 'written' : 'missing'}`)
     .join(', ');
   const next = status.nextArtifact
-    ? `next artifact ${status.nextArtifact}: node ${JSON.stringify(toolPath)} instructions ${status.sagaId} ${status.nextArtifact}`
+    ? `next artifact ${status.nextArtifact}: read ${JSON.stringify(path.join(promptsPath, `${status.nextArtifact}.md`))}`
     : 'next artifact none';
   return [
     `Saga ${status.sagaId}`,

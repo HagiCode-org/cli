@@ -32,7 +32,7 @@ describe('Saga asset lookup', () => {
       for (const modulePath of modulePaths) {
         const assets = loadSagaAssets(pathToFileURL(modulePath).href);
         expect(assets.directory).toBe(bundledAssets);
-        expect(assets.files.size).toBe(8);
+        expect(assets.files.size).toBe(7);
       }
     } finally {
       process.chdir(previousDirectory);

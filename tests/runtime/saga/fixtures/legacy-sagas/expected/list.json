@@ -1,0 +1,32 @@
+{
+  "sagas": [
+    {
+      "sagaId": "legacy-planned",
+      "state": "planned",
+      "revision": 0,
+      "counts": {
+        "total": 1,
+        "done": 0,
+        "blocked": 0,
+        "pending": 1,
+        "superseded": 0
+      },
+      "openAmendments": 0,
+      "updatedAt": "2026-11-08T08:12:19Z"
+    },
+    {
+      "sagaId": "legacy-running",
+      "state": "running",
+      "revision": 2,
+      "counts": {
+        "total": 4,
+        "done": 1,
+        "blocked": 1,
+        "pending": 2,
+        "superseded": 1
+      },
+      "openAmendments": 1,
+      "updatedAt": "2026-11-08T08:12:19Z"
+    }
+  ]
+}

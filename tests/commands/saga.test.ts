@@ -423,7 +423,7 @@ describe('Saga command registration', () => {
       expect(human.stdout.join('')).toContain('Saga created');
       expect(human.stdout.join('')).toContain('id         demo');
       expect(human.stdout.join('')).toContain(path.join(projectPath, '.hagicode/sagas/demo'));
-      expect(human.stdout.join('')).toContain('instructions demo goal');
+      expect(human.stdout.join('')).toContain('then write goal.md, research.md, acceptance.md and progress.md');
       expect(human.stdout.join('')).not.toContain('CREATED');
 
       const json = createDependencies();
@@ -466,11 +466,8 @@ describe('Saga command registration', () => {
       expect(incomplete.stderr.join('')).toContain(`hagi saga init --path "${incompleteProject}"`);
 
       installSagaResources(failingProject, loadSagaAssets());
-      writeFileSync(
-        path.join(failingProject, '.hagicode/sagas/tools/saga.mjs'),
-        "console.error('child failure detail'); process.exitCode = 7;\n",
-      );
-      // Creation is native: a broken installed tool neither blocks nor changes `saga new`.
+      // Creation is native: no installed tool is needed, and none is installed.
+      expect(existsSync(path.join(failingProject, '.hagicode/sagas/tools'))).toBe(false);
       const native = createDependencies();
       expect(
         await runCli(
@@ -538,7 +535,8 @@ describe('Saga command registration', () => {
       ).toBe(0);
       expect(statusHuman.stdout.join('')).toContain('artifacts goal=written');
       expect(statusHuman.stdout.join('')).toContain('next artifact research');
-      expect(statusHuman.stdout.join('')).toContain('instructions demo research');
+      expect(statusHuman.stdout.join('')).toContain('read ');
+      expect(statusHuman.stdout.join('')).toContain('/prompts/research.md');
 
       const itemsJson = createDependencies();
       expect(

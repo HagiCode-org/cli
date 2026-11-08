@@ -67,7 +67,7 @@ function newSaga(dependencies: AppDependencies) {
   return async function sagaNewAction(this: Command, sagaId: string): Promise<void> {
     const context = await resolveSagaCommandContext(this, dependencies);
     validateSagaId(sagaId, context.sagaRoot);
-    const toolPath = requireSagaResources(context.sagaRoot, context.selector);
+    const promptsPath = requireSagaResources(context.sagaRoot, context.selector);
     const metadata = createSagaNatively(sagaId, context.sagaRoot);
     const result = {
       id: metadata.id,
@@ -75,7 +75,7 @@ function newSaga(dependencies: AppDependencies) {
       metadata,
     };
 
-    context.io.stdout(context.outputJson ? formatJson(result) : formatSagaNewHuman(result, toolPath));
+    context.io.stdout(context.outputJson ? formatJson(result) : formatSagaNewHuman(result, promptsPath));
   };
 }
 
@@ -92,8 +92,8 @@ function showSagaStatus(dependencies: AppDependencies) {
     const context = await resolveSagaCommandContext(this, dependencies);
     const sagaDirectory = requireSagaDirectory(context.sagaRoot, sagaId);
     const status = readSagaStatus(sagaId, sagaDirectory);
-    const toolPath = path.join(context.sagaRoot, 'tools', 'saga.mjs');
-    context.io.stdout(context.outputJson ? formatJson(status) : formatSagaStatusHuman(status, toolPath));
+    const promptsPath = path.join(context.sagaRoot, 'prompts');
+    context.io.stdout(context.outputJson ? formatJson(status) : formatSagaStatusHuman(status, promptsPath));
   };
 }
 
@@ -113,7 +113,7 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
   addSagaOptions(saga.command('init').description('Install the managed Saga resources.'))
     .option('--force', 'Replace differing managed resources.')
     .action(initSaga(dependencies));
-  addSagaOptions(saga.command('new <saga-id>').description('Create a Saga using the installed project tool.'))
+  addSagaOptions(saga.command('new <saga-id>').description('Create a Saga using the installed project prompts.'))
     .action(newSaga(dependencies));
   addSagaOptions(saga.command('list').description('List active Sagas.'))
     .action(listSagas(dependencies));

@@ -1,0 +1,1 @@
+CHECK FAIL: open amendment 002-tighten-t3.md: merge it into the artifacts and set merged-in

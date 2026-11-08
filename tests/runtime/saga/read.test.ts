@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -19,7 +18,6 @@ import {
   type SagaStatus,
 } from '../../../src/runtime/saga/read';
 
-const canonicalTool = path.resolve(__dirname, '../../../resources/saga/tools/saga.mjs');
 const progress = [
   '- [ ] pending Create | pending evidence',
   '- [x] done Finish | evidence/done.log',
@@ -82,21 +80,6 @@ function createProject(projectRoot: string): string {
   return sagaRoot;
 }
 
-function canonicalJson(sagaRoot: string, ...args: string[]): unknown {
-  const result = spawnSync(process.execPath, [canonicalTool, '--root', sagaRoot, ...args], {
-    encoding: 'utf8',
-    shell: false,
-  });
-  if (result.status !== 0) {
-    throw new Error(result.stderr || result.stdout || `canonical Saga tool exited with ${result.status}`);
-  }
-  return JSON.parse(result.stdout);
-}
-
-function withoutObservationTime<T extends { updatedAt: string }>(value: T): Omit<T, 'updatedAt'> & { updatedAt: string } {
-  return { ...value, updatedAt: '<observation-time>' };
-}
-
 describe('read-only Saga projections', () => {
   let temporaryRoot: string;
 
@@ -143,27 +126,6 @@ describe('read-only Saga projections', () => {
       { name: '002-merged.md', mergedIn: 'r2' },
       { name: 'no-marker.md', mergedIn: '' },
     ]);
-  });
-
-  it('matches canonical list, items, and default status using a separate writer fixture', () => {
-    const subjectRoot = createProject(path.join(temporaryRoot, 'subject'));
-    const referenceRoot = createProject(path.join(temporaryRoot, 'reference'));
-    const referenceTool = (command: string, sagaId?: string) =>
-      canonicalJson(referenceRoot, ...(sagaId ? [command, sagaId] : [command]));
-
-    const expectedItems = canonicalJson(referenceRoot, 'items', 'demo') as { sagaId: string; items: unknown[] };
-    expect({ sagaId: 'demo', items: readSagaItems(path.join(subjectRoot, 'demo')) }).toEqual(expectedItems);
-    expect(readSagaItemsPayload(subjectRoot, 'demo')).toEqual(expectedItems);
-
-    const expectedStatus = referenceTool('status', 'demo') as SagaStatus;
-    const actualStatus = readSagaStatus('demo', path.join(subjectRoot, 'demo'));
-    expect(withoutObservationTime(actualStatus)).toEqual(withoutObservationTime(expectedStatus));
-
-    const expectedList = referenceTool('list') as { sagas: Array<{ updatedAt: string }> };
-    const actualList = readSagaList(subjectRoot);
-    expect(actualList.map(withoutObservationTime)).toEqual(expectedList.sagas.map(withoutObservationTime));
-    expect(readSagaListPayload(subjectRoot)).toEqual({ sagas: actualList });
-    expect(actualList.map(row => row.sagaId)).toEqual(['alpha', 'demo']);
   });
 
   it('reports a missing or invalid requested Saga as not found', () => {
@@ -232,7 +194,6 @@ describe('read-only Saga projections', () => {
 
   it('ignores stale paused status cache data and leaves it byte-for-byte unchanged', () => {
     const subjectRoot = createProject(path.join(temporaryRoot, 'stale-subject'));
-    const referenceRoot = createProject(path.join(temporaryRoot, 'stale-reference'));
     const statusPath = path.join(subjectRoot, 'demo', 'runtime', 'status.json');
     const stale = JSON.stringify({
       schema: 'saga-status/2',
@@ -243,9 +204,7 @@ describe('read-only Saga projections', () => {
     writeFile(subjectRoot, 'demo/runtime/status.json', stale);
     const before = statSync(statusPath);
 
-    const expected = canonicalJson(referenceRoot, 'status', 'demo') as SagaStatus;
     const actual = readSagaStatus('demo', path.join(subjectRoot, 'demo'));
-    expect(withoutObservationTime(actual)).toEqual(withoutObservationTime(expected));
     expect(actual.note).toBe('');
     expect(actual.state).toBe('running');
     expect(statSync(statusPath)).toMatchObject({ size: before.size, mode: before.mode, mtimeMs: before.mtimeMs });
@@ -272,7 +231,7 @@ describe('read-only Saga projections', () => {
     );
   });
 
-  it('treats a missing Saga root as an empty list without invoking the canonical writer', () => {
+  it('treats a missing Saga root as an empty list without writing', () => {
     const missingRoot = path.join(temporaryRoot, 'missing');
     expect(readSagaList(missingRoot)).toEqual([]);
     expect(existsSync(missingRoot)).toBe(false);

@@ -1,0 +1,4 @@
+# Research
+
+## Open questions
+- none

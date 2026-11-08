@@ -64,8 +64,8 @@ function initCommand(selector: SagaSelector): string {
 
 export function requireSagaResources(sagaRoot: string, selector: SagaSelector): string {
   const projectRoot = path.dirname(path.dirname(sagaRoot));
-  const directoryPaths = ['.hagicode', '.hagicode/sagas', '.hagicode/sagas/prompts', '.hagicode/sagas/tools'];
-  const filePaths = [...PROMPT_PATHS, 'tools/saga.mjs', '.gitignore'];
+  const directoryPaths = ['.hagicode', '.hagicode/sagas', '.hagicode/sagas/prompts'];
+  const filePaths = [...PROMPT_PATHS, '.gitignore'];
   const missing = (resourcePath: string): never => {
     throw new CliOperationFailedError(
       `Saga resource path "${resourcePath}" is missing or unsafe. Run ${initCommand(selector)} after correcting the target.`,
@@ -99,7 +99,7 @@ export function requireSagaResources(sagaRoot: string, selector: SagaSelector): 
     missing('.gitignore (runtime ignore rule)');
   }
 
-  return path.join(sagaRoot, 'tools', 'saga.mjs');
+  return path.join(sagaRoot, 'prompts');
 }
 
 export type SagaMetadata = {

@@ -19,7 +19,6 @@ const RESOURCE_DIRECTORIES = [
   '.hagicode',
   '.hagicode/sagas',
   '.hagicode/sagas/prompts',
-  '.hagicode/sagas/tools',
 ];
 
 function isRuntimeIgnoreRule(bytes: Buffer): boolean {

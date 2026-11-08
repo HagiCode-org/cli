@@ -38,7 +38,6 @@ describe('Saga installation safety preflight', () => {
       '.hagicode',
       '.hagicode/sagas',
       '.hagicode/sagas/prompts',
-      '.hagicode/sagas/tools',
     ]) {
       const target = path.join(projectRoot, relativePath);
       mkdirSync(path.dirname(target), { recursive: true });

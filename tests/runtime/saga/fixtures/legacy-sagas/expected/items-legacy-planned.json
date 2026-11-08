@@ -1,0 +1,12 @@
+{
+  "sagaId": "legacy-planned",
+  "items": [
+    {
+      "id": "P1",
+      "title": "Only item",
+      "state": "pending",
+      "cmd": "node -e \"process.exit(0)\"",
+      "note": ""
+    }
+  ]
+}
