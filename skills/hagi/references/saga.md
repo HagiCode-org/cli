@@ -20,7 +20,7 @@ installed. The command prints each file's `created`, `unchanged`, `merged`, `rep
 with code `4` if any conflicts remain. Use `--force` to replace differing managed resources with the bundled versions;
 identical resources remain untouched. Forced initialization never discards custom `.gitignore` entries.
 
-The `.gitignore` rule `*/runtime/` is merged as a separate exact line. Existing bytes, line endings, and entries are
+The `.gitignore` rule `**/runtime/` is merged as a separate exact line. Existing bytes, line endings, and entries are
 preserved; LF and CRLF files are supported, and repeated initialization does not append duplicate rules.
 
 Before writing, initialization checks that managed directories and files are not redirected, that resource targets are
@@ -181,7 +181,7 @@ Human output prints a one-line outcome and one line per refusal reason.
 
 Before any command writes a file under a Saga's `runtime/` directory (`claim`, `set-status`, `tick`, `block`, and a
 `freeze` that moves history), it makes sure `.hagicode/sagas/.gitignore` ignores runtime directories. An existing
-`*/runtime/` or `**/runtime/` line is kept byte for byte; otherwise `**/runtime/` is appended with the file's line endings.
+`**/runtime/` line is kept byte for byte; otherwise `**/runtime/` is appended with the file's line endings.
 If the ignore file cannot be written, the command stops before `runtime/` is created.
 
 ## Read-only projection and ownership

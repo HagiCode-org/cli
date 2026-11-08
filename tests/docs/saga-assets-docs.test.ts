@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { runCli } from '../../src/main';
 import { createDependencies } from '../commands/testHelpers';
 
+const LEGACY_TOOL = ['saga', 'mjs'].join('.');
+
 const root = path.resolve(__dirname, '../..');
 const read = (relative: string) => readFileSync(path.join(root, relative), 'utf8');
 const readme = read('README.md');
@@ -41,7 +43,7 @@ describe('Saga asset maintenance guidance', () => {
 
   it('describes native-only usage and never names the standalone tool', () => {
     for (const documentation of [readme, cliUsage, sagaReference, localDevelopment, sessionData, validation]) {
-      expect(documentation).not.toContain('saga.mjs');
+      expect(documentation).not.toContain(LEGACY_TOOL);
       expect(documentation).not.toMatch(/\bnode\s+\S*tools\/saga/);
     }
     expect(readme).toMatch(/six (bundled )?method prompts/);
