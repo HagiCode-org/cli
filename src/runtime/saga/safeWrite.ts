@@ -117,6 +117,28 @@ export function writeJsonAtomic(sagaRoot: string, target: string, value: unknown
   writeFileAtomic(sagaRoot, target, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+/**
+ * Appends `text` to a contained file, creating the file when it is missing. Earlier bytes are never rewritten: a newline is
+ * written first only when the file is non-empty and does not end with one. The target is checked by `assertContained`, so a
+ * symbolic link or a redirected ancestor refuses the append before any byte is written.
+ */
+export function appendContained(sagaRoot: string, target: string, text: string): void {
+  const file = assertContained(sagaRoot, target);
+  const existing = readContainedBytes(sagaRoot, target);
+  const needsSeparator = existing !== undefined && existing.length > 0 && existing[existing.length - 1] !== 0x0a;
+  let descriptor: number | undefined;
+  try {
+    descriptor = openSync(file, 'a');
+    writeSync(descriptor, toBytes(needsSeparator ? `\n${text}` : text));
+  } catch (error) {
+    throw new CliOperationFailedError(`Cannot append to Saga data "${target}": ${errorMessage(error)}`);
+  } finally {
+    if (descriptor !== undefined) {
+      closeSync(descriptor);
+    }
+  }
+}
+
 export function removeFile(sagaRoot: string, target: string): void {
   unlinkSync(assertContained(sagaRoot, target));
 }

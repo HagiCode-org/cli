@@ -9,6 +9,7 @@ import {
   formatSagaNewHuman,
   formatSagaStatusHuman,
 } from '../formatters/saga';
+import { metadataLimitsText } from '../runtime/metadataOptions';
 import { SagaResourceConflictError } from '../runtime/errors';
 import { loadSagaAssets } from '../runtime/saga/assets';
 import {
@@ -23,6 +24,7 @@ import {
   readSagaStatus,
   requireSagaDirectory,
 } from '../runtime/saga/read';
+import { createSagaSessionAction } from './saga/session';
 import { resolveSagaCommandContext } from './saga/shared';
 import {
   amendSagaCommand,
@@ -151,4 +153,37 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
   addSagaOptions(saga.command('check <saga-id>').description('Check the plan (--phase plan) or the frozen run contract (--phase run, the default).'))
     .option('--phase <phase>', 'plan or run.', 'run')
     .action(checkSaga(dependencies));
+
+  const sessionGroup = saga.command('session').description('Create Saga Worker chat sessions and record them.');
+  addJsonOption(sessionGroup.command('create').description('Create a Worker chat session marked with saga.* metadata and record it in runtime/sessions.md.'))
+    .option('--saga <id>', 'Saga whose Worker this is.')
+    .option('--title <title>', 'Title of the Worker chat session.')
+    .option('--role <role>', 'implementation or verification.')
+    .option('--master <session-id>', 'Session ID of the orchestrating (master) session.')
+    .option('--item <id>', 'Plan item the Worker serves; recorded as "-" when omitted.')
+    .option('--path <directory>', 'Project directory. The backend is called to find the registered project with this real path.')
+    .option('--project-id <id>', 'Backend project ID.')
+    .addHelpText('after', `\n${SESSION_CREATE_HELP}\n`)
+    .action(createSagaSessionAction(dependencies));
 }
+
+const SESSION_CREATE_HELP = [
+  'Metadata written to the session (userMetadata):',
+  '  saga.id        the Saga ID',
+  '  saga.role      always worker',
+  '  saga.worker    the --role value',
+  '  saga.master    the --master value',
+  '  saga.item      the --item value (only when --item is given)',
+  '',
+  'The execution token comes only from SAGA_EXECUTION_TOKEN; --token is refused because it is the backend bearer token.',
+  'The command creates and records the session. It sends no message and does not archive it (see hagi chat archive).',
+  '',
+  'Exit codes: 0 created and recorded; 1 refused, or the record could not be written (the session ID is named);',
+  '2 usage error, nothing sent; 24 Saga not found.',
+  '',
+  metadataLimitsText(),
+  '',
+  'Example:',
+  '  SAGA_EXECUTION_TOKEN=<token> hagi saga session create --saga demo --path <root> --title "T1 implementation"',
+  '    --role implementation --master <your-session-id> --item T1',
+].join('\n');

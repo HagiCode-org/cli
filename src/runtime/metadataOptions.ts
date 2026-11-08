@@ -35,14 +35,24 @@ const METADATA_JSON_HELP = [
   'Keys and values follow the same rules as --metadata.',
 ].join(' ');
 
-/** The limits and an orchestration example, for the help of a command that takes the metadata options. */
-function metadataLimitsHelp(commandName: string, requiredArgs: string): string {
+/**
+ * The metadata limits as help lines, shared with every command that writes session metadata (`chat create`, `proposal create`,
+ * `saga session create`). The backend enforces them; the CLI only states them.
+ */
+export function metadataLimitsText(): string {
   return [
     'Metadata limits (the backend checks them and reports a violation as an error):',
     '  - at most 16 entries in total;',
     '  - key: 1 to 64 characters matching ^[a-z][a-z0-9._-]{0,63}$ (lowercase letters, digits, "." "_" "-", starting with a letter);',
     '  - value: 1 to 512 characters, with no control characters;',
     '  - each key may appear once across --metadata and --metadata-json.',
+  ].join('\n');
+}
+
+/** The limits and an orchestration example, for the help of a command that takes the metadata options. */
+function metadataLimitsHelp(commandName: string, requiredArgs: string): string {
+  return [
+    metadataLimitsText(),
     '',
     'The metadata is returned as userMetadata in --json output and is shown in the human output when present.',
     '',

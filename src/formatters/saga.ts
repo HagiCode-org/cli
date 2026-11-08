@@ -91,6 +91,26 @@ export function formatSagaItemsHuman(payload: { sagaId: string; items: SagaItem[
   ].join('\n');
 }
 
+export type SagaSessionCreateResult = {
+  sagaId: string;
+  session: { sessionId: string; userMetadata?: Record<string, string> };
+  record: string;
+};
+
+/** Human output of `saga session create`: the created session ID, its `saga.*` metadata and the record file. */
+export function formatSagaSessionCreateHuman(result: SagaSessionCreateResult): string {
+  const metadata = Object.entries(result.session.userMetadata ?? {})
+    .map(([key, value]) => `${key}=${value}`)
+    .join(', ');
+  return [
+    `session created: ${result.session.sessionId}`,
+    `saga          ${result.sagaId}`,
+    `metadata      ${metadata || 'none'}`,
+    `recorded in   ${result.record}`,
+    '',
+  ].join('\n');
+}
+
 /** Outcome line plus one line per refusal reason; the reasons are never folded into the outcome line. */
 export function formatSagaRefusalHuman(command: string, sagaId: string, reasons: string[]): string {
   return [
