@@ -1,9 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   getAllowedPublishEntries,
   getRequiredPublishFiles,
   isAllowedBundledFile,
   inspectPackedFiles,
+  verifySagaManifest,
 } from '../../scripts/verify-package.mjs';
 
 const LEGACY_TOOL = ['saga', 'mjs'].join('.');
@@ -137,3 +141,57 @@ describe('verify-package', () => {
     });
   });
 });
+
+describe('verify-package Saga manifest', () => {
+  const repoRoot = path.resolve(__dirname, '..', '..');
+  let temporaryRoot: string;
+
+  beforeEach(() => {
+    temporaryRoot = mkdtempSync(path.join(os.tmpdir(), 'verify-saga-manifest-'));
+    cpSync(path.join(repoRoot, 'resources', 'saga'), path.join(temporaryRoot, 'resources', 'saga'), { recursive: true });
+  });
+
+  afterEach(() => {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  });
+
+  const manifestPath = () => path.join(temporaryRoot, 'resources', 'saga', 'manifest.json');
+  const editManifest = (mutate: (manifest: Record<string, any>) => void) => {
+    const manifest = JSON.parse(readFileSync(manifestPath(), 'utf8'));
+    mutate(manifest);
+    writeFileSync(manifestPath(), JSON.stringify(manifest, null, 2));
+  };
+
+  it('accepts the clean schema 2 manifest of the package', () => {
+    expect(verifySagaManifest(repoRoot)).toMatchObject({ schemaVersion: 2 });
+    expect(verifySagaManifest(temporaryRoot)).toMatchObject({ schemaVersion: 2 });
+  });
+
+  it('fails for a wrong schema version and names the manifest', () => {
+    editManifest(manifest => {
+      manifest.schemaVersion = 1;
+    });
+    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/resources\/saga\/manifest\.json must use schemaVersion 2/);
+  });
+
+  it('fails for a wrong install or method key set', () => {
+    editManifest(manifest => {
+      delete manifest.methods.amend;
+    });
+    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/methods must list exactly goal, research, acceptance, plan, run, amend/);
+
+    cpSync(path.join(repoRoot, 'resources', 'saga', 'manifest.json'), manifestPath());
+    editManifest(manifest => {
+      manifest.install['prompts/run.md'] = manifest.methods.run;
+    });
+    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/install must list exactly \.gitignore/);
+  });
+
+  it('fails when a listed digest does not match its file', () => {
+    editManifest(manifest => {
+      manifest.methods.plan = '0'.repeat(64);
+    });
+    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/does not match resources\/saga\/manifest\.json/);
+  });
+});
+

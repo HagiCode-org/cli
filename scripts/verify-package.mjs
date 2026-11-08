@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -25,6 +26,8 @@ const PUBLISHED_SAGA_RESOURCE_FILES = [
   'resources/saga/prompts/research.md',
   'resources/saga/prompts/run.md',
 ];
+const SAGA_INSTALL_KEYS = [".gitignore"];
+const SAGA_METHOD_KEYS = ["goal", "research", "acceptance", "plan", "run", "amend"];
 const FORBIDDEN_PUBLISH_PATTERNS = [
   /\.map$/i,
   /^dist\/commands\//i,
@@ -158,6 +161,45 @@ function requireManifestEntrypoints(packageJson, repoRoot) {
   }
 }
 
+function assertManifestKeys(value, expectedKeys, field) {
+  const keys = value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value).sort() : undefined;
+  const wanted = [...expectedKeys].sort();
+  if (!keys || keys.length !== wanted.length || keys.some((key, index) => key !== wanted[index])) {
+    throw new Error(`resources/saga/manifest.json ${field} must list exactly ${expectedKeys.join(", ")}.`);
+  }
+}
+
+/**
+ * Checks the schema 2 Saga manifest: exact `install` and `methods` key sets, and a SHA-256 digest for every listed file
+ * that matches the bytes on disk. The published file list itself is checked separately by `inspectPackedFiles`.
+ */
+export function verifySagaManifest(repoRoot) {
+  const sagaRoot = path.join(repoRoot, "resources", "saga");
+  const manifestPath = path.join(sagaRoot, "manifest.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+
+  if (manifest.schemaVersion !== 2) {
+    throw new Error(`resources/saga/manifest.json must use schemaVersion 2, found ${JSON.stringify(manifest.schemaVersion)}.`);
+  }
+  assertManifestKeys(manifest.install, SAGA_INSTALL_KEYS, "install");
+  assertManifestKeys(manifest.methods, SAGA_METHOD_KEYS, "methods");
+
+  const entries = [
+    ...Object.entries(manifest.install).map(([name, digest]) => [name, digest]),
+    ...Object.entries(manifest.methods).map(([name, digest]) => [`prompts/${name}.md`, digest]),
+  ];
+  for (const [relativePath, digest] of entries) {
+    if (typeof digest !== "string" || !/^[0-9a-f]{64}$/.test(digest)) {
+      throw new Error(`resources/saga/manifest.json has an invalid digest for ${relativePath}.`);
+    }
+    const bytes = fs.readFileSync(path.join(sagaRoot, ...relativePath.split("/")));
+    if (createHash("sha256").update(bytes).digest("hex") !== digest) {
+      throw new Error(`Saga resource ${relativePath} does not match resources/saga/manifest.json.`);
+    }
+  }
+  return manifest;
+}
+
 function runNpmPack(repoRoot) {
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
   const packOutput = execFileSync(npmCommand, ["pack", "--dry-run", "--json"], {
@@ -181,6 +223,9 @@ export function verifyPackage({ repoRoot = ".", packSummary } = {}) {
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
   requireManifestEntrypoints(packageJson, resolvedRepoRoot);
+  if (publishesSagaResources(packageJson)) {
+    verifySagaManifest(resolvedRepoRoot);
+  }
 
   const resolvedPackSummary = packSummary ?? runNpmPack(resolvedRepoRoot);
   const inspection = inspectPackedFiles(
