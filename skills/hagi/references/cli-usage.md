@@ -92,9 +92,10 @@ hagi
 |-- chat      list | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | enable | disable | uninstall
-              gallery search | detail | install
-              trusted list | upsert | delete | reset
+|-- skills    local list | enable | disable | uninstall
+|             gallery search | detail | install
+|             trusted list | upsert | delete | reset
+`-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
 
 ## Project repositories
@@ -280,6 +281,28 @@ hagi skills local disable --skill-name hagi --json
 - Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
 - `skills gallery detail` adds skills.sh audit ratings. `--json` keeps the detail fields and adds `audit: { providers: [...] }`, one entry per provider with `provider` and, when supplied, `risk`, `alerts`, `score` and `analyzedAt`. Human output appends one `skills.sh audit (<provider>)` line per provider, with `--` for missing values. If the audit fails or has no data, the command still exits `0` and `audit.providers` is `[]`. A detail failure fails the command as before. The audit never changes the install command preview or installability.
 
+## Agent lock commands
+
+`hagi agent lock` takes turns on a shared resource with other agents. The full protocol, the numbers and the seven agent rules are in [`resource-lock.md`](resource-lock.md); read it before using these commands. There is no top-level `hagi lock`.
+
+```bash
+hagi agent lock acquire --lock-id eu-1/duckov --owner sess-7f2c
+hagi agent lock acquire --server eu-1 --game duckov --owner sess-7f2c --wait --timeout 900
+hagi agent lock status --lock-id eu-1/duckov --owner sess-7f2c --json
+hagi agent lock heartbeat --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock renew --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock release --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock requisition --lock-id eu-1/duckov --owner sess-7f2c --reason "User order: take the lock now"
+hagi agent lock list --prefix eu-1/
+```
+
+- Name the lock with `--lock-id <id>` or with `--server <name> --game <name>` (not both forms). The owner is your own session ID, passed as `--owner`; without it the CLI reads `HAGI_LOCK_OWNER`, then `HAGI_SESSION_ID`, and otherwise exits `2`.
+- `acquire` takes `--wait`, `--timeout <seconds>` (default 900, needs `--wait`), `--lease-seconds <n>` and `--label <text>`. Without `--wait` it exits `0` for `Holding` and `Queued`. With `--wait` it exits `0` only when the owner holds the lock, `31` on timeout and `32` when the queue entry was dropped.
+- `status` takes `--wait-seconds <n>`. `renew` and `heartbeat` take `--epoch <n>` and `--lease-seconds <n>`; `heartbeat` also takes `--interval <seconds>` (default 120) and `--verbose`. `release` takes `--epoch <n>`. `requisition` requires `--reason <text>` and takes `--label <text>`. `list` takes `--prefix <text>`.
+- `heartbeat` is long-running and quiet on success. Run it under a watcher; it exits `32` when the lock is lost and `0` when stopped, without releasing.
+- Timing: 10-minute feedback timeout, 24-hour maximum hold, 2-minute heartbeat interval, 30-second claim window, 60-second waiter TTL.
+- Never run `requisition` unless the user explicitly ordered a forced take.
+
 ## Exit codes
 
 Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
@@ -293,7 +316,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
-| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

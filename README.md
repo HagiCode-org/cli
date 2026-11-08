@@ -117,9 +117,10 @@ hagi
 |-- chat      list | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | enable | disable | uninstall
-              gallery search | detail | install
-              trusted list | upsert | delete | reset
+|-- skills    local list | enable | disable | uninstall
+|             gallery search | detail | install
+|             trusted list | upsert | delete | reset
+`-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
 
 The `send` commands of `chat`, `proposal`, and `hagitask` also take `--steer` and `--no-steer`, and `HAGI_SEND_STEER` sets the default. See [Steer](#steer-send-option).
@@ -679,6 +680,39 @@ hagi skills trusted delete --provider-id example-provider
 hagi skills trusted reset
 ```
 
+## Agent Lock Commands
+
+`hagi agent lock` lets several agents take turns on one shared resource, such as a game server that only one agent may use at a time. The backend keeps a fair queue per lock; the lock is cooperative and cannot stop an action already running on the remote resource. There is no top-level `hagi lock`. The agent-facing protocol is in [`skills/hagi/references/resource-lock.md`](skills/hagi/references/resource-lock.md).
+
+```bash
+hagi agent lock acquire --lock-id eu-1/duckov --owner sess-7f2c
+hagi agent lock acquire --server eu-1 --game duckov --owner sess-7f2c --wait --timeout 900
+hagi agent lock status --lock-id eu-1/duckov --owner sess-7f2c --json
+hagi agent lock heartbeat --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock release --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock requisition --lock-id eu-1/duckov --owner sess-7f2c --reason "User order: take the lock now"
+hagi agent lock list --prefix eu-1/
+```
+
+- Lock: `--lock-id <id>` (one to four `/`-separated segments) or `--server <name> --game <name>`, which means `<server>/<game>`. Giving both forms, or only one of `--server` and `--game`, exits `2` before any request.
+- Owner: `--owner <id>`, then `HAGI_LOCK_OWNER`, then `HAGI_SESSION_ID`. An agent passes its own session ID. The CLI never invents or stores an owner ID; with none set it exits `2`.
+- `acquire` takes the lock or joins the queue and exits `0` for `Holding` and `Queued`. `acquire --wait` long-polls until the owner holds the lock (exit `0`), the `--timeout` passes (default 900 seconds, exit `31`, the queue entry it created is released), or the entry is dropped (exit `32`). Ctrl-C releases the entry it created and never a lock held before. `acquire` has no force option.
+- `status` reads one owner's state (`Holding`, `Queued`, `Expired`, `Requisitioned`, `None`) and exits `0` for all of them; `--wait-seconds` long-polls. `renew` sends one renewal. `release` exits `0` whether or not anything was released. `list` shows the busy locks; `--prefix` filters them.
+- `heartbeat` renews at once and then every `--interval` seconds (default 120), is quiet on success (`--verbose` prints each beat), prints a line and exits `32` when the lock is lost, retries transport errors with backoff and never reports them as loss. SIGINT or SIGTERM ends it with exit `0` and does not release. Run it under a Monitor or another watcher.
+- `requisition` requires `--reason` (1 to 200 characters), takes the lock at once, and displaces the holder, who is told by its next heartbeat. Use it only when a user explicitly ordered a forced take.
+- Answers show the valid-until time, the 24-hour hard cap, the check-in window and, for a queued owner, the turn window.
+
+| Timing | Default |
+| --- | --- |
+| Feedback timeout (no heartbeat releases the lock) | 10 minutes |
+| Maximum hold | 24 hours |
+| Heartbeat interval | 2 minutes |
+| Claim window after a handoff | 30 seconds |
+| Waiter TTL | 60 seconds |
+| `acquire --wait` timeout | 900 seconds |
+
+Agent loop: `acquire`, read the windows, start `heartbeat` under a watcher before any work (or, when queued, a continuous `acquire --wait` watcher), stop the heartbeat when done and then `release`, and stop using the resource as soon as a command exits `32`. After losing track, repeat `acquire` with the same owner; it is safe.
+
 ## Steer (send option)
 
 `hagi chat send`, `hagi proposal send`, and `hagi hagitask send` deliver a message in one of two ways:
@@ -748,7 +782,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
-| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
