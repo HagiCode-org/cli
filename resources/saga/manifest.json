@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "files": {
-    ".gitignore": "49f38d5fe88ca07cdf13680b2d4f8a8f55d9b871e88192ad25db08e5ec1476fa",
+    ".gitignore": "b43c8b58f191b9e0a0b54b6938c0aa4685d70b8f4ae2294c83a9ad6e728b7c0a",
     "prompts/acceptance.md": "11ca06794d0ec19e87d1a4e883a67014563e9750b9fa62a8bedd43a69d52ca65",
     "prompts/amend.md": "be621d1221a85656851548aee1e9e9d78480288bd856baf1bdbf50cb3317f49b",
     "prompts/goal.md": "a545b01c9f6010df661f02cf62ef9bcae527ccf329f304ea82ffdda239b118df",
