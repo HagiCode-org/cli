@@ -12,7 +12,7 @@ const bundledPaths = [
   'prompts/plan.md',
   'prompts/amend.md',
   'prompts/run.md',
-  '.gitignore',
+  'install/gitignore.template',
 ];
 
 function listFiles(directory: string, prefix = ''): string[] {
@@ -24,8 +24,12 @@ function listFiles(directory: string, prefix = ''): string[] {
 
 describe('bundled Saga assets', () => {
   it('contains the ignore rule, the six published methods, and no standalone tool', () => {
-    expect(listFiles(bundleRoot).filter(file => !['manifest.json', '.npmignore'].includes(file)).sort()).toEqual([...bundledPaths].sort());
-    expect(readFileSync(path.join(bundleRoot, '.npmignore'), 'utf8')).toBe('!.gitignore\n');
+    expect(listFiles(bundleRoot).filter(file => file !== 'manifest.json').sort()).toEqual([...bundledPaths].sort());
+  });
+
+  it('keeps no dot-named ignore file in the bundle, because npm renames a packaged .gitignore on install', () => {
+    const dotIgnoreFiles = listFiles(bundleRoot).filter(file => ['.gitignore', '.npmignore'].includes(path.posix.basename(file)));
+    expect(dotIgnoreFiles).toEqual([]);
   });
 
   it('has the run prompt create Workers with hagi saga session create and no manual sessions.md append', () => {
@@ -47,7 +51,7 @@ describe('bundled Saga assets', () => {
     };
     expect(manifest.schemaVersion).toBe(2);
     expect(Object.keys(manifest).sort()).toEqual(['install', 'methods', 'schemaVersion']);
-    expect(Object.keys(manifest.install)).toEqual(['.gitignore']);
+    expect(Object.keys(manifest.install)).toEqual(['install/gitignore.template']);
     expect(Object.keys(manifest.methods).sort()).toEqual(['acceptance', 'amend', 'goal', 'plan', 'research', 'run']);
     for (const [name, digest] of Object.entries(manifest.methods)) {
       expect(createHash('sha256').update(readFileSync(path.join(bundleRoot, 'prompts', `${name}.md`))).digest('hex')).toBe(digest);

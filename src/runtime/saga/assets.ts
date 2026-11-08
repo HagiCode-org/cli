@@ -7,8 +7,12 @@ import { CliOperationFailedError } from '../errors';
 /** Method names in the order the CLI lists them; each one is a bundled file at `prompts/<name>.md`. */
 export const SAGA_METHOD_NAMES = ['goal', 'research', 'acceptance', 'plan', 'run', 'amend'] as const;
 
-/** The only resource `init` installs into a project: the Saga ignore rule. */
-const INSTALL_FILE = '.gitignore';
+/**
+ * The only resource `init` installs into a project: the Saga ignore rule. The bundled source is not named `.gitignore`
+ * because npm renames a packaged `.gitignore` to `.npmignore` on install, which would drop the rule from the package.
+ */
+const INSTALL_SOURCE = 'install/gitignore.template';
+const INSTALL_TARGET = '.gitignore';
 
 type SagaAssetManifest = {
   schemaVersion: 2;
@@ -101,7 +105,7 @@ function parseManifest(bytes: Buffer, manifestPath: string): SagaAssetManifest {
   }
   return {
     schemaVersion: 2,
-    install: requireExactKeys(manifest.install, [INSTALL_FILE], 'install', manifestPath),
+    install: requireExactKeys(manifest.install, [INSTALL_SOURCE], 'install', manifestPath),
     methods: requireExactKeys(manifest.methods, SAGA_METHOD_NAMES, 'methods', manifestPath),
   };
 }
@@ -124,8 +128,8 @@ export function loadSagaAssets(moduleUrl = defaultModuleUrl()): SagaAssets {
   const manifest = parseManifest(readRegularFile(manifestPath, 'Saga asset manifest'), manifestPath);
 
   const install = new Map<string, Buffer>();
-  for (const [assetPath, expectedHash] of Object.entries(manifest.install)) {
-    install.set(assetPath, verifiedBytes(directory, assetPath, expectedHash));
+  for (const [sourcePath, expectedHash] of Object.entries(manifest.install)) {
+    install.set(INSTALL_TARGET, verifiedBytes(directory, sourcePath, expectedHash));
   }
 
   const methods = new Map<string, Buffer>();

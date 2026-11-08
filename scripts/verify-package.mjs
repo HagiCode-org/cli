@@ -17,7 +17,7 @@ const ALLOWED_SHARED_CHUNK_PATTERN = /^dist\/chunks\/[^/]+\.js$/i;
 // Embedded skill files; allowed only when package.json `files` publishes the `skills` directory.
 const PUBLISHED_SKILLS_PATTERN = /^skills\/.+$/i;
 const PUBLISHED_SAGA_RESOURCE_FILES = [
-  'resources/saga/.gitignore',
+  'resources/saga/install/gitignore.template',
   'resources/saga/manifest.json',
   'resources/saga/prompts/acceptance.md',
   'resources/saga/prompts/amend.md',
@@ -26,7 +26,7 @@ const PUBLISHED_SAGA_RESOURCE_FILES = [
   'resources/saga/prompts/research.md',
   'resources/saga/prompts/run.md',
 ];
-const SAGA_INSTALL_KEYS = [".gitignore"];
+const SAGA_INSTALL_KEYS = ["install/gitignore.template"];
 const SAGA_METHOD_KEYS = ["goal", "research", "acceptance", "plan", "run", "amend"];
 const FORBIDDEN_PUBLISH_PATTERNS = [
   /\.map$/i,

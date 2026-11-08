@@ -21,7 +21,7 @@ const manifest = {
   files: ['dist', 'README.md', 'resources/saga'],
 };
 const sagaResources = [
-  'resources/saga/.gitignore',
+  'resources/saga/install/gitignore.template',
   'resources/saga/manifest.json',
   'resources/saga/prompts/acceptance.md',
   'resources/saga/prompts/amend.md',
@@ -98,7 +98,7 @@ describe('verify-package', () => {
 
     const withoutSagaResources = { ...manifest, files: ['dist', 'README.md'] };
     expect(isAllowedBundledFile(`resources/saga/tools/${LEGACY_TOOL}`, withoutSagaResources)).toBe(false);
-    expect(getRequiredPublishFiles(withoutSagaResources)).not.toContain('resources/saga/.gitignore');
+    expect(getRequiredPublishFiles(withoutSagaResources)).not.toContain('resources/saga/install/gitignore.template');
   });
 
   it('rejects a packed standalone Saga tool and its source map by name', () => {
@@ -184,7 +184,7 @@ describe('verify-package Saga manifest', () => {
     editManifest(manifest => {
       manifest.install['prompts/run.md'] = manifest.methods.run;
     });
-    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/install must list exactly \.gitignore/);
+    expect(() => verifySagaManifest(temporaryRoot)).toThrow(/install must list exactly install\/gitignore\.template/);
   });
 
   it('fails when a listed digest does not match its file', () => {

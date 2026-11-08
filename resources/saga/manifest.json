@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "install": {
-    ".gitignore": "b43c8b58f191b9e0a0b54b6938c0aa4685d70b8f4ae2294c83a9ad6e728b7c0a"
+    "install/gitignore.template": "b43c8b58f191b9e0a0b54b6938c0aa4685d70b8f4ae2294c83a9ad6e728b7c0a"
   },
   "methods": {
     "goal": "a545b01c9f6010df661f02cf62ef9bcae527ccf329f304ea82ffdda239b118df",

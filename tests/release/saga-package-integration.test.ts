@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const repoRoot = path.resolve(__dirname, '../..');
 const resourcePaths = [
-  'resources/saga/.gitignore',
+  'resources/saga/install/gitignore.template',
   'resources/saga/manifest.json',
   'resources/saga/prompts/acceptance.md',
   'resources/saga/prompts/amend.md',
@@ -133,7 +133,7 @@ describe('packed Saga acceptance', () => {
     );
     expect(packagedManifest).toEqual(sourceManifest);
     expect(packagedManifest.schemaVersion).toBe(2);
-    expect(Object.keys(packagedManifest.install)).toEqual(['.gitignore']);
+    expect(Object.keys(packagedManifest.install)).toEqual(['install/gitignore.template']);
     expect(Object.keys(packagedManifest.methods)).toEqual(['goal', 'research', 'acceptance', 'plan', 'run', 'amend']);
     const packagedFiles: Array<[string, string]> = [
       ...Object.entries(packagedManifest.install as Record<string, string>),
@@ -147,7 +147,7 @@ describe('packed Saga acceptance', () => {
       expect(extracted).toEqual(source);
       expect(createHash('sha256').update(extracted).digest('hex')).toBe(expectedHash);
     }
-    for (const assetPath of ['.gitignore', 'manifest.json']) {
+    for (const assetPath of ['install/gitignore.template', 'manifest.json']) {
       expect(readFileSync(path.join(extractedPackage, 'resources/saga', assetPath))).toEqual(
         readFileSync(path.join(repoRoot, 'resources/saga', assetPath)),
       );
