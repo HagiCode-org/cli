@@ -169,7 +169,8 @@ hagi
 |-- skills    local list | enable | disable | uninstall
 |             gallery search | detail | install
 |             trusted list | upsert | delete | reset
-`-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
+|-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
+`-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
 ```
 
 The `send` commands of `chat`, `proposal`, and `hagitask` also take `--steer` and `--no-steer`, and `HAGI_SEND_STEER` sets the default. See [Steer](#steer-send-option).
@@ -728,6 +729,17 @@ cat provider.json | hagi skills trusted upsert --input - --json
 hagi skills trusted delete --provider-id example-provider
 hagi skills trusted reset
 ```
+
+## Usage Commands
+
+`hagi usage limits` reads each provider's limit windows (remaining percent and reset time) from the backend's Token Monitor usage. It is read-only and reads nothing from local files.
+
+```bash
+hagi usage limits --provider claude --json
+hagi usage limits --provider claude --wait-until-above 10 --max-wait 480 --json
+```
+
+Low quota is a successful reading: `ready` and `low` both exit `0`. Exit `34` means no usable figure could be read. `--max-wait` (at most `21600`) and `--jitter-seconds` (at most `3600`) are refused without `--wait-until-above`, and `--wait-until-above` needs `--provider`. See the [CLI usage reference](skills/hagi/references/cli-usage.md#usage-commands) for the output fields and exit codes.
 
 ## Agent Lock Commands
 
