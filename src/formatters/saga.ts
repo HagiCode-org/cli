@@ -1,7 +1,7 @@
-import path from 'node:path';
 import type { SagaInstallOutcome, SagaInstallReport } from '../runtime/saga/install';
 import type { SagaMetadata } from '../runtime/saga/create';
 import type { SagaItem, SagaListRow, SagaStatus } from '../runtime/saga/read';
+import type { MethodsReport } from '../runtime/saga/check';
 
 export type SagaCreationResult = {
   id: string;
@@ -10,7 +10,7 @@ export type SagaCreationResult = {
 };
 
 export function formatSagaInitHuman(report: SagaInstallReport): string {
-  const outcomes: SagaInstallOutcome[] = ['created', 'unchanged', 'merged', 'replaced', 'conflict'];
+  const outcomes: SagaInstallOutcome[] = ['created', 'unchanged', 'merged'];
   const lines = [
     'Saga resource installation',
     `root       ${report.root}`,
@@ -25,14 +25,14 @@ export function formatSagaInitHuman(report: SagaInstallReport): string {
   return `${lines.join('\n')}\n`;
 }
 
-export function formatSagaNewHuman(result: SagaCreationResult, promptsPath: string): string {
+export function formatSagaNewHuman(result: SagaCreationResult): string {
   return [
     'Saga created',
     `id         ${result.id}`,
     `directory  ${result.directory}`,
     `createdAt  ${result.metadata.createdAt}`,
     `method     ${result.metadata.method}`,
-    `next       read ${JSON.stringify(path.join(promptsPath, 'goal.md'))}, then write goal.md, research.md, acceptance.md and progress.md`,
+    'next       read the planning method with "hagi saga method goal", then write goal.md, research.md, acceptance.md and progress.md',
     '',
   ].join('\n');
 }
@@ -54,12 +54,12 @@ export function formatSagaListHuman(payload: { sagas: SagaListRow[] }): string {
   ].join('\n');
 }
 
-export function formatSagaStatusHuman(status: SagaStatus, promptsPath: string): string {
+export function formatSagaStatusHuman(status: SagaStatus): string {
   const artifactSummary = Object.entries(status.artifacts)
     .map(([name, present]) => `${name}=${present ? 'written' : 'missing'}`)
     .join(', ');
   const next = status.nextArtifact
-    ? `next artifact ${status.nextArtifact}: read ${JSON.stringify(path.join(promptsPath, `${status.nextArtifact}.md`))}`
+    ? `next artifact ${status.nextArtifact}: read the method with "hagi saga method ${status.nextArtifact}"`
     : 'next artifact none';
   return [
     `Saga ${status.sagaId}`,
@@ -111,6 +111,21 @@ export function formatSagaSessionCreateHuman(result: SagaSessionCreateResult): s
   ].join('\n');
 }
 
+/** One notice line per drifted method. Drift is informational: it never changes the outcome of a command. */
+export function formatMethodNotices(methods: MethodsReport | undefined): string {
+  if (!methods) {
+    return '';
+  }
+  return methods.drift
+    .map(entry => `notice: method ${entry.name} differs from the digest recorded at freeze (recorded ${entry.recorded ?? 'none'}, installed ${entry.current}); confirm before resuming\n`)
+    .join('');
+}
+
+/** Extra human lines for a refused command: method drift is still reported alongside the refusal reasons. */
+export function formatSagaRefusalExtras(details: Record<string, unknown>): string {
+  return formatMethodNotices(details.methods as MethodsReport | undefined);
+}
+
 /** Outcome line plus one line per refusal reason; the reasons are never folded into the outcome line. */
 export function formatSagaRefusalHuman(command: string, sagaId: string, reasons: string[]): string {
   return [
@@ -144,7 +159,8 @@ export function formatSagaWriteHuman(command: string, result: Record<string, unk
     case 'release':
       return `released: ${sagaId} (owner session ${String(result.ownerSession)})\n`;
     case 'check':
-      return `check passed: ${sagaId} (${String(result.phase)})\n`;
+      return `check passed: ${sagaId} (${String(result.phase)})\n`
+        + formatMethodNotices(result.methods as MethodsReport | undefined);
     case 'set-status':
       return `status set: ${sagaId} ${String(result.state)} (revision ${String(result.revision)})\n`;
     case 'tick':

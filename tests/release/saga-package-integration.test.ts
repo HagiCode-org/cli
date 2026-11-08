@@ -132,16 +132,16 @@ describe('packed Saga acceptance', () => {
       readFileSync(path.join(extractedPackage, 'resources/saga/manifest.json'), 'utf8'),
     );
     expect(packagedManifest).toEqual(sourceManifest);
-    expect(Object.keys(packagedManifest.files)).toEqual([
-      '.gitignore',
-      'prompts/acceptance.md',
-      'prompts/amend.md',
-      'prompts/goal.md',
-      'prompts/plan.md',
-      'prompts/research.md',
-      'prompts/run.md',
-    ]);
-    for (const [relativePath, expectedHash] of Object.entries(packagedManifest.files)) {
+    expect(packagedManifest.schemaVersion).toBe(2);
+    expect(Object.keys(packagedManifest.install)).toEqual(['.gitignore']);
+    expect(Object.keys(packagedManifest.methods)).toEqual(['goal', 'research', 'acceptance', 'plan', 'run', 'amend']);
+    const packagedFiles: Array<[string, string]> = [
+      ...Object.entries(packagedManifest.install as Record<string, string>),
+      ...Object.entries(packagedManifest.methods as Record<string, string>).map(
+        ([name, digest]): [string, string] => [`prompts/${name}.md`, digest],
+      ),
+    ];
+    for (const [relativePath, expectedHash] of packagedFiles) {
       const source = readFileSync(path.join(repoRoot, 'resources/saga', relativePath));
       const extracted = readFileSync(path.join(extractedPackage, 'resources/saga', relativePath));
       expect(extracted).toEqual(source);
@@ -165,8 +165,8 @@ describe('packed Saga acceptance', () => {
     const initial = invoke('saga', 'init', '--path', projectPath, '--json');
     expect(initial.code, `${initial.stderr}\n${initial.stdout}`).toBe(0);
     const initialReport = JSON.parse(initial.stdout);
-    expect(initialReport.files).toHaveLength(7);
-    expect(initialReport.files.find((file: { path: string }) => file.path === '.gitignore')?.outcome).toBe('created');
+    expect(initialReport.files).toEqual([{ path: '.gitignore', outcome: 'created' }]);
+    expect(initialReport.conflicts).toEqual([]);
 
     const repeated = invoke('saga', 'init', '--path', projectPath, '--json');
     expect(repeated.code).toBe(0);
@@ -174,19 +174,18 @@ describe('packed Saga acceptance', () => {
 
     const sagaRoot = path.join(projectPath, '.hagicode/sagas');
     const goalPath = path.join(sagaRoot, 'prompts/goal.md');
-    const bundledGoal = readFileSync(goalPath);
-    writeFileSync(goalPath, 'local conflict');
-    const conflict = invoke('saga', 'init', '--path', projectPath, '--json');
-    expect(conflict.code).toBe(4);
-    expect(JSON.parse(conflict.stdout).conflicts).toEqual(['prompts/goal.md']);
-    expect(conflict.stderr).toContain('Saga resources conflict with existing files');
-    expect(JSON.parse(conflict.stderr).error.exitCode).toBe(4);
-    expect(readFileSync(goalPath, 'utf8')).toBe('local conflict');
+    mkdirSync(path.dirname(goalPath), { recursive: true });
+    writeFileSync(goalPath, 'local legacy prompt');
+    const legacy = invoke('saga', 'init', '--path', projectPath, '--json');
+    expect(legacy.code).toBe(0);
+    expect(JSON.parse(legacy.stdout).conflicts).toEqual([]);
+    expect(legacy.stdout).not.toContain('prompts');
+    expect(readFileSync(goalPath, 'utf8')).toBe('local legacy prompt');
 
     const forced = invoke('saga', 'init', '--path', projectPath, '--force', '--json');
     expect(forced.code).toBe(0);
     expect(JSON.parse(forced.stdout).conflicts).toEqual([]);
-    expect(readFileSync(goalPath)).toEqual(bundledGoal);
+    expect(readFileSync(goalPath, 'utf8')).toBe('local legacy prompt');
 
     const created = invoke('saga', 'new', 'demo', '--path', projectPath, '--json');
     expect(created.code).toBe(0);
@@ -201,7 +200,7 @@ describe('packed Saga acceptance', () => {
     expect(separatorQuery.code).toBe(0);
     expect(JSON.parse(separatorQuery.stdout).sagas).toHaveLength(1);
 
-    expect(existsSync(path.join(sagaRoot, 'prompts', 'goal.md'))).toBe(true);
+    expect(readFileSync(goalPath, 'utf8')).toBe('local legacy prompt');
     expect(existsSync(path.join(sagaRoot, 'tools'))).toBe(false);
 
     if (process.platform === 'win32') {

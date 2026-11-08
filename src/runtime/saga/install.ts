@@ -15,10 +15,10 @@ import path from 'node:path';
 import type { SagaAssets } from './assets';
 import { CliOperationFailedError } from '../errors';
 
+/** Directories `init` creates. Method prompts are not project resources, so no `prompts` directory is ever created. */
 const RESOURCE_DIRECTORIES = [
   '.hagicode',
   '.hagicode/sagas',
-  '.hagicode/sagas/prompts',
 ];
 
 function isRuntimeIgnoreRule(bytes: Buffer): boolean {
@@ -77,7 +77,7 @@ function assertContained(root: string, target: string, actualPath: string): void
   }
 }
 
-export function preflightSagaInstall(projectDirectory: string, assets: SagaAssets, force = false): string {
+export function preflightSagaInstall(projectDirectory: string, assets: SagaAssets): string {
   const projectRoot = realpathSync(projectDirectory);
   if (!statSync(projectRoot).isDirectory()) {
     throw new CliOperationFailedError(`Selected project path is not a directory: ${projectDirectory}`);
@@ -99,7 +99,7 @@ export function preflightSagaInstall(projectDirectory: string, assets: SagaAsset
     assertContained(projectRoot, target, realpathSync(target));
   }
 
-  for (const [assetPath, expectedBytes] of assets.files) {
+  for (const assetPath of assets.install.keys()) {
     const target = path.join(sagaRoot, ...assetPath.split('/'));
     const stat = lstatIfPresent(target);
     if (!stat) {
@@ -113,35 +113,35 @@ export function preflightSagaInstall(projectDirectory: string, assets: SagaAsset
     }
     assertContained(sagaRoot, target, realpathSync(target));
 
-    if (stat.nlink > 1) {
-      const currentBytes = readFileSync(target);
-      const wouldWrite = assetPath === '.gitignore'
-        ? !isRuntimeIgnoreRule(currentBytes)
-        : force && !currentBytes.equals(expectedBytes);
-      if (wouldWrite) {
-        throw new CliOperationFailedError(`Refusing to overwrite hard-linked Saga resource: ${target}`);
-      }
+    if (stat.nlink > 1 && !isRuntimeIgnoreRule(readFileSync(target))) {
+      throw new CliOperationFailedError(`Refusing to overwrite hard-linked Saga resource: ${target}`);
     }
   }
 
   return sagaRoot;
 }
 
-export type SagaInstallOutcome = 'created' | 'unchanged' | 'merged' | 'replaced' | 'conflict';
+export type SagaInstallOutcome = 'created' | 'unchanged' | 'merged';
 
 export type SagaInstallReport = {
   root: string;
   force: boolean;
   files: Array<{ path: string; outcome: SagaInstallOutcome }>;
+  /** Always empty: the only installed resource is the ignore file, which is merged rather than replaced. */
   conflicts: string[];
 };
 
+/**
+ * Installs the Saga ignore rule and the Saga directories. Nothing under `prompts/` is read, compared or written, so an
+ * existing project-local `prompts/` (or a legacy `tools/` file) is left exactly as it is. `force` is accepted for
+ * compatibility and changes nothing.
+ */
 export function installSagaResources(
   projectDirectory: string,
   assets: SagaAssets,
   force = false,
 ): SagaInstallReport {
-  const sagaRoot = preflightSagaInstall(projectDirectory, assets, force);
+  const sagaRoot = preflightSagaInstall(projectDirectory, assets);
   const projectRoot = path.dirname(path.dirname(sagaRoot));
 
   for (const relativePath of RESOURCE_DIRECTORIES) {
@@ -150,44 +150,29 @@ export function installSagaResources(
       mkdirSync(target);
     }
   }
-  preflightSagaInstall(projectRoot, assets, force);
+  preflightSagaInstall(projectRoot, assets);
 
   const files: SagaInstallReport['files'] = [];
-  const conflicts: string[] = [];
-  for (const [assetPath, expectedBytes] of assets.files) {
+  for (const [assetPath, expectedBytes] of assets.install) {
     const target = path.join(sagaRoot, ...assetPath.split('/'));
     const stat = lstatIfPresent(target);
     if (!stat) {
-      preflightSagaInstall(projectRoot, assets, force);
+      preflightSagaInstall(projectRoot, assets);
       writeAtomically(target, expectedBytes);
       files.push({ path: assetPath, outcome: 'created' });
       continue;
     }
 
     const currentBytes = readFileSync(target);
-    if (assetPath === '.gitignore') {
-      const mergedBytes = mergeRuntimeIgnoreRule(currentBytes);
-      if (currentBytes.equals(mergedBytes)) {
-        files.push({ path: assetPath, outcome: 'unchanged' });
-      } else {
-        preflightSagaInstall(projectRoot, assets, force);
-        writeAtomically(target, mergedBytes, stat.mode & 0o777);
-        files.push({ path: assetPath, outcome: 'merged' });
-      }
-      continue;
-    }
-
-    if (currentBytes.equals(expectedBytes)) {
+    const mergedBytes = mergeRuntimeIgnoreRule(currentBytes);
+    if (currentBytes.equals(mergedBytes)) {
       files.push({ path: assetPath, outcome: 'unchanged' });
-    } else if (force) {
-      preflightSagaInstall(projectRoot, assets, force);
-      writeAtomically(target, expectedBytes, stat.mode & 0o777);
-      files.push({ path: assetPath, outcome: 'replaced' });
     } else {
-      conflicts.push(assetPath);
-      files.push({ path: assetPath, outcome: 'conflict' });
+      preflightSagaInstall(projectRoot, assets);
+      writeAtomically(target, mergedBytes, stat.mode & 0o777);
+      files.push({ path: assetPath, outcome: 'merged' });
     }
   }
 
-  return { root: sagaRoot, force, files, conflicts };
+  return { root: sagaRoot, force, files, conflicts: [] };
 }

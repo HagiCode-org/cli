@@ -54,8 +54,7 @@ describe(`Legacy tools/${LEGACY_TOOL} left by an earlier installation`, () => {
     const sagaRoot = report.root;
     expect(statSync(path.join(sagaRoot, 'tools'), { throwIfNoEntry: false })).toBeUndefined();
 
-    const promptsPath = requireSagaResources(sagaRoot, { kind: 'path', value: projectRoot });
-    expect(promptsPath).toBe(path.join(sagaRoot, 'prompts'));
+    expect(requireSagaResources(sagaRoot, { kind: 'path', value: projectRoot })).toBeUndefined();
 
     const metadata = createSagaNatively('demo', sagaRoot);
     expect(metadata.id).toBe('demo');

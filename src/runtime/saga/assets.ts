@@ -2,25 +2,26 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { CliOperationFailedError } from '../errors';
 
-const ASSET_PATHS = [
-  '.gitignore',
-  'prompts/acceptance.md',
-  'prompts/amend.md',
-  'prompts/goal.md',
-  'prompts/plan.md',
-  'prompts/research.md',
-  'prompts/run.md',
-];
+/** Method names in the order the CLI lists them; each one is a bundled file at `prompts/<name>.md`. */
+export const SAGA_METHOD_NAMES = ['goal', 'research', 'acceptance', 'plan', 'run', 'amend'] as const;
+
+/** The only resource `init` installs into a project: the Saga ignore rule. */
+const INSTALL_FILE = '.gitignore';
 
 type SagaAssetManifest = {
-  schemaVersion: number;
-  files: Record<string, string>;
+  schemaVersion: 2;
+  install: Record<string, string>;
+  methods: Record<string, string>;
 };
 
 export type SagaAssets = {
   directory: string;
-  files: ReadonlyMap<string, Buffer>;
+  /** Resources installed into `.hagicode/sagas/`, keyed by their path there. */
+  install: ReadonlyMap<string, Buffer>;
+  /** Published method bytes, keyed by method name. */
+  methods: ReadonlyMap<string, Buffer>;
 };
 
 function defaultModuleUrl(): string {
@@ -51,12 +52,34 @@ function readRegularFile(filePath: string, description: string): Buffer {
   try {
     stat = fs.lstatSync(filePath);
   } catch (error) {
-    throw new Error(`Unable to read ${description} at ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new CliOperationFailedError(
+      `Unable to read ${description} at ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
   if (!stat.isFile()) {
-    throw new Error(`${description} is not a regular file: ${filePath}`);
+    throw new CliOperationFailedError(`${description} is not a regular file: ${filePath}`);
   }
   return fs.readFileSync(filePath);
+}
+
+function requireExactKeys(value: unknown, expected: readonly string[], field: string, manifestPath: string): Record<string, string> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new CliOperationFailedError(`Invalid Saga asset manifest at ${manifestPath}: ${field} must be an object`);
+  }
+  const entries = value as Record<string, unknown>;
+  const keys = Object.keys(entries).sort();
+  const wanted = [...expected].sort();
+  if (keys.length !== wanted.length || keys.some((key, index) => key !== wanted[index])) {
+    throw new CliOperationFailedError(
+      `Invalid Saga asset manifest at ${manifestPath}: ${field} must list exactly ${expected.join(', ')}`,
+    );
+  }
+  for (const key of keys) {
+    if (typeof entries[key] !== 'string') {
+      throw new CliOperationFailedError(`Invalid Saga asset manifest at ${manifestPath}: ${field}.${key} must be a digest`);
+    }
+  }
+  return entries as Record<string, string>;
 }
 
 function parseManifest(bytes: Buffer, manifestPath: string): SagaAssetManifest {
@@ -64,41 +87,51 @@ function parseManifest(bytes: Buffer, manifestPath: string): SagaAssetManifest {
   try {
     value = JSON.parse(bytes.toString('utf8'));
   } catch (error) {
-    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new CliOperationFailedError(
+      `Invalid Saga asset manifest at ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: expected an object`);
+    throw new CliOperationFailedError(`Invalid Saga asset manifest at ${manifestPath}: expected an object`);
   }
 
-  const manifest = value as Partial<SagaAssetManifest>;
-  if (manifest.schemaVersion !== 1) {
-    throw new Error(`Unsupported Saga asset manifest schema at ${manifestPath}`);
+  const manifest = value as Record<string, unknown>;
+  if (manifest.schemaVersion !== 2) {
+    throw new CliOperationFailedError(`Unsupported Saga asset manifest schema at ${manifestPath}`);
   }
-  if (!manifest.files || typeof manifest.files !== 'object' || Array.isArray(manifest.files)) {
-    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: files must be an object`);
-  }
-
-  const paths = Object.keys(manifest.files).sort();
-  if (paths.length !== ASSET_PATHS.length || paths.some((assetPath, index) => assetPath !== ASSET_PATHS[index])) {
-    throw new Error(`Invalid Saga asset manifest at ${manifestPath}: expected exactly the seven managed assets`);
-  }
-  return manifest as SagaAssetManifest;
+  return {
+    schemaVersion: 2,
+    install: requireExactKeys(manifest.install, [INSTALL_FILE], 'install', manifestPath),
+    methods: requireExactKeys(manifest.methods, SAGA_METHOD_NAMES, 'methods', manifestPath),
+  };
 }
 
+function verifiedBytes(directory: string, relativePath: string, expectedHash: string): Buffer {
+  const bytes = readRegularFile(path.join(directory, ...relativePath.split('/')), `Saga asset ${relativePath}`);
+  if (!/^[0-9a-f]{64}$/.test(expectedHash) || createHash('sha256').update(bytes).digest('hex') !== expectedHash) {
+    throw new CliOperationFailedError(`Saga asset integrity check failed for ${relativePath}`);
+  }
+  return bytes;
+}
+
+/**
+ * Loads and verifies every bundled Saga resource. Any missing, unreadable or mismatched file fails before the caller
+ * receives any bytes, so a tampered package never yields content.
+ */
 export function loadSagaAssets(moduleUrl = defaultModuleUrl()): SagaAssets {
   const directory = findAssetDirectory(moduleUrl);
   const manifestPath = path.join(directory, 'manifest.json');
   const manifest = parseManifest(readRegularFile(manifestPath, 'Saga asset manifest'), manifestPath);
-  const files = new Map<string, Buffer>();
 
-  for (const assetPath of ASSET_PATHS) {
-    const bytes = readRegularFile(path.join(directory, assetPath), `Saga asset ${assetPath}`);
-    const expectedHash = manifest.files[assetPath];
-    if (!/^[0-9a-f]{64}$/.test(expectedHash) || createHash('sha256').update(bytes).digest('hex') !== expectedHash) {
-      throw new Error(`Saga asset integrity check failed for ${assetPath}`);
-    }
-    files.set(assetPath, bytes);
+  const install = new Map<string, Buffer>();
+  for (const [assetPath, expectedHash] of Object.entries(manifest.install)) {
+    install.set(assetPath, verifiedBytes(directory, assetPath, expectedHash));
   }
 
-  return { directory, files };
+  const methods = new Map<string, Buffer>();
+  for (const name of SAGA_METHOD_NAMES) {
+    methods.set(name, verifiedBytes(directory, `prompts/${name}.md`, manifest.methods[name]));
+  }
+
+  return { directory, install, methods };
 }

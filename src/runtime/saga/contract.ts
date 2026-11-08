@@ -41,6 +41,8 @@ export type ContractLock = {
   prev?: string;
   hashes: Record<string, string>;
   acceptanceByItem: Record<string, string>;
+  /** SHA-256 of each published method at freeze time; absent in locks written before method digests existed. */
+  methods?: Record<string, string>;
   items: string[];
 };
 
@@ -137,7 +139,10 @@ export function acceptanceHashes(commands: Record<string, string>): Record<strin
   return Object.fromEntries(Object.entries(commands).map(([id, command]) => [id, sha256(command)]));
 }
 
-/** Byte layout identical to the bundled tool's contract.lock. */
+/**
+ * Byte layout identical to the bundled tool's contract.lock. The optional `methods:` section sits between
+ * `acceptance-by-item:` and `items:`; a lock without it serializes exactly as before.
+ */
 export function serializeLock(lock: ContractLock): string {
   const section = (entries: Record<string, string>) => Object.entries(entries)
     .map(([key, value]) => `  ${key}: ${value}\n`)
@@ -145,7 +150,9 @@ export function serializeLock(lock: ContractLock): string {
   return `revision: ${lock.revision}\n`
     + (lock.frozenAt === undefined ? '' : `frozen-at: ${lock.frozenAt}\n`)
     + (lock.prev === undefined ? '' : `prev: ${lock.prev}\n`)
-    + `hashes:\n${section(lock.hashes)}acceptance-by-item:\n${section(lock.acceptanceByItem)}items: ${lock.items.join(' ')}\n`;
+    + `hashes:\n${section(lock.hashes)}acceptance-by-item:\n${section(lock.acceptanceByItem)}`
+    + (lock.methods === undefined ? '' : `methods:\n${section(lock.methods)}`)
+    + `items: ${lock.items.join(' ')}\n`;
 }
 
 /** Parses contract.lock; a malformed file is an operation failure, never a silent default. */
@@ -169,6 +176,7 @@ export function parseLock(text: string, filePath = 'contract.lock'): ContractLoc
     prev,
     hashes: readSection(text, 'hashes'),
     acceptanceByItem: readSection(text, 'acceptance-by-item'),
+    methods: /^methods:\r?\n/m.test(text) ? readSection(text, 'methods') : undefined,
     items: items[1].split(/\s+/).filter(Boolean),
   };
 }

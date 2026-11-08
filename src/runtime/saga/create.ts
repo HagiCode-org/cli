@@ -7,8 +7,6 @@ import { assertContained, writeFileExclusive } from './safeWrite';
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
 const RESERVED_IDS = new Set(['prompts', 'tools', 'archive', 'runtime', 'amendments', 'revisions']);
-const PROMPT_PATHS = ['goal', 'research', 'acceptance', 'plan', 'amend', 'run']
-  .map(name => `prompts/${name}.md`);
 
 function exists(target: string): boolean {
   try {
@@ -62,10 +60,14 @@ function initCommand(selector: SagaSelector): string {
   return `hagi saga init ${option} ${JSON.stringify(selector.value)}`;
 }
 
-export function requireSagaResources(sagaRoot: string, selector: SagaSelector): string {
+/**
+ * Requires only what `init` installs: the two Saga directories and the runtime ignore rule. Method prompts are read
+ * from the CLI package with `hagi saga method`, so a project never needs them here.
+ */
+export function requireSagaResources(sagaRoot: string, selector: SagaSelector): void {
   const projectRoot = path.dirname(path.dirname(sagaRoot));
-  const directoryPaths = ['.hagicode', '.hagicode/sagas', '.hagicode/sagas/prompts'];
-  const filePaths = [...PROMPT_PATHS, '.gitignore'];
+  const directoryPaths = ['.hagicode', '.hagicode/sagas'];
+  const filePaths = ['.gitignore'];
   const missing = (resourcePath: string): never => {
     throw new CliOperationFailedError(
       `Saga resource path "${resourcePath}" is missing or unsafe. Run ${initCommand(selector)} after correcting the target.`,
@@ -99,8 +101,6 @@ export function requireSagaResources(sagaRoot: string, selector: SagaSelector): 
   if (!ignoreLines.includes('**/runtime/') && !ignoreLines.includes('*/runtime/')) {
     missing('.gitignore (runtime ignore rule)');
   }
-
-  return path.join(sagaRoot, 'prompts');
 }
 
 export type SagaMetadata = {

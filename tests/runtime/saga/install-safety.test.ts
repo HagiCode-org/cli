@@ -37,51 +37,56 @@ describe('Saga installation safety preflight', () => {
     for (const relativePath of [
       '.hagicode',
       '.hagicode/sagas',
-      '.hagicode/sagas/prompts',
     ]) {
       const target = path.join(projectRoot, relativePath);
       mkdirSync(path.dirname(target), { recursive: true });
       symlinkSync(outside, target, process.platform === 'win32' ? 'junction' : 'dir');
       const before = snapshot(outside);
-      expect(() => preflightSagaInstall(projectRoot, assets, true)).toThrow(/redirected Saga installation directory/);
+      expect(() => preflightSagaInstall(projectRoot, assets)).toThrow(/redirected Saga installation directory/);
       expect(snapshot(outside)).toBe(before);
       rmSync(target, { force: true });
     }
   });
 
-  it('rejects redirected and nonregular managed files before changing external content', () => {
+  it('rejects a redirected or nonregular ignore file before changing external content', () => {
     if (process.platform === 'win32') {
       return;
     }
 
     const projectRoot = path.join(temporaryRoot, 'project');
     const outside = path.join(temporaryRoot, 'outside');
-    const prompts = path.join(projectRoot, '.hagicode/sagas/prompts');
-    mkdirSync(prompts, { recursive: true });
+    const sagaRoot = path.join(projectRoot, '.hagicode/sagas');
+    mkdirSync(sagaRoot, { recursive: true });
     mkdirSync(outside);
     const outsideFile = path.join(outside, 'marker.txt');
     writeFileSync(outsideFile, 'unchanged');
     const before = snapshot(outside);
-    symlinkSync(outsideFile, path.join(prompts, 'goal.md'));
-    expect(() => preflightSagaInstall(projectRoot, assets, true)).toThrow(/redirected Saga resource/);
+    const ignorePath = path.join(sagaRoot, '.gitignore');
+    symlinkSync(outsideFile, ignorePath);
+    expect(() => preflightSagaInstall(projectRoot, assets)).toThrow(/redirected Saga resource/);
     expect(snapshot(outside)).toBe(before);
 
-    rmSync(path.join(prompts, 'goal.md'));
-    mkdirSync(path.join(prompts, 'goal.md'));
-    expect(() => preflightSagaInstall(projectRoot, assets, true)).toThrow(/not a regular file/);
+    rmSync(ignorePath);
+    mkdirSync(ignorePath);
+    expect(() => preflightSagaInstall(projectRoot, assets)).toThrow(/not a regular file/);
     expect(snapshot(outside)).toBe(before);
   });
 
-  it('refuses forced replacement of a hard-linked resource', () => {
+  it('refuses a hard-linked ignore file that would need a merge, and accepts one that already has the rule', () => {
     const projectRoot = path.join(temporaryRoot, 'project');
     const externalFile = path.join(temporaryRoot, 'external-resource');
-    const target = path.join(projectRoot, '.hagicode/sagas/prompts/goal.md');
+    const target = path.join(projectRoot, '.hagicode/sagas/.gitignore');
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(externalFile, 'custom bytes');
     linkSync(externalFile, target);
     const before = `${readFileSync(externalFile).toString('base64')}:${statSync(externalFile).mtimeMs}`;
 
-    expect(() => preflightSagaInstall(projectRoot, assets, true)).toThrow(/hard-linked Saga resource/);
+    expect(() => preflightSagaInstall(projectRoot, assets)).toThrow(/hard-linked Saga resource/);
     expect(`${readFileSync(externalFile).toString('base64')}:${statSync(externalFile).mtimeMs}`).toBe(before);
+
+    rmSync(target);
+    writeFileSync(externalFile, '**/runtime/\n');
+    linkSync(externalFile, target);
+    expect(() => preflightSagaInstall(projectRoot, assets)).not.toThrow();
   });
 });

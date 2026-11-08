@@ -90,6 +90,13 @@ describe('Saga command registration', () => {
     const status = createDependencies();
     expect(await runCli(['node', 'hagi', 'saga', 'status', '--help'], status.dependencies)).toBe(0);
     expect(status.stdout.join('')).toContain('<saga-id>');
+
+    const method = createDependencies();
+    expect(await runCli(['node', 'hagi', 'saga', 'method', '--help'], method.dependencies)).toBe(0);
+    expect(method.stdout.join('')).toContain('<name>');
+    expect(method.stdout.join('')).toContain('--json');
+    expect(method.stdout.join('')).not.toContain('--path');
+    expect(method.stdout.join('')).not.toContain('--project-id');
   });
 
   it('rejects unknown contract commands and missing required Saga IDs as usage errors', async () => {
@@ -366,24 +373,24 @@ describe('Saga command registration', () => {
     ).toBe(EXIT_CODES.TRANSPORT);
   });
 
-  it('prints init outcomes and maps preserved resource conflicts to exit code 4', async () => {
+  it('prints init outcomes and exits 0 while leaving legacy project prompts untouched', async () => {
     const temporaryRoot = mkdtempSync(path.join(os.tmpdir(), 'hagi-saga-init-command-'));
     const projectPath = path.join(temporaryRoot, 'Project With Spaces');
-    const conflictPath = path.join(projectPath, '.hagicode/sagas/prompts/goal.md');
-    mkdirSync(path.dirname(conflictPath), { recursive: true });
-    writeFileSync(conflictPath, 'custom prompt');
+    const legacyPath = path.join(projectPath, '.hagicode/sagas/prompts/goal.md');
+    mkdirSync(path.dirname(legacyPath), { recursive: true });
+    writeFileSync(legacyPath, 'custom prompt');
 
     try {
       const { dependencies, stdout, stderr, api } = createDependencies();
       expect(
         await runCli(['node', 'hagi', 'saga', 'init', '--path', projectPath], dependencies),
-      ).toBe(4);
-      expect(stdout.join('')).toContain('conflict  prompts/goal.md');
-      expect(stdout.join('')).toContain('created');
-      expect(stderr.join('')).toContain('Saga resources conflict with existing files');
-      expect(stderr.join('')).toContain('--force');
+      ).toBe(0);
+      expect(stdout.join('')).toContain('created   .gitignore');
+      expect(stdout.join('')).not.toContain('prompts');
+      expect(stderr.join('')).toBe('');
       expect(api.listProjects).not.toHaveBeenCalled();
-      expect(existsSync(path.join(projectPath, '.hagicode/sagas/prompts/research.md'))).toBe(true);
+      expect(readFileSync(legacyPath, 'utf8')).toBe('custom prompt');
+      expect(existsSync(path.join(projectPath, '.hagicode/sagas/prompts/research.md'))).toBe(false);
 
       const forced = createDependencies();
       expect(
@@ -395,10 +402,9 @@ describe('Saga command registration', () => {
       const report = JSON.parse(forced.stdout.join(''));
       expect(report.force).toBe(true);
       expect(report.conflicts).toEqual([]);
-      expect(report.files).toContainEqual({ path: 'prompts/goal.md', outcome: 'replaced' });
-      expect(report.files.every((file: { path: string; outcome: string }) =>
-        ['created', 'unchanged', 'merged', 'replaced'].includes(file.outcome),
-      )).toBe(true);
+      expect(report.files).toEqual([{ path: '.gitignore', outcome: 'unchanged' }]);
+      expect(forced.stdout.join('')).not.toContain('prompts');
+      expect(readFileSync(legacyPath, 'utf8')).toBe('custom prompt');
       expect(forced.stderr).toEqual([]);
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });
@@ -421,6 +427,8 @@ describe('Saga command registration', () => {
         await runCli(['node', 'hagi', 'saga', 'new', 'demo', '--path', projectPath], human.dependencies),
       ).toBe(0);
       expect(human.stdout.join('')).toContain('Saga created');
+      expect(human.stdout.join('')).toContain('hagi saga method goal');
+      expect(human.stdout.join('')).not.toContain('prompts');
       expect(human.stdout.join('')).toContain('id         demo');
       expect(human.stdout.join('')).toContain(path.join(projectPath, '.hagicode/sagas/demo'));
       expect(human.stdout.join('')).toContain('then write goal.md, research.md, acceptance.md and progress.md');
@@ -535,8 +543,8 @@ describe('Saga command registration', () => {
       ).toBe(0);
       expect(statusHuman.stdout.join('')).toContain('artifacts goal=written');
       expect(statusHuman.stdout.join('')).toContain('next artifact research');
-      expect(statusHuman.stdout.join('')).toContain('read ');
-      expect(statusHuman.stdout.join('')).toContain('/prompts/research.md');
+      expect(statusHuman.stdout.join('')).toContain('read the method with "hagi saga method research"');
+      expect(statusHuman.stdout.join('')).not.toContain('prompts');
 
       const itemsJson = createDependencies();
       expect(

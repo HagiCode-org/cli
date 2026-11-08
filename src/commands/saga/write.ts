@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
 import type { AppDependencies } from '../../runtime/commandContext';
 import { formatJson } from '../../formatters/json';
-import { formatSagaRefusalHuman, formatSagaWriteHuman } from '../../formatters/saga';
+import { formatSagaRefusalExtras, formatSagaRefusalHuman, formatSagaWriteHuman } from '../../formatters/saga';
 import { CliSagaRefusalError, CliUsageError } from '../../runtime/errors';
-import { checkErrors, type CheckPhase } from '../../runtime/saga/check';
+import { checkRun, type CheckPhase } from '../../runtime/saga/check';
 import { freezeContract } from '../../runtime/saga/freeze';
 import { amendSaga, archiveSaga, blockItem, tickItem } from '../../runtime/saga/mutate';
 import { isWritableState, setStatus, WRITABLE_STATES } from '../../runtime/saga/statusWrite';
@@ -60,8 +60,10 @@ export function sagaWriteAction(dependencies: AppDependencies, spec: SagaWriteSp
       emit(context.outputJson ? formatJson(result) : formatSagaWriteHuman(spec.name, result));
     } catch (error) {
       if (error instanceof CliSagaRefusalError) {
-        const result = { sagaId, command: spec.name, ok: false, errors: error.reasons };
-        emit(context.outputJson ? formatJson(result) : formatSagaRefusalHuman(spec.name, sagaId, error.reasons));
+        const result = { sagaId, command: spec.name, ok: false, errors: error.reasons, ...error.details };
+        emit(context.outputJson
+          ? formatJson(result)
+          : formatSagaRefusalHuman(spec.name, sagaId, error.reasons) + formatSagaRefusalExtras(error.details));
         error.reported = true;
       }
       throw error;
@@ -127,11 +129,12 @@ export function checkSaga(dependencies: AppDependencies) {
     },
     run: ({ sagaId, sagaRoot }, options) => {
       const phase = options.phase as CheckPhase;
-      const errors = checkErrors(sagaRoot, sagaId, phase);
+      const { errors, methods } = checkRun(sagaRoot, sagaId, phase);
+      const details = methods === undefined ? {} : { methods };
       if (errors.length > 0) {
-        throw new CliSagaRefusalError(errors);
+        throw new CliSagaRefusalError(errors, { details });
       }
-      return { phase, errors: [] };
+      return { phase, errors: [], ...details };
     },
   });
 }

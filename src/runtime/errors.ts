@@ -62,12 +62,15 @@ export class SagaResourceConflictError extends Error {
  */
 export class CliSagaRefusalError extends Error {
   readonly reasons: string[];
+  /** Extra result fields a refused command still reports, such as the method drift of `check`. */
+  readonly details: Record<string, unknown>;
   reported: boolean;
 
-  constructor(reasons: string[], options: { reported?: boolean } = {}) {
+  constructor(reasons: string[], options: { reported?: boolean; details?: Record<string, unknown> } = {}) {
     super(reasons.join('; '));
     this.name = 'CliSagaRefusalError';
     this.reasons = reasons;
+    this.details = options.details ?? {};
     this.reported = options.reported ?? false;
   }
 }

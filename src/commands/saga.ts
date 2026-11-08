@@ -10,7 +10,7 @@ import {
   formatSagaStatusHuman,
 } from '../formatters/saga';
 import { metadataLimitsText } from '../runtime/metadataOptions';
-import { SagaResourceConflictError } from '../runtime/errors';
+import { CliUsageError } from '../runtime/errors';
 import { loadSagaAssets } from '../runtime/saga/assets';
 import {
   createSagaNatively,
@@ -18,6 +18,7 @@ import {
   validateSagaId,
 } from '../runtime/saga/create';
 import { installSagaResources } from '../runtime/saga/install';
+import { isMethodName, METHOD_NAMES, readMethod } from '../runtime/saga/methods';
 import {
   readSagaItemsPayload,
   readSagaListPayload,
@@ -59,9 +60,21 @@ function initSaga(dependencies: AppDependencies) {
     const report = installSagaResources(context.projectDirectory, loadSagaAssets(), force);
 
     context.io.stdout(context.outputJson ? formatJson(report) : formatSagaInitHuman(report));
-    if (report.conflicts.length > 0) {
-      throw new SagaResourceConflictError(report.conflicts);
+  };
+}
+
+/** Prints one published method from the installed package. It takes no selector, so it never touches a project. */
+function showSagaMethod(dependencies: AppDependencies) {
+  return async function sagaMethodAction(this: Command, name: string): Promise<void> {
+    const options = this.optsWithGlobals<{ json?: boolean }>();
+    if (!isMethodName(name)) {
+      throw new CliUsageError(`Unknown Saga method ${JSON.stringify(name)}: use one of ${METHOD_NAMES.join(', ')}.`);
     }
+    const method = readMethod(name, loadSagaAssets());
+    const content = method.bytes.toString('utf8');
+    dependencies.io.stdout(options.json === true
+      ? formatJson({ name: method.name, sha256: method.sha256, content })
+      : content);
   };
 }
 
@@ -69,7 +82,7 @@ function newSaga(dependencies: AppDependencies) {
   return async function sagaNewAction(this: Command, sagaId: string): Promise<void> {
     const context = await resolveSagaCommandContext(this, dependencies);
     validateSagaId(sagaId, context.sagaRoot);
-    const promptsPath = requireSagaResources(context.sagaRoot, context.selector);
+    requireSagaResources(context.sagaRoot, context.selector);
     const metadata = createSagaNatively(sagaId, context.sagaRoot);
     const result = {
       id: metadata.id,
@@ -77,7 +90,7 @@ function newSaga(dependencies: AppDependencies) {
       metadata,
     };
 
-    context.io.stdout(context.outputJson ? formatJson(result) : formatSagaNewHuman(result, promptsPath));
+    context.io.stdout(context.outputJson ? formatJson(result) : formatSagaNewHuman(result));
   };
 }
 
@@ -94,8 +107,7 @@ function showSagaStatus(dependencies: AppDependencies) {
     const context = await resolveSagaCommandContext(this, dependencies);
     const sagaDirectory = requireSagaDirectory(context.sagaRoot, sagaId);
     const status = readSagaStatus(sagaId, sagaDirectory);
-    const promptsPath = path.join(context.sagaRoot, 'prompts');
-    context.io.stdout(context.outputJson ? formatJson(status) : formatSagaStatusHuman(status, promptsPath));
+    context.io.stdout(context.outputJson ? formatJson(status) : formatSagaStatusHuman(status));
   };
 }
 
@@ -112,10 +124,12 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
     .command('saga')
     .description('Initialize, create, and inspect project-local Sagas.');
 
-  addSagaOptions(saga.command('init').description('Install the managed Saga resources.'))
-    .option('--force', 'Replace differing managed resources.')
+  addSagaOptions(saga.command('init').description('Install the Saga ignore rule. Method prompts come from the CLI (see method).'))
+    .option('--force', 'Accepted for compatibility; no managed resource is replaced.')
     .action(initSaga(dependencies));
-  addSagaOptions(saga.command('new <saga-id>').description('Create a Saga using the installed project prompts.'))
+  addJsonOption(saga.command('method <name>').description(`Print a published Saga method (${METHOD_NAMES.join(', ')}) from the installed CLI.`))
+    .action(showSagaMethod(dependencies));
+  addSagaOptions(saga.command('new <saga-id>').description('Create a Saga in an initialized project.'))
     .action(newSaga(dependencies));
   addSagaOptions(saga.command('list').description('List active Sagas.'))
     .action(listSagas(dependencies));

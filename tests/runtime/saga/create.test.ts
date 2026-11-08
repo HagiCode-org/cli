@@ -23,15 +23,10 @@ import { installSagaResources } from '../../../src/runtime/saga/install';
 
 const run = promisify(execFile);
 
-const promptPaths = ['goal', 'research', 'acceptance', 'plan', 'amend', 'run']
-  .map(name => `prompts/${name}.md`);
-
+/** The layout `init` creates: the Saga directory and its runtime ignore rule. No method prompts. */
 function installFixtureLayout(sagaRoot: string, ignoreContent = '*/runtime/\n'): void {
-  for (const relativePath of [...promptPaths, '.gitignore']) {
-    const target = path.join(sagaRoot, ...relativePath.split('/'));
-    mkdirSync(path.dirname(target), { recursive: true });
-    writeFileSync(target, relativePath === '.gitignore' ? ignoreContent : `custom:${relativePath}`);
-  }
+  mkdirSync(sagaRoot, { recursive: true });
+  writeFileSync(path.join(sagaRoot, '.gitignore'), ignoreContent);
 }
 
 function snapshot(root: string): Array<[string, string]> {
@@ -112,39 +107,47 @@ describe('Saga ID validation', () => {
     expect(readFileSync(sentinel, 'utf8')).toBe('keep archived');
   });
 
-  it.each([...promptPaths, '.gitignore (runtime ignore rule)'])(
-    'refuses an incomplete installation missing %s without writing',
-    missingPath => {
-      installFixtureLayout(sagaRoot);
-      const selector = { kind: 'path', value: projectPath } as const;
-      if (missingPath === '.gitignore (runtime ignore rule)') {
-        writeFileSync(path.join(sagaRoot, '.gitignore'), '# custom ignore\r\n');
-      } else {
-        rmSync(path.join(sagaRoot, ...missingPath.split('/')));
-      }
-      const before = snapshot(path.join(projectPath, '.hagicode'));
-
-      expect(() => requireSagaResources(sagaRoot, selector)).toThrow(
-        `hagi saga init --path "${projectPath}"`,
-      );
-      expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
-    },
-  );
-
-  it('accepts a complete customized layout without repairing its files', () => {
-    installFixtureLayout(sagaRoot, '# custom\r\n*/runtime/\r\n');
+  it.each([
+    ['the ignore file', (sagaRoot: string) => rmSync(path.join(sagaRoot, '.gitignore'))],
+    ['the runtime rule', (sagaRoot: string) => writeFileSync(path.join(sagaRoot, '.gitignore'), '# custom ignore\r\n')],
+    ['the Saga directory', (sagaRoot: string) => rmSync(sagaRoot, { recursive: true, force: true })],
+  ])('refuses an incomplete installation missing %s without writing', (_label, damage) => {
+    installFixtureLayout(sagaRoot);
+    damage(sagaRoot);
+    const selector = { kind: 'path', value: projectPath } as const;
     const before = snapshot(path.join(projectPath, '.hagicode'));
-    expect(requireSagaResources(sagaRoot, { kind: 'project-id', value: 'project id' })).toBe(
-      path.join(sagaRoot, 'prompts'),
+
+    expect(() => requireSagaResources(sagaRoot, selector)).toThrow(
+      `hagi saga init --path "${projectPath}"`,
     );
     expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
   });
 
-  it('refuses a nonregular prompt and preserves the original project-id selector in guidance', () => {
+  it('accepts a complete customized layout without prompts and without repairing its files', () => {
+    installFixtureLayout(sagaRoot, '# custom\r\n*/runtime/\r\n');
+    const before = snapshot(path.join(projectPath, '.hagicode'));
+
+    expect(requireSagaResources(sagaRoot, { kind: 'project-id', value: 'project id' })).toBeUndefined();
+    expect(existsSync(path.join(sagaRoot, 'prompts'))).toBe(false);
+    expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
+  });
+
+  it('ignores a legacy prompts directory entirely, even one with differing or unreadable content', () => {
     installFixtureLayout(sagaRoot);
-    const promptPath = path.join(sagaRoot, 'prompts', 'run.md');
-    rmSync(promptPath);
-    mkdirSync(promptPath);
+    const legacyPrompt = path.join(sagaRoot, 'prompts', 'run.md');
+    mkdirSync(path.dirname(legacyPrompt));
+    writeFileSync(legacyPrompt, 'custom run');
+    const before = snapshot(path.join(projectPath, '.hagicode'));
+
+    expect(() => requireSagaResources(sagaRoot, { kind: 'path', value: projectPath })).not.toThrow();
+    expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
+  });
+
+  it('refuses a nonregular ignore file and preserves the original project-id selector in guidance', () => {
+    installFixtureLayout(sagaRoot);
+    const ignorePath = path.join(sagaRoot, '.gitignore');
+    rmSync(ignorePath);
+    mkdirSync(ignorePath);
     const before = snapshot(path.join(projectPath, '.hagicode'));
 
     expect(() => requireSagaResources(sagaRoot, { kind: 'project-id', value: 'project-1' })).toThrow(
@@ -153,9 +156,10 @@ describe('Saga ID validation', () => {
     expect(snapshot(path.join(projectPath, '.hagicode'))).toEqual(before);
   });
 
-  it('creates canonical metadata natively with no runtime file and no installed tool', () => {
+  it('creates canonical metadata natively with no runtime file, no prompts and no installed tool', () => {
     const report = installSagaResources(projectPath, loadSagaAssets());
     expect(existsSync(path.join(report.root, 'tools'))).toBe(false);
+    expect(existsSync(path.join(report.root, 'prompts'))).toBe(false);
 
     const metadata = createSagaNatively('demo', report.root);
 

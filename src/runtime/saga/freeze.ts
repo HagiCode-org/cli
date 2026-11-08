@@ -3,6 +3,7 @@ import { CliSagaRefusalError } from '../errors';
 import { acceptanceFingerprints, currentHashes, loadContractView, openAmendmentErrors, openQuestionErrors, planErrors, readFrozenLock } from './check';
 import { serializeLock, sha256, splitLines, utcTimestamp } from './contract';
 import { readSagaAmendments } from './read';
+import { methodDigests } from './methods';
 import {
   ensureDirectory,
   ensureRuntimeIgnore,
@@ -24,6 +25,8 @@ export type FreezeOutcome = {
  * amendment merged into `rN+1`. Every refusal is raised before the first write, so a refused freeze changes nothing.
  */
 export function freezeContract(sagaRoot: string, sagaId: string): FreezeOutcome {
+  // Computed first: a failed package integrity check exits before any read or write, so no lock is written.
+  const methods = methodDigests();
   const view = loadContractView(sagaRoot, sagaId);
   const refusals = [...planErrors(view), ...openQuestionErrors(view), ...openAmendmentErrors(view)];
   if (refusals.length > 0) {
@@ -44,6 +47,7 @@ export function freezeContract(sagaRoot: string, sagaId: string): FreezeOutcome 
       prev: '-',
       hashes,
       acceptanceByItem: acceptance,
+      methods,
       items: ids,
     }));
     return { revision: 1, unchanged: false, reopened: [], added: active.map(row => row.id) };
@@ -102,6 +106,7 @@ export function freezeContract(sagaRoot: string, sagaId: string): FreezeOutcome 
     prev: sha256(text),
     hashes,
     acceptanceByItem: acceptance,
+    methods,
     items: ids,
   }));
   return {

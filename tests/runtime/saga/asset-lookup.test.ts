@@ -32,7 +32,8 @@ describe('Saga asset lookup', () => {
       for (const modulePath of modulePaths) {
         const assets = loadSagaAssets(pathToFileURL(modulePath).href);
         expect(assets.directory).toBe(bundledAssets);
-        expect(assets.files.size).toBe(7);
+        expect(assets.methods.size).toBe(6);
+        expect([...assets.install.keys()]).toEqual(['.gitignore']);
       }
     } finally {
       process.chdir(previousDirectory);
@@ -51,5 +52,6 @@ describe('Saga asset lookup', () => {
 
     writeFileSync(goalPath, 'corrupted');
     expect(() => loadSagaAssets(moduleUrl)).toThrow(/integrity check failed for prompts\/goal\.md/);
+    expect(() => loadSagaAssets(moduleUrl)).not.toThrow(/prompts\/run\.md/);
   });
 });

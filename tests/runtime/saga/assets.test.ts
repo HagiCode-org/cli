@@ -23,7 +23,7 @@ function listFiles(directory: string, prefix = ''): string[] {
 }
 
 describe('bundled Saga assets', () => {
-  it('contains exactly the seven authoritative paths and no standalone tool', () => {
+  it('contains the ignore rule, the six published methods, and no standalone tool', () => {
     expect(listFiles(bundleRoot).filter(file => !['manifest.json', '.npmignore'].includes(file)).sort()).toEqual([...bundledPaths].sort());
     expect(readFileSync(path.join(bundleRoot, '.npmignore'), 'utf8')).toBe('!.gitignore\n');
   });
@@ -39,12 +39,21 @@ describe('bundled Saga assets', () => {
     expect(runPrompt).not.toContain('Append every session you create');
   });
 
-  it('matches every manifest hash byte for byte', () => {
-    const manifest = JSON.parse(readFileSync(path.join(bundleRoot, 'manifest.json'), 'utf8')) as { files: Record<string, string> };
-    expect(Object.keys(manifest.files).sort()).toEqual([...bundledPaths].sort());
-    for (const bundlePath of bundledPaths) {
-      const digest = createHash('sha256').update(readFileSync(path.join(bundleRoot, bundlePath))).digest('hex');
-      expect(digest).toBe(manifest.files[bundlePath]);
+  it('uses schema 2 with exactly the install and method maps, each matching its bundled bytes', () => {
+    const manifest = JSON.parse(readFileSync(path.join(bundleRoot, 'manifest.json'), 'utf8')) as {
+      schemaVersion: number;
+      install: Record<string, string>;
+      methods: Record<string, string>;
+    };
+    expect(manifest.schemaVersion).toBe(2);
+    expect(Object.keys(manifest).sort()).toEqual(['install', 'methods', 'schemaVersion']);
+    expect(Object.keys(manifest.install)).toEqual(['.gitignore']);
+    expect(Object.keys(manifest.methods).sort()).toEqual(['acceptance', 'amend', 'goal', 'plan', 'research', 'run']);
+    for (const [name, digest] of Object.entries(manifest.methods)) {
+      expect(createHash('sha256').update(readFileSync(path.join(bundleRoot, 'prompts', `${name}.md`))).digest('hex')).toBe(digest);
+    }
+    for (const [name, digest] of Object.entries(manifest.install)) {
+      expect(createHash('sha256').update(readFileSync(path.join(bundleRoot, name))).digest('hex')).toBe(digest);
     }
   });
 });

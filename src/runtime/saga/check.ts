@@ -12,6 +12,7 @@ import {
 } from './contract';
 import { readSagaAmendments } from './read';
 import { readContainedBytes, readContainedText } from './safeWrite';
+import { methodDigests, METHOD_NAMES } from './methods';
 
 export const ARTIFACT_FILES = ['goal.md', 'research.md', 'acceptance.md', 'progress.md'] as const;
 /** A report that proves an item: a `Status: PASS` (or `状态: PASS`) line. */
@@ -169,6 +170,50 @@ export function checkErrors(sagaRoot: string, sagaId: string, phase: CheckPhase)
   const view = loadContractView(sagaRoot, sagaId);
   const errors = planErrors(view);
   return phase === 'run' ? [...errors, ...runPhaseErrors(view)] : errors;
+}
+
+export type MethodDrift = {
+  name: string;
+  /** Digest recorded in the lock, or null when the lock has no entry for the method. */
+  recorded: string | null;
+  /** Digest of the method in the installed package. */
+  current: string;
+};
+
+/** Method digests recorded in contract.lock against the installed package. Drift is a notice, never an error. */
+export type MethodsReport = {
+  recorded: boolean;
+  drift: MethodDrift[];
+};
+
+/**
+ * Compares the lock's `methods:` section with the installed methods. Undefined when no lock exists. A lock without the
+ * section reports `recorded: false` with no drift.
+ */
+export function methodsReport(view: SagaContractView): MethodsReport | undefined {
+  const frozen = readFrozenLock(view);
+  if (!frozen) {
+    return undefined;
+  }
+  const recorded = frozen.lock.methods;
+  if (recorded === undefined) {
+    return { recorded: false, drift: [] };
+  }
+  const current = methodDigests();
+  const drift = METHOD_NAMES
+    .filter(name => recorded[name] !== current[name])
+    .map(name => ({ name, recorded: recorded[name] ?? null, current: current[name] }));
+  return { recorded: true, drift };
+}
+
+/** The `check` result: plan or run errors, plus the method report for the run phase only. */
+export function checkRun(sagaRoot: string, sagaId: string, phase: CheckPhase): { errors: string[]; methods?: MethodsReport } {
+  const view = loadContractView(sagaRoot, sagaId);
+  const errors = planErrors(view);
+  if (phase === 'plan') {
+    return { errors };
+  }
+  return { errors: [...errors, ...runPhaseErrors(view)], methods: methodsReport(view) };
 }
 
 /** Completion gate for `set-status done`: every active item verified and the run contract closed. */

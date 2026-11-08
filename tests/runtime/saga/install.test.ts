@@ -1,4 +1,4 @@
-import { chmodSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -39,21 +39,20 @@ describe('Saga resource installation', () => {
     rmSync(temporaryRoot, { recursive: true, force: true });
   });
 
-  it('installs only managed resources and leaves identical resources untouched on repeat runs', () => {
+  it('installs only the runtime ignore rule and never creates a prompts directory', () => {
     const projectRoot = path.join(temporaryRoot, 'empty project');
     mkdirSync(projectRoot);
 
     const first = installSagaResources(projectRoot, assets);
-    expect(first.files.map(file => file.outcome)).toEqual(Array(assets.files.size).fill('created'));
+    expect(first.files).toEqual([{ path: '.gitignore', outcome: 'created' }]);
     expect(first.conflicts).toEqual([]);
-    expect(listFiles(first.root).sort()).toEqual([...assets.files.keys()].sort());
-    for (const [assetPath, bytes] of assets.files) {
-      expect(readFileSync(path.join(first.root, ...assetPath.split('/'))).equals(bytes)).toBe(true);
-    }
+    expect(listFiles(first.root).sort()).toEqual(['.gitignore']);
+    expect(readFileSync(path.join(first.root, '.gitignore')).equals(assets.install.get('.gitignore')!)).toBe(true);
+    expect(statSync(path.join(first.root, 'prompts'), { throwIfNoEntry: false })).toBeUndefined();
 
     const snapshot = resourceSnapshot(first.root);
     const second = installSagaResources(projectRoot, assets);
-    expect(second.files.map(file => file.outcome)).toEqual(Array(assets.files.size).fill('unchanged'));
+    expect(second.files).toEqual([{ path: '.gitignore', outcome: 'unchanged' }]);
     expect(resourceSnapshot(second.root)).toEqual(snapshot);
     expect(listFiles(second.root).some(file => file.endsWith('.tmp'))).toBe(false);
   });
@@ -94,33 +93,41 @@ describe('Saga resource installation', () => {
     expect(listFiles(sagaRoot)).toContain('demo/progress.md');
   });
 
-  it('preserves conflicts by default and restores only differing resources with force', () => {
-    const projectRoot = path.join(temporaryRoot, 'conflicting project');
-    mkdirSync(projectRoot);
-    const initial = installSagaResources(projectRoot, assets);
-    const conflictPath = path.join(initial.root, 'prompts/goal.md');
-    const missingPath = path.join(initial.root, 'prompts/research.md');
-    const unchangedPath = path.join(initial.root, 'prompts/acceptance.md');
-    writeFileSync(conflictPath, 'custom prompt');
-    rmSync(missingPath);
-    const conflictBefore = statSync(conflictPath);
-    const unchangedBefore = statSync(unchangedPath);
+  it.each([false, true])('leaves differing and identical legacy prompts untouched (force=%s)', force => {
+    const projectRoot = path.join(temporaryRoot, `legacy-files-${force}`);
+    const promptsRoot = path.join(projectRoot, '.hagicode', 'sagas', 'prompts');
+    mkdirSync(promptsRoot, { recursive: true });
+    writeFileSync(path.join(promptsRoot, 'goal.md'), 'custom goal');
+    writeFileSync(path.join(promptsRoot, 'run.md'), readFileSync(path.join(assets.directory, 'prompts', 'run.md')));
+    const before = resourceSnapshot(promptsRoot);
 
-    const preserved = installSagaResources(projectRoot, assets);
-    expect(preserved.conflicts).toEqual(['prompts/goal.md']);
-    expect(preserved.files.find(file => file.path === 'prompts/goal.md')?.outcome).toBe('conflict');
-    expect(preserved.files.find(file => file.path === 'prompts/research.md')?.outcome).toBe('created');
-    expect(readFileSync(conflictPath, 'utf8')).toBe('custom prompt');
-    expect(statSync(conflictPath).mtimeMs).toBe(conflictBefore.mtimeMs);
+    const report = installSagaResources(projectRoot, assets, force);
 
-    const forced = installSagaResources(projectRoot, assets, true);
-    expect(forced.conflicts).toEqual([]);
-    expect(forced.files.find(file => file.path === 'prompts/goal.md')?.outcome).toBe('replaced');
-    expect(forced.files.find(file => file.path === 'prompts/acceptance.md')?.outcome).toBe('unchanged');
-    expect(readFileSync(conflictPath).equals(assets.files.get('prompts/goal.md')!)).toBe(true);
-    expect(statSync(unchangedPath).mtimeMs).toBe(unchangedBefore.mtimeMs);
-    expect(statSync(unchangedPath).mode).toBe(unchangedBefore.mode);
-    expect(listFiles(initial.root).some(file => file.endsWith('.tmp'))).toBe(false);
+    expect(report.conflicts).toEqual([]);
+    expect(report.files).toEqual([{ path: '.gitignore', outcome: 'created' }]);
+    expect(JSON.stringify(report)).not.toContain('prompts');
+    expect(resourceSnapshot(promptsRoot)).toEqual(before);
+    expect(readFileSync(path.join(promptsRoot, 'goal.md'), 'utf8')).toBe('custom goal');
+    expect(listFiles(report.root).some(file => file.startsWith('prompts/'))).toBe(true);
+  });
+
+  it.each([false, true])('neither follows nor reports a symlinked legacy prompts directory (force=%s)', force => {
+    const projectRoot = path.join(temporaryRoot, `legacy-link-${force}`);
+    const sagaRoot = path.join(projectRoot, '.hagicode', 'sagas');
+    mkdirSync(sagaRoot, { recursive: true });
+    const outside = path.join(temporaryRoot, `outside-${force}`);
+    mkdirSync(outside);
+    writeFileSync(path.join(outside, 'goal.md'), 'outside');
+    symlinkSync(outside, path.join(sagaRoot, 'prompts'), 'dir');
+    const before = resourceSnapshot(outside);
+
+    const report = installSagaResources(projectRoot, assets, force);
+
+    expect(report.conflicts).toEqual([]);
+    expect(report.files).toEqual([{ path: '.gitignore', outcome: 'created' }]);
+    expect(lstatSync(path.join(sagaRoot, 'prompts')).isSymbolicLink()).toBe(true);
+    expect(resourceSnapshot(outside)).toEqual(before);
+    expect(readFileSync(path.join(report.root, '.gitignore'), 'utf8')).toBe('**/runtime/\n');
   });
 
   it('writes the recursive runtime ignore rule on a fresh installation', () => {
