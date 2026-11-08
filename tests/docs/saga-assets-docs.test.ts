@@ -61,7 +61,7 @@ describe('Saga asset maintenance guidance', () => {
     expect(Object.keys(packageJson.scripts).filter(name => name.startsWith('saga:'))).toEqual([]);
     expect(validation).toContain('tests/runtime/saga/assets.test.ts');
     expect(validation).toContain('pnpm run pack:check');
-    expect(validation).toContain('hidden `.gitignore` template');
+    expect(validation).toContain('`install/gitignore.template`');
   });
 
   it('documents selector syntax, offline behavior, host-local paths, and npx caching in both user guides', () => {
@@ -108,7 +108,7 @@ describe('Saga asset maintenance guidance', () => {
       expect(sagaReference).toContain(detail);
     }
     expect(sagaReference).toContain('hagi saga init --path "./My Project"');
-    expect(sagaReference).toContain('hagi saga init --path "./My Project" --force --json');
+    expect(sagaReference).toContain('hagi saga init --path "./My Project" --json');
   });
 
   it('documents canonical ID rules, collisions, and new-Saga metadata', () => {

@@ -160,5 +160,5 @@ pnpm run pack:check
 ```
 
 The npm tarball ships `dist`, `README.md`, `skills/**`, and only
-the allowlisted Saga resources, including the hidden `.gitignore` template. `pack:check` verifies the actual package
+the allowlisted Saga resources, including the `install/gitignore.template` file that becomes `.gitignore` in a project. `pack:check` verifies the actual package
 contents and rejects source maps or unexpected resource files.

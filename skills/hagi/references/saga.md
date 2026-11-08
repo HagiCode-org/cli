@@ -11,7 +11,7 @@ Run `init` before creating a Saga:
 
 ```bash
 hagi saga init --path "./My Project"
-hagi saga init --path "./My Project" --force --json
+hagi saga init --path "./My Project" --json
 ```
 
 Initialization installs only the ignore rule under `.hagicode/sagas/.gitignore`. It creates no `prompts/` directory and
