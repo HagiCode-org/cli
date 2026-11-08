@@ -22,7 +22,7 @@ const RESOURCE_DIRECTORIES = [
 ];
 
 function isRuntimeIgnoreRule(bytes: Buffer): boolean {
-  return bytes.toString('utf8').split(/\r?\n/).includes('*/runtime/');
+  return bytes.toString('utf8').split(/\r?\n/).includes('**/runtime/');
 }
 
 function mergeRuntimeIgnoreRule(bytes: Buffer): Buffer {
@@ -32,7 +32,7 @@ function mergeRuntimeIgnoreRule(bytes: Buffer): Buffer {
   const text = bytes.toString('utf8');
   const newline = text.match(/\r\n|\n/)?.[0] ?? '\n';
   const separator = bytes.length > 0 && !text.endsWith('\n') ? newline : '';
-  return Buffer.concat([bytes, Buffer.from(`${separator}*/runtime/`)]);
+  return Buffer.concat([bytes, Buffer.from(`${separator}**/runtime/`)]);
 }
 
 function lstatIfPresent(target: string) {

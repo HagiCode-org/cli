@@ -17,7 +17,6 @@ import { CliOperationFailedError, CliSagaRefusalError } from '../errors';
 
 /** Runtime ignore rule written when no `runtime/` rule exists yet. */
 const RUNTIME_IGNORE_RULE = '**/runtime/';
-const ACCEPTED_RUNTIME_IGNORE_RULES = ['*/runtime/', RUNTIME_IGNORE_RULE];
 
 function lstatIfPresent(target: string) {
   try {
@@ -169,13 +168,13 @@ export function moveDirectory(sagaRoot: string, from: string, to: string): void 
 
 function isRuntimeIgnoreRule(text: string): boolean {
   const lines = text.split(/\r?\n/);
-  return ACCEPTED_RUNTIME_IGNORE_RULES.some(rule => lines.includes(rule));
+  return lines.includes(RUNTIME_IGNORE_RULE);
 }
 
 /**
  * Ensures `<sagaRoot>/.gitignore` ignores runtime directories before any runtime file is written. An existing
- * `*\/runtime/` or `**\/runtime/` line is left alone byte for byte; otherwise the rule is appended and the file's
- * existing bytes and line endings are preserved. A failure stops the caller before `runtime/` is created.
+ * `**\/runtime/` line is left alone byte for byte; otherwise the rule is appended and the file's existing bytes and
+ * line endings are preserved, so a legacy `*\/runtime/` line stays and the recursive rule is added after it. A failure stops the caller before `runtime/` is created.
  */
 export function ensureRuntimeIgnore(sagaRoot: string): void {
   ensureDirectory(sagaRoot, sagaRoot);

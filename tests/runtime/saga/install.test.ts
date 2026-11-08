@@ -123,6 +123,13 @@ describe('Saga resource installation', () => {
     expect(listFiles(initial.root).some(file => file.endsWith('.tmp'))).toBe(false);
   });
 
+  it('writes the recursive runtime ignore rule on a fresh installation', () => {
+    const projectRoot = path.join(temporaryRoot, 'fresh ignore project');
+    mkdirSync(projectRoot);
+    const report = installSagaResources(projectRoot, assets);
+    expect(readFileSync(path.join(report.root, '.gitignore'), 'utf8')).toBe('**/runtime/\n');
+  });
+
   it('merges the runtime ignore rule without changing existing lines or file mode', () => {
     const projectRoot = path.join(temporaryRoot, 'ignore project');
     const sagaRoot = path.join(projectRoot, '.hagicode', 'sagas');
@@ -134,7 +141,7 @@ describe('Saga resource installation', () => {
 
     const merged = installSagaResources(projectRoot, assets);
     expect(merged.files.find(file => file.path === '.gitignore')?.outcome).toBe('merged');
-    expect(readFileSync(ignorePath)).toEqual(Buffer.from('# keep\r\nnode_modules/ */runtime/\r\n*/runtime/'));
+    expect(readFileSync(ignorePath)).toEqual(Buffer.from('# keep\r\nnode_modules/ */runtime/\r\n**/runtime/'));
     expect(statSync(ignorePath).mode & 0o777).toBe(0o640);
     const mergedStat = statSync(ignorePath);
 

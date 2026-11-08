@@ -95,7 +95,8 @@ export function requireSagaResources(sagaRoot: string, selector: SagaSelector): 
   }
 
   const ignorePath = path.join(sagaRoot, '.gitignore');
-  if (!readFileSync(ignorePath, 'utf8').split(/\r?\n/).includes('*/runtime/')) {
+  const ignoreLines = readFileSync(ignorePath, 'utf8').split(/\r?\n/);
+  if (!ignoreLines.includes('**/runtime/') && !ignoreLines.includes('*/runtime/')) {
     missing('.gitignore (runtime ignore rule)');
   }
 

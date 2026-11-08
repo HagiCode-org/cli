@@ -83,10 +83,10 @@ describe('ensureRuntimeIgnore', () => {
     expect(readFileSync(ignorePath(), 'utf8')).toBe('**/runtime/\n');
   });
 
-  it('leaves the bytes unchanged when a runtime rule already exists', () => {
+  it('keeps a legacy line and appends the recursive rule after it', () => {
     writeFileSync(ignorePath(), 'node_modules/\n*/runtime/\n');
     ensureRuntimeIgnore(sagaRoot);
-    expect(readFileSync(ignorePath(), 'utf8')).toBe('node_modules/\n*/runtime/\n');
+    expect(readFileSync(ignorePath(), 'utf8')).toBe('node_modules/\n*/runtime/\n**/runtime/\n');
   });
 
   it('accepts the double-star rule as an existing runtime rule', () => {
