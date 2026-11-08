@@ -47,11 +47,11 @@ describe('hagi agent group', () => {
     expect(stdout.join('')).toContain('other ran');
   });
 
-  it('adds only `agent` to the top-level commands', () => {
+  it('registers the agent and Saga command groups', () => {
     const { dependencies } = createDependencies();
     const names = createCliApp(dependencies).commands.map(command => command.name());
 
-    expect(names).toEqual(['project', 'proposal', 'vault', 'chat', 'hagitask', 'plan', 'skills', 'agent']);
+    expect(names).toEqual(['project', 'proposal', 'vault', 'chat', 'hagitask', 'plan', 'skills', 'agent', 'saga']);
     expect(names).not.toContain('lock');
   });
 

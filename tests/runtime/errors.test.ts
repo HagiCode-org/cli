@@ -7,6 +7,7 @@ import {
   CliOperationFailedError,
   CliUsageError,
   CliWaitTimeoutError,
+  SagaResourceConflictError,
   EXIT_CODES,
   isTransientLockFailure,
   normalizeCliError,
@@ -133,6 +134,13 @@ describe('errors', () => {
     expect(normalizeCliError(new CliOperationFailedError('Unknown built-in skill: nope.'))).toEqual({
       exitCode: 30,
       message: 'Unknown built-in skill: nope.',
+    });
+  });
+
+  it('maps Saga resource conflicts to exit code 4', () => {
+    expect(normalizeCliError(new SagaResourceConflictError(['prompts/goal.md']))).toEqual({
+      exitCode: 4,
+      message: 'Saga resources conflict with existing files: prompts/goal.md. Re-run with --force to replace them.',
     });
   });
 

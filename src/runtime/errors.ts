@@ -3,6 +3,7 @@ import { ErrorDetailSchema } from '../generated/grpc/hagicode/common/v1/error_de
 
 export const EXIT_CODES = {
   USAGE: 2,
+  SAGA_RESOURCE_CONFLICT: 4,
   HTTP_BAD_REQUEST: 20,
   HTTP_UNAUTHORIZED: 21,
   HTTP_FORBIDDEN: 23,
@@ -43,6 +44,13 @@ export class CliOperationFailedError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CliOperationFailedError';
+  }
+}
+
+export class SagaResourceConflictError extends Error {
+  constructor(conflicts: string[]) {
+    super(`Saga resources conflict with existing files: ${conflicts.join(', ')}. Re-run with --force to replace them.`);
+    this.name = 'SagaResourceConflictError';
   }
 }
 
@@ -270,6 +278,13 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
   if (error instanceof CliOperationFailedError) {
     return {
       exitCode: EXIT_CODES.OPERATION_FAILED,
+      message: error.message,
+    };
+  }
+
+  if (error instanceof SagaResourceConflictError) {
+    return {
+      exitCode: EXIT_CODES.SAGA_RESOURCE_CONFLICT,
       message: error.message,
     };
   }

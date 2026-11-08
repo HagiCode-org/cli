@@ -5,6 +5,7 @@ import { registerHagiTaskCommands } from './commands/hagitask';
 import { registerPlanCommands } from './commands/plan';
 import { registerProjectCommands } from './commands/project';
 import { registerProposalCommands } from './commands/proposal';
+import { registerSagaCommands } from './commands/saga';
 import { registerSkillsCommands } from './commands/skills';
 import { registerVaultCommands } from './commands/vault';
 import {
@@ -27,7 +28,7 @@ export function createCliApp(
 
   program
     .name('hagi')
-    .description('HagiCode CLI for project, proposal, vault, chat, HagiTask, and scheduled plan management, plus agent-facing capabilities.')
+    .description('HagiCode CLI for project, proposal, Saga, vault, chat, HagiTask, and scheduled plan management, plus agent-facing capabilities.')
     .showHelpAfterError()
     .exitOverride();
 
@@ -53,6 +54,7 @@ export function createCliApp(
   registerPlanCommands(program, dependencies);
   registerSkillsCommands(program, dependencies);
   registerAgentCommands(program, dependencies);
+  registerSagaCommands(program, dependencies);
 
   return program;
 }
