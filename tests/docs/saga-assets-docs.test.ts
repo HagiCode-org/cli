@@ -18,7 +18,7 @@ const packageJson = JSON.parse(read('package.json'));
 
 describe('Saga asset maintenance guidance', () => {
   it('routes local Saga operations through the Hagi skill without losing existing guidance', () => {
-    expect(skillManifest).toContain('local Saga initialization, creation, or read-only queries');
+    expect(skillManifest).toContain('local Saga initialization, creation, checks, writes, or read-only queries');
     expect(skillManifest).toContain('`saga init`, `saga new`, `saga list`, `saga status`, or `saga items`');
     expect(skillManifest).toContain('`references/saga.md`');
     expect(skillManifest).toContain('without reading backend configuration or calling the API');
@@ -106,8 +106,8 @@ describe('Saga asset maintenance guidance', () => {
     expect(sagaReference).toMatch(/Invalid IDs are usage errors\s+\(code `2`\)/);
     expect(sagaReference).toContain('ends in `-<saga-id>`');
     expect(sagaReference).toContain('code `30`');
-    expect(sagaReference).toContain('identifies the Saga directory and includes the metadata written by the canonical tool');
-    expect(sagaReference).toMatch(/child human\s+output is not embedded/);
+    expect(sagaReference).toContain('identifies the Saga directory and includes the metadata written to `saga.json`');
+    expect(sagaReference).toMatch(/writes no runtime file and does not run the installed tool/);
     expect(sagaReference).toContain('node .hagicode/sagas/tools/saga.mjs instructions demo goal');
 
     const example = sagaReference.match(/```json\n([\s\S]*?)\n```/)?.[1];
@@ -136,7 +136,7 @@ describe('Saga asset maintenance guidance', () => {
     expect(sagaReference).toMatch(/does not refresh or rewrite that stored status/);
     expect(sagaReference).toMatch(/strictly read-only.*do not initialize or repair resources/s);
     expect(sagaReference).toContain('or execute acceptance commands');
-    expect(sagaReference).toMatch(/Contract validation.*remain owned by the installed project/s);
+    expect(sagaReference).toMatch(/Every write and check command is implemented by the CLI.*never executes/s);
 
     for (const command of [
       'hagi saga list --project-id <project-id> --json',
@@ -148,13 +148,16 @@ describe('Saga asset maintenance guidance', () => {
     expect(sessionData).toMatch(/without initializing or repairing them, refreshing runtime status,/);
     expect(sessionData).toMatch(/`updatedAt` is not the stored/);
     expect(sessionData).toMatch(/run either only\s+when the user explicitly asks/);
-    expect(sessionData).toContain('Contract and lifecycle operations remain with the installed Saga tool.');
+    expect(sessionData).toContain('Contract and lifecycle operations run through `hagi saga`');
   });
 
   it('matches documented subcommands and positional IDs to the registered help', async () => {
     const rootHelp = createDependencies();
     expect(await runCli(['node', 'hagi', 'saga', '--help'], rootHelp.dependencies)).toBe(0);
-    for (const command of ['init', 'new', 'list', 'status', 'items']) {
+    for (const command of [
+      'init', 'new', 'list', 'status', 'items',
+      'claim', 'assert-owner', 'release', 'freeze', 'check', 'tick', 'block', 'set-status', 'amend', 'archive',
+    ]) {
       expect(rootHelp.stdout.join('')).toContain(command);
     }
 
@@ -162,6 +165,26 @@ describe('Saga asset maintenance guidance', () => {
       const help = createDependencies();
       expect(await runCli(['node', 'hagi', 'saga', command, '--help'], help.dependencies)).toBe(0);
       expect(help.stdout.join('')).toContain('<saga-id>');
+    }
+  });
+
+  it('documents the write and check commands with token rules, exit codes, and parseable examples', async () => {
+    for (const detail of [
+      '`--token <token>`',
+      '`SAGA_EXECUTION_TOKEN`',
+      'rejected with `--project-id`',
+      'exit code `1`',
+      'Usage error',
+      'runtime/execute.lock',
+      'never taken over',
+      '**/runtime/',
+    ]) {
+      expect(sagaReference.replace(/\s+/g, ' ')).toContain(detail.replace(/\s+/g, ' '));
+    }
+    for (const command of ['claim', 'assert-owner', 'release', 'freeze', 'check', 'tick', 'block', 'set-status', 'amend', 'archive']) {
+      expect(sagaReference).toContain(`hagi saga ${command}`);
+      const help = createDependencies();
+      expect(await runCli(['node', 'hagi', 'saga', command, '--help'], help.dependencies)).toBe(0);
     }
   });
 });

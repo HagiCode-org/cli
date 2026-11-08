@@ -109,7 +109,7 @@ hagi saga items <saga-id> --project-id <project-id> --json
 These queries read the selected project's Saga files without initializing or repairing them, refreshing runtime status,
 or executing acceptance commands. Status is a fresh `saga-status/2` observation; its `updatedAt` is not the stored
 execution heartbeat in `runtime/status.json`. `init` installs resources and `new` creates a Saga, so run either only
-when the user explicitly asks for that change. Contract and lifecycle operations remain with the installed Saga tool.
+when the user explicitly asks for that change. Contract and lifecycle operations run through `hagi saga` with the execution token rules in `references/saga.md`.
 
 ### Skills
 

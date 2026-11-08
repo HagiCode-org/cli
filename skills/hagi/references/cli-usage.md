@@ -92,7 +92,7 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items
+|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
@@ -122,6 +122,9 @@ hagi saga new demo --path "./My Project" --json
 hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
 hagi saga items demo --path "./My Project" --json
+hagi saga claim demo --path "./My Project" --session orchestrator-1 --json
+hagi saga check demo --path "./My Project" --phase run --json
+hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --json
 ```
 
 For offline use, invoke an installed package or a package already present in the `npx` cache. An uncached
