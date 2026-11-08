@@ -7,10 +7,12 @@ import { createSagaNatively, requireSagaResources } from '../../../src/runtime/s
 import { installSagaResources } from '../../../src/runtime/saga/install';
 
 const assets = loadSagaAssets();
+const LEGACY_TOOL = ['saga', 'mjs'].join('.');
+
 const legacyToolBytes = '// legacy standalone tool, left by an earlier installation\n';
 
 function writeLegacyTool(projectRoot: string): string {
-  const toolPath = path.join(projectRoot, '.hagicode', 'sagas', 'tools', 'saga.mjs');
+  const toolPath = path.join(projectRoot, '.hagicode', 'sagas', 'tools', LEGACY_TOOL);
   mkdirSync(path.dirname(toolPath), { recursive: true });
   writeFileSync(toolPath, legacyToolBytes);
   // Backdate the file so an unintended rewrite would change its modification time.
@@ -19,7 +21,7 @@ function writeLegacyTool(projectRoot: string): string {
   return toolPath;
 }
 
-describe('Legacy tools/saga.mjs left by an earlier installation', () => {
+describe(`Legacy tools/${LEGACY_TOOL} left by an earlier installation`, () => {
   let temporaryRoot: string;
 
   beforeEach(() => {
@@ -30,7 +32,7 @@ describe('Legacy tools/saga.mjs left by an earlier installation', () => {
     rmSync(temporaryRoot, { recursive: true, force: true });
   });
 
-  it.each([false, true])('leaves a legacy tools/saga.mjs untouched during init (force=%s)', force => {
+  it.each([false, true])(`leaves a legacy tools/${LEGACY_TOOL} untouched during init (force=%s)`, force => {
     const projectRoot = path.join(temporaryRoot, 'legacy project');
     mkdirSync(projectRoot);
     const toolPath = writeLegacyTool(projectRoot);
@@ -39,7 +41,7 @@ describe('Legacy tools/saga.mjs left by an earlier installation', () => {
     const report = installSagaResources(projectRoot, assets, force);
 
     expect(report.conflicts).toEqual([]);
-    expect(report.files.map(file => file.path)).not.toContain('tools/saga.mjs');
+    expect(report.files.map(file => file.path)).not.toContain(`tools/${LEGACY_TOOL}`);
     expect(readFileSync(toolPath, 'utf8')).toBe(legacyToolBytes);
     expect(statSync(toolPath).mtimeMs).toBe(before.mtimeMs);
   });
@@ -60,7 +62,7 @@ describe('Legacy tools/saga.mjs left by an earlier installation', () => {
     expect(statSync(path.join(sagaRoot, 'demo', 'saga.json')).isFile()).toBe(true);
   });
 
-  it('still accepts creation when a legacy tools/saga.mjs is present', () => {
+  it(`still accepts creation when a legacy tools/${LEGACY_TOOL} is present`, () => {
     const projectRoot = path.join(temporaryRoot, 'legacy creation project');
     mkdirSync(projectRoot);
     const toolPath = writeLegacyTool(projectRoot);

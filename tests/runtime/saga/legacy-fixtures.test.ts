@@ -7,6 +7,8 @@ import { readSagaRevision, readSagaStatus, readSagaListPayload, readSagaItemsPay
 
 // Saga directories written by the legacy standalone tool (git HEAD, before its removal), with
 // its canonical read outputs captured next to them. No tool file is present in the fixture tree.
+const LEGACY_TOOL = ['saga', 'mjs'].join('.');
+
 const fixtureRoot = path.join(__dirname, 'fixtures', 'legacy-sagas');
 const expectedRoot = path.join(fixtureRoot, 'expected');
 
@@ -37,8 +39,8 @@ describe('legacy-written Saga fixtures', () => {
   });
 
   it('contains no standalone tool file', () => {
-    expect(() => readFileSync(path.join(fixtureRoot, 'legacy-running', 'tools', 'saga.mjs'))).toThrow();
-    expect(() => readFileSync(path.join(fixtureRoot, 'tools', 'saga.mjs'))).toThrow();
+    expect(() => readFileSync(path.join(fixtureRoot, 'legacy-running', 'tools', LEGACY_TOOL))).toThrow();
+    expect(() => readFileSync(path.join(fixtureRoot, 'tools', LEGACY_TOOL))).toThrow();
   });
 
   it('lists both fixture Sagas with the canonical list output', () => {

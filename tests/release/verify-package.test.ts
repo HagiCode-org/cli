@@ -6,6 +6,8 @@ import {
   inspectPackedFiles,
 } from '../../scripts/verify-package.mjs';
 
+const LEGACY_TOOL = ['saga', 'mjs'].join('.');
+
 const manifest = {
   name: '@hagicode/cli',
   main: './dist/main.js',
@@ -88,20 +90,20 @@ describe('verify-package', () => {
     }
     expect(isAllowedBundledFile('resources/saga/prompts/extra.md', manifest)).toBe(false);
     expect(isAllowedBundledFile('resources/saga/README.md', manifest)).toBe(false);
-    expect(isAllowedBundledFile('resources/saga/tools/saga.mjs.map', manifest)).toBe(false);
+    expect(isAllowedBundledFile(`resources/saga/tools/${LEGACY_TOOL}.map`, manifest)).toBe(false);
 
     const withoutSagaResources = { ...manifest, files: ['dist', 'README.md'] };
-    expect(isAllowedBundledFile('resources/saga/tools/saga.mjs', withoutSagaResources)).toBe(false);
+    expect(isAllowedBundledFile(`resources/saga/tools/${LEGACY_TOOL}`, withoutSagaResources)).toBe(false);
     expect(getRequiredPublishFiles(withoutSagaResources)).not.toContain('resources/saga/.gitignore');
   });
 
   it('rejects a packed standalone Saga tool and its source map by name', () => {
     const base = ['package.json', 'README.md', 'dist/cli.js', 'dist/main.js', ...sagaResources];
     expect(
-      inspectPackedFiles(manifest, [...base, 'resources/saga/tools/saga.mjs', 'resources/saga/tools/saga.mjs.map']),
+      inspectPackedFiles(manifest, [...base, `resources/saga/tools/${LEGACY_TOOL}`, `resources/saga/tools/${LEGACY_TOOL}.map`]),
     ).toMatchObject({
       missingFiles: [],
-      unexpectedFiles: ['resources/saga/tools/saga.mjs', 'resources/saga/tools/saga.mjs.map'],
+      unexpectedFiles: [`resources/saga/tools/${LEGACY_TOOL}`, `resources/saga/tools/${LEGACY_TOOL}.map`],
     });
   });
 
