@@ -299,6 +299,19 @@ The CLI may suggest a next command, but it never chains later lifecycle APIs aut
 
 Each command maps to one backend action. The CLI may suggest a next command, but it never chains later lifecycle APIs automatically.
 
+`proposal create` takes the same `--metadata` and `--metadata-json` options as `chat create`, with the same rules and limits; see [Session Metadata](#session-metadata). A master marker and worker markers, for example:
+
+```bash
+MASTER_ID=$(hagi chat create --title "Batch master" --project-id "$PROJECT_ID" --metadata role=master --metadata batch=2026-11-07 --json | json_field '.session.sessionId')
+hagi proposal create --project-id "$PROJECT_ID" --chief-complaint "Repository scope
+Writable repositories:
+- none
+Read-only repositories:
+- none
+
+Tighten the settings page copy" --default-title --metadata role=worker --metadata master="$MASTER_ID" --json
+```
+
 ## Vault Commands
 
 Create a vault with a local folder to browse. The new id is read from `vault.id`:
@@ -369,6 +382,24 @@ hagi chat send --session-id "$CHAT_ID" --content "Summarize the current diff" --
 hagi chat archive --session-id "$CHAT_ID"
 hagi chat delete --session-id "$CHAT_ID"
 ```
+
+### Session Metadata
+
+`chat create` and `proposal create` take write-once metadata entries, for example the role markers an orchestrator uses to find its sessions again:
+
+```bash
+hagi chat create --title "Master" --project-id "$PROJECT_ID" --metadata role=master --metadata batch=2026-11-07 --json
+hagi chat create --title "Worker 1" --project-id "$PROJECT_ID" --metadata role=worker --metadata master="$MASTER_ID" --json
+printf '{"role":"worker","master":"%s"}' "$MASTER_ID" | hagi chat create --title "Worker 2" --project-id "$PROJECT_ID" --metadata-json - --json
+```
+
+- `--metadata key=value` is repeatable. The text is split at the first `=`, so a value may contain `=`.
+- `--metadata-json <file|->` reads a JSON object of string values from a file, or from stdin with `-`. It is repeatable.
+- A key may appear once across both options. A missing `=`, an empty key, a repeated key, or JSON that is not an object of string values is a usage error: the command exits `2` and sends no request.
+- Limits, checked by the backend: at most 16 entries; a key of 1 to 64 characters matching `^[a-z][a-z0-9._-]{0,63}$`; a value of 1 to 512 characters with no control characters. A rejection exits with the backend's message as it is, and the session is not created.
+- Metadata is write-once: it is set when the session is created and cannot be changed later. Every reader of the session can see it, so do not put secrets in it.
+- The entries come back as `userMetadata` in the `--json` output of `chat create`, `chat list`, `proposal create` and `proposal get`. The human output adds one `userMetadata` line, keys sorted, when there are entries. A session without metadata has no `userMetadata` field.
+
 
 ## HagiTask Commands
 

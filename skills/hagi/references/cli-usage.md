@@ -140,6 +140,24 @@ hagi proposal messages --session-id <session-id> --last 1 --json
 - `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
 - Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
 
+## Session metadata
+
+`chat create` and `proposal create` take write-once metadata entries. An orchestrator marks the sessions it starts with them, for example a master marker and worker markers, and finds them again through `userMetadata`.
+
+```bash
+hagi chat create --title "Master" --project-id <project-id> --metadata role=master --metadata batch=2026-11-07 --json
+hagi chat create --title "Worker 1" --project-id <project-id> --metadata role=worker --metadata master=<master-session-id> --json
+printf '{"role":"worker","master":"<master-session-id>"}' | hagi chat create --title "Worker 2" --project-id <project-id> --metadata-json - --json
+hagi proposal create --project-id <project-id> --chief-complaint "<text>" --default-title --metadata role=worker --metadata master=<master-session-id> --json
+```
+
+- `--metadata key=value` is repeatable. The text is split at the first `=`, so a value may contain `=`.
+- `--metadata-json <file|->` reads a JSON object of string values from a file, or from stdin with `-`. It is repeatable.
+- A key may appear once across both options. A missing `=`, an empty key, a repeated key, or JSON that is not an object of string values exits `2` before any request is sent.
+- Backend limits: at most 16 entries; a key of 1 to 64 characters matching `^[a-z][a-z0-9._-]{0,63}$`; a value of 1 to 512 characters with no control characters. The backend's message is printed as it is, and the session is not created.
+- Write-once: the entries are set at creation and cannot be changed later. Do not put secrets in them: every reader of the session can see them.
+- Output: `--json` of `chat create`, `chat list`, `proposal create` and `proposal get` carries `userMetadata` (an object of string values) when the session has entries. The human output adds one `userMetadata` line, keys sorted. A session without entries has no `userMetadata` field.
+
 ## HagiTask commands
 
 A HagiTask is a preset task with a structured input. Use the schema-first flow: list the tasks, read one task's schema, write the input file from the schema, then create the session.
