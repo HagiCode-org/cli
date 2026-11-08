@@ -10,7 +10,7 @@
 ## Requirements
 
 - Node.js 24+
-- Access to a HagiCode backend API for backend-selected commands; Saga commands with `--path` work locally without one
+- Access to a HagiCode backend API for backend-selected commands; Saga commands with `--path` work locally without one, except `saga session create`, which needs the backend to find the registered project
 
 ## Installation
 
@@ -80,7 +80,8 @@ hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --jso
 
 Each Saga command requires exactly one project selector: `--path <directory>` or `--project-id <id>`. Missing, empty,
 or conflicting selectors exit with code `2`. `--path` is resolved on the CLI host, relative to the current directory,
-and does not read backend configuration or contact the backend; backend flags do not change local behavior. Quote paths
+and does not read backend configuration or contact the backend; backend flags do not change local behavior. The one
+exception is `saga session create`, which looks up the registered project through the backend (see below). Quote paths
 that contain spaces.
 
 ```bash
@@ -99,6 +100,13 @@ Write and check commands (`claim`, `assert-owner`, `release`, `freeze`, `check`,
 from `--token` or `SAGA_EXECUTION_TOKEN`; with `--project-id`, `--token` is rejected because it is the backend token, so use
 `SAGA_EXECUTION_TOKEN` there. Exit code `0` means success, `1` a refusal or failed check, and `2` a usage error.
 
+`saga session create --saga <id> --path <root> --title <title> --role implementation|verification --master <session-id> [--item <id>]`
+creates one Worker chat session and records it in `runtime/sessions.md`. Unlike the other Saga commands it calls the
+backend even with `--path`: the registered project whose real path matches `<root>` supplies the project ID, and no match
+or several matches is a refusal. The execution token comes only from `SAGA_EXECUTION_TOKEN`; `--token` is refused with
+either selector. The session carries `saga.*` metadata. The command sends no message and does not archive the session.
+See the [Saga command reference](skills/hagi/references/saga.md#worker-sessions) for the options, metadata keys and exit codes.
+
 With `--project-id`, the CLI uses the normal base URL, token, and language settings to resolve the project through the
 backend. The returned project path must exist on the machine running the CLI; it is not a remote filesystem path.
 
@@ -109,7 +117,7 @@ leaves identical resources untouched on repeat runs. See the [Saga command refer
 for outcomes, safety behavior, and JSON details.
 
 For offline use, install the package or use a cached `npx` package. An uncached `npx @hagicode/cli` invocation may need
-network access to download the package even though `saga ... --path` itself does not use a backend.
+network access to download the package even though `saga ... --path` itself does not use a backend, except `saga session create`, which does.
 
 ## Connection Setup
 
@@ -127,7 +135,7 @@ Every backend operation resolves the base URL on each invocation, in this order:
 ```
 
 If none of the three is set, a backend operation exits with code `2` and sends no backend request. Saga commands using
-`--path` bypass this resolution and do not read backend configuration. The `steer` key is the default for `hagi chat send`,
+`--path` bypass this resolution and do not read backend configuration, except `saga session create`, which resolves its project through the backend. The `steer` key is the default for `hagi chat send`,
 `hagi proposal send`, and `hagi hagitask send` (see [Steer](#steer-send-option)); it must be `true` or `false`.
 
 Operation commands send requests without a credential by default. Pass `--token` (or set `HAGI_API_TOKEN`) only when your backend requires one.

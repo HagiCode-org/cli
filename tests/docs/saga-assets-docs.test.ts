@@ -1,8 +1,15 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
-import { createDependencies } from '../commands/testHelpers';
+import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
+import { createDependencies, createProject, createSession } from '../commands/testHelpers';
+
+/** Splits one documented shell line into words; double quotes group a value that contains spaces. */
+function shellWords(line: string): string[] {
+  return [...line.matchAll(/"([^"]*)"|(\S+)/g)].map(match => match[1] ?? match[2]);
+}
 
 const LEGACY_TOOL = ['saga', 'mjs'].join('.');
 
@@ -191,6 +198,87 @@ describe('Saga asset maintenance guidance', () => {
       expect(sagaReference).toContain(`hagi saga ${command}`);
       const help = createDependencies();
       expect(await runCli(['node', 'hagi', 'saga', command, '--help'], help.dependencies)).toBe(0);
+    }
+  });
+
+  it('names every saga subcommand printed by the help, including session create, in the skill and CLI usage', async () => {
+    const rootHelp = createDependencies();
+    expect(await runCli(['node', 'hagi', 'saga', '--help'], rootHelp.dependencies)).toBe(0);
+    const names = [...rootHelp.stdout.join('').matchAll(/^ {2}([a-z][a-z-]*)(?:\s|$)/gm)]
+      .map(match => match[1])
+      .filter(name => name !== 'help');
+
+    expect(names).toContain('session');
+    for (const name of names) {
+      const phrase = name === 'session' ? 'session create' : name;
+      expect(skillManifest).toContain(phrase);
+      expect(cliUsage).toContain(phrase);
+    }
+  });
+
+  it('lists session create among the state-changing saga commands and states the authorization rule', () => {
+    expect(sessionData).toMatch(/\| `saga` \| `init`, `new`, `session create` \|/);
+    expect(sessionData).toContain('Creating a Worker changes state');
+  });
+
+  it('documents the session create token, metadata, record and exit-code rules in the Saga reference', () => {
+    const flat = sagaReference.replace(/\s+/g, ' ');
+    for (const detail of [
+      'saga.id',
+      'saga.role',
+      'saga.worker',
+      'saga.master',
+      'saga.item',
+      'SAGA_EXECUTION_TOKEN',
+      'runtime/sessions.md',
+      'exit code',
+    ]) {
+      expect(flat).toContain(detail);
+    }
+    expect(flat).toContain('`session create`');
+    expect(flat).toContain('`--token` is refused');
+  });
+
+  it('checks that every test file named for the session command in validation.md exists', () => {
+    const section = validation.slice(
+      validation.indexOf('## Saga Worker session command'),
+      validation.indexOf('## Package publish-surface check'),
+    );
+    const files = [...section.matchAll(/tests\/[\w./-]+\.test\.ts/g)].map(match => match[0]);
+
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      expect(existsSync(path.join(root, file)), file).toBe(true);
+    }
+  });
+
+  it('runs the documented session create example as written against a fake backend', async () => {
+    const workspace = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'hagi-doc-session-')));
+    try {
+      const projectPath = path.join(workspace, 'My Project');
+      mkdirSync(path.join(projectPath, '.hagicode', 'sagas', 'demo'), { recursive: true });
+      const example = sagaReference.split('\n').find(line => line.startsWith('hagi saga session create '));
+      expect(example).toBeDefined();
+      // The documented path is relative to the reader's directory; the test points it at its own project.
+      const words = shellWords(example as string).slice(1);
+      words[words.indexOf('--path') + 1] = projectPath;
+
+      const createChatSession = vi.fn(async (body: { metadata?: Record<string, string> }) => ({
+        ...createSession('worker-doc', PCode_Models_SessionType.CHAT),
+        userMetadata: body.metadata,
+      }));
+      const harness = createDependencies({
+        createChatSession,
+        listProjects: vi.fn().mockResolvedValue({ projects: [{ ...createProject('p-doc'), path: projectPath }] }),
+      });
+      harness.dependencies.env.SAGA_EXECUTION_TOKEN = 'doc-token';
+
+      expect(await runCli(['node', 'hagi', ...words], harness.dependencies)).toBe(0);
+      expect(createChatSession).toHaveBeenCalledOnce();
+      expect(readFileSync(path.join(projectPath, '.hagicode', 'sagas', 'demo', 'runtime', 'sessions.md'), 'utf8'))
+        .toContain('- worker-doc | ');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
     }
   });
 });

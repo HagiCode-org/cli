@@ -28,6 +28,17 @@ describe('bundled Saga assets', () => {
     expect(readFileSync(path.join(bundleRoot, '.npmignore'), 'utf8')).toBe('!.gitignore\n');
   });
 
+  it('has the run prompt create Workers with hagi saga session create and no manual sessions.md append', () => {
+    const runPrompt = readFileSync(path.join(bundleRoot, 'prompts/run.md'), 'utf8');
+
+    expect(runPrompt).toContain('hagi saga session create');
+    expect(runPrompt).toContain('--role <role>');
+    expect(runPrompt).toContain('SAGA_EXECUTION_TOKEN');
+    expect(runPrompt).toContain('records each Worker session');
+    expect(runPrompt).not.toContain('hagi chat create');
+    expect(runPrompt).not.toContain('Append every session you create');
+  });
+
   it('matches every manifest hash byte for byte', () => {
     const manifest = JSON.parse(readFileSync(path.join(bundleRoot, 'manifest.json'), 'utf8')) as { files: Record<string, string> };
     expect(Object.keys(manifest.files).sort()).toEqual([...bundledPaths].sort());

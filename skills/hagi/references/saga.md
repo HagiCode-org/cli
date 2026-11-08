@@ -2,6 +2,8 @@
 
 Saga files are project-local. Select exactly one project with `--path <directory>` or `--project-id <id>` for every
 Saga command. A local `--path` is resolved on the CLI host and does not read backend configuration or make API calls.
+The one exception is `session create` (see [Worker sessions](#worker-sessions)), which calls the backend even with `--path`
+to find the registered project.
 
 ## Initialize managed resources
 
@@ -83,7 +85,7 @@ unreadable existing data is reported instead of being repaired. ## Execution own
 
 `claim`, `assert-owner`, and `release` manage `runtime/execute.lock`. Every mutating command (`freeze`, `tick`, `block`,
 `set-status`, `amend`, `archive`, `release`, `assert-owner`) reads the execution token from `--token <token>` or, when
-that flag is absent, from `SAGA_EXECUTION_TOKEN`.
+that flag is absent, from `SAGA_EXECUTION_TOKEN`. The exception is `session create`, which reads only `SAGA_EXECUTION_TOKEN`.
 
 ```bash
 hagi saga claim demo --path "./My Project" --session orchestrator-1
@@ -124,6 +126,42 @@ amendment is merged into `rN+1` and no frozen item disappeared without a superse
 `runtime/history/rN/`. Every refusal (open question, unmerged amendment, plan mismatch, tampered contract, removed item)
 lists each reason, exits `1`, and writes nothing.
 
+## Worker sessions
+
+Set `SAGA_EXECUTION_TOKEN` to the token that `claim` printed, then create a Worker and record it:
+
+```bash
+hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
+```
+
+- The command creates one ordinary chat session in the project and appends one line to `runtime/sessions.md`. It sends
+  no message and does not archive the session; `hagi chat archive --session-id <id>` stays a separate step.
+- Required and nonblank: `--saga <id>`, `--title <title>`, `--role implementation|verification`, and `--master <session-id>`
+  (the orchestrator's own session ID). `--item <id>` is optional. `--saga` and `--item` are identifiers: a path separator
+  or a traversal segment is a usage error (code `2`). Exactly one of `--path <directory>` or `--project-id <id>` is
+  required.
+- The execution token comes only from `SAGA_EXECUTION_TOKEN`, which must be set and nonempty. `--token` is refused with
+  either selector as a usage error (code `2`), because the root `--token` is the backend bearer token and must never carry
+  the execution token. A missing token is also code `2`, and no request is sent.
+- `--path` calls the backend: the command lists the registered projects and takes the one whose real path equals the
+  root. Projects whose path is missing on this host are skipped. Zero matches, or several, is a refusal (code `1`) that
+  names the path or the matching IDs, and creates nothing. `--project-id` looks the project up directly.
+- After the project and the Saga are resolved, the owner check of `assert-owner` runs with the token. A Saga without a lock
+  still passes once a token is set. A wrong token is a refusal (code `1`), and an unknown Saga is code `24`.
+- The new session's `userMetadata` holds `saga.id` (the Saga), `saga.role` (always `worker`), `saga.worker` (the `--role`
+  value), `saga.master` (the `--master` value), and `saga.item` only when `--item` is given. The backend checks the key
+  format (`^[a-z][a-z0-9._-]{0,63}$`), at most 16 entries, and value length (1 to 512 characters). The metadata is
+  write-once and readable by everyone who can read the session, so it groups Workers and is not a security boundary. The
+  token never appears in it. Workers created before this command carry no `saga.*` metadata and are not backfilled.
+- The record is one line, `- <session-id> | <UTC time> | <role> | <item or -> | <title>`, appended after earlier content
+  in `<root>/.hagicode/sagas/<saga>/runtime/sessions.md`. The file and `runtime/` are created when missing. Whitespace in
+  the title, line breaks included, collapses to single spaces. A symbolic link or a redirected `runtime/` is refused
+  before the session is created.
+- If the append fails after the session was created, the command exits `1` and names the created session ID, in the
+  human output and as `session.sessionId` in `--json` with `ok` false.
+- `--json` success is one object: `{ "sagaId": "demo", "command": "session create", "ok": true, "session": { "sessionId": "...", "userMetadata": { ... } }, "record": "<path to sessions.md>" }`.
+- Exit codes: `0` created and recorded; `1` refused, or the record failed after creation; `2` usage error; `24` Saga not found.
+
 ## Items, amendments, and archive
 
 ```bash
@@ -163,7 +201,7 @@ is replaced atomically, so a concurrent reader always sees a complete document.
 |------|---------|
 | `0` | Success. |
 | `1` | Refusal or failed check. Every reason is printed; nothing was changed. |
-| `2` | Usage error: bad selector, missing or invalid argument, or `--token` with `--project-id`. |
+| `2` | Usage error: bad selector, missing or invalid argument, or `--token` with `--project-id` (with either selector for `session create`). |
 | `4` | Init resource conflict (see above). |
 | `24` | Saga or project not found. |
 | `30` | Operation failed, including a `new` collision. |

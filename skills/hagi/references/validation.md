@@ -133,6 +133,21 @@ node ./dist/cli.js proposal --help
 
 If only a specific command changed, also verify that command's help directly.
 
+## Saga Worker session command
+
+Run this when `src/commands/saga/session.ts`, the Saga runtime helpers (`project.ts`, `safeWrite.ts`, `sessionRecord.ts`),
+the run prompt or these references changed:
+
+```bash
+cd repos/cli
+pnpm exec vitest run tests/commands/saga-session-create.test.ts tests/runtime/saga/appendContained.test.ts tests/runtime/saga/project.test.ts tests/runtime/saga/sessionRecord.test.ts
+pnpm exec vitest run tests/runtime/saga/assets.test.ts tests/docs
+node ./dist/cli.js saga session create --help
+```
+
+The command test covers argument validation, token rejection, selector matching, the `saga.*` metadata, the `sessions.md`
+append and the failed-record report. The help check prints the parameters, the metadata keys and the metadata limits.
+
 ## Package publish-surface check
 
 Run this when `package.json`, publish contents, or release metadata changed. The Saga asset check and the package check

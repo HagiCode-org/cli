@@ -141,10 +141,12 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `chat` | `create`, `archive`, `delete`, `send` |
 | `hagitask` | `create`, `send` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
-| `saga` | `init`, `new` |
+| `saga` | `init`, `new`, `session create` |
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
+
+`saga session create` creates a chat session for a Saga Worker and records it in the Saga's `runtime/sessions.md`. Creating a Worker changes state, so run it only when the user or a Saga run explicitly asks for it. It takes the execution token from `SAGA_EXECUTION_TOKEN` only, and with `--path` it calls the backend to find the project. See [`saga.md`](saga.md#worker-sessions).
 
 A `send` with Steer (`--steer`, or `HAGI_SEND_STEER` set in the calling shell) inserts its text into a running turn. The result says which happened: `steered` means a running task took it, and `queued` means no running task did, so it went out as the next message. `HAGI_SEND_STEER` belongs to the calling shell; the backend does not set it inside agent sessions.
 
