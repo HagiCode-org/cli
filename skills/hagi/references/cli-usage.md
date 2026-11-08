@@ -35,6 +35,7 @@ For one-off execution, replace `hagi` with `npx @hagicode/cli`.
 hagi --help
 hagi project list --json
 hagi proposal list --json
+hagi saga list --path .
 hagi chat list --json
 hagi hagitask list --json
 hagi hagitask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
@@ -55,9 +56,11 @@ Example:
 hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
 ```
 
+Saga commands using `--path` accept these flags but do not read backend configuration or contact the backend.
+
 ## Environment variables
 
-The CLI resolves runtime settings centrally before every command.
+Backend operations resolve runtime settings centrally before accessing the API.
 Explicit flags always override environment variables.
 
 | Variable | Purpose |
@@ -78,7 +81,9 @@ The base URL can also be stored in a local config file:
 The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset. The `steer` key must be `true` or `false`; any other value exits with code `2` and names the file.
 
 Base URL precedence, highest first: `--base-url`, then `HAGI_API_BASE_URL`, then `baseUrl` in the config file.
-There is no default. When none of the three is set, the CLI exits with code `2` and names all three sources.
+There is no default. When none of the three is set, a backend operation exits with code `2` and names all three sources.
+The local Saga selector `--path` is the exception: it does not read this file, so malformed, unreachable, or absent backend
+settings do not affect that local operation.
 
 ## Command overview
 
@@ -87,6 +92,7 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
+|-- saga      init | new | list | status | items
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
@@ -97,6 +103,30 @@ hagi
 |             trusted list | upsert | delete | reset
 `-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
+
+## Saga commands
+
+Each command requires exactly one nonempty project selector:
+
+- `--path <directory>` resolves a local directory on the CLI host. Relative paths use the current working directory. This
+  selector does not read backend configuration or make API calls, and shared backend flags do not change its behavior.
+- `--project-id <id>` reads the project list through the configured backend. Its project path must be a directory available
+  on the machine running the CLI; the CLI does not execute filesystem operations remotely.
+
+Missing, empty, or conflicting selectors exit `2` before backend access or file writes. Paths with spaces should be quoted.
+Shared `--base-url`, `--token`, `--lang`, and `--json` options are accepted.
+
+```bash
+hagi saga init --path "./My Project"
+hagi saga new demo --path "./My Project" --json
+hagi saga list --path "./My Project"
+hagi saga status demo --project-id <project-id> --json
+hagi saga items demo --path "./My Project" --json
+```
+
+For offline use, invoke an installed package or a package already present in the `npx` cache. An uncached
+`npx @hagicode/cli` command may need network access to download the package; the local `--path` operation itself does not
+need backend access.
 
 ## Project repositories
 

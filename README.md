@@ -5,12 +5,12 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), vaults and their files, chat sessions, HagiTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), local Sagas, vaults and their files, chat sessions, HagiTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
 - Node.js 24+
-- Access to a HagiCode backend API
+- Access to a HagiCode backend API for backend-selected commands; Saga commands with `--path` work locally without one
 
 ## Installation
 
@@ -76,9 +76,36 @@ Example:
 hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
 ```
 
+## Saga Commands
+
+Each Saga command requires exactly one project selector: `--path <directory>` or `--project-id <id>`. Missing, empty,
+or conflicting selectors exit with code `2`. `--path` is resolved on the CLI host, relative to the current directory,
+and does not read backend configuration or contact the backend; backend flags do not change local behavior. Quote paths
+that contain spaces.
+
+```bash
+hagi saga init --path "./My Project"
+hagi saga new demo --path "./My Project" --json
+hagi saga list --path "./My Project"
+hagi saga status demo --project-id <project-id> --json
+hagi saga items demo --path "./My Project" --json
+```
+
+With `--project-id`, the CLI uses the normal base URL, token, and language settings to resolve the project through the
+backend. The returned project path must exist on the machine running the CLI; it is not a remote filesystem path.
+
+`saga init` installs managed resources without overwriting differing files by default: it preserves conflicts, installs
+missing resources, and reports each file outcome. Conflicts exit with code `4`; `--force` replaces differing managed
+resources, while `.gitignore` is always merged additively. Initialization refuses redirected or unsafe targets and
+leaves identical resources untouched on repeat runs. See the [Saga command reference](skills/hagi/references/saga.md)
+for outcomes, safety behavior, and JSON details.
+
+For offline use, install the package or use a cached `npx` package. An uncached `npx @hagicode/cli` invocation may need
+network access to download the package even though `saga ... --path` itself does not use a backend.
+
 ## Connection Setup
 
-Every operation command resolves the backend base URL on each invocation, in this order:
+Every backend operation resolves the base URL on each invocation, in this order:
 
 1. `--base-url <url>` flag
 2. `HAGI_API_BASE_URL` environment variable
@@ -91,7 +118,9 @@ Every operation command resolves the backend base URL on each invocation, in thi
 }
 ```
 
-If none of the three is set, the command exits with code `2` and sends no backend request. The `steer` key is the default for `hagi chat send`, `hagi proposal send`, and `hagi hagitask send` (see [Steer](#steer-send-option)); it must be `true` or `false`.
+If none of the three is set, a backend operation exits with code `2` and sends no backend request. Saga commands using
+`--path` bypass this resolution and do not read backend configuration. The `steer` key is the default for `hagi chat send`,
+`hagi proposal send`, and `hagi hagitask send` (see [Steer](#steer-send-option)); it must be `true` or `false`.
 
 Operation commands send requests without a credential by default. Pass `--token` (or set `HAGI_API_TOKEN`) only when your backend requires one.
 
@@ -112,6 +141,7 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
+|-- saga      init | new | list | status | items
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send

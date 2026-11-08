@@ -98,6 +98,19 @@ hagi plan list --json
 hagi plan get --id <plan-id> --json
 ```
 
+### Sagas
+
+```bash
+hagi saga list --project-id <project-id> --json
+hagi saga status <saga-id> --project-id <project-id> --json
+hagi saga items <saga-id> --project-id <project-id> --json
+```
+
+These queries read the selected project's Saga files without initializing or repairing them, refreshing runtime status,
+or executing acceptance commands. Status is a fresh `saga-status/2` observation; its `updatedAt` is not the stored
+execution heartbeat in `runtime/status.json`. `init` installs resources and `new` creates a Saga, so run either only
+when the user explicitly asks for that change. Contract and lifecycle operations remain with the installed Saga tool.
+
 ### Skills
 
 ```bash
@@ -128,6 +141,7 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `chat` | `create`, `archive`, `delete`, `send` |
 | `hagitask` | `create`, `send` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
+| `saga` | `init`, `new` |
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
