@@ -15,6 +15,17 @@ const IMPLICIT_FILE_PATTERNS = [
 const ALLOWED_SHARED_CHUNK_PATTERN = /^dist\/chunks\/[^/]+\.js$/i;
 // Embedded skill files; allowed only when package.json `files` publishes the `skills` directory.
 const PUBLISHED_SKILLS_PATTERN = /^skills\/.+$/i;
+const PUBLISHED_SAGA_RESOURCE_FILES = [
+  'resources/saga/.gitignore',
+  'resources/saga/manifest.json',
+  'resources/saga/prompts/acceptance.md',
+  'resources/saga/prompts/amend.md',
+  'resources/saga/prompts/goal.md',
+  'resources/saga/prompts/plan.md',
+  'resources/saga/prompts/research.md',
+  'resources/saga/prompts/run.md',
+  'resources/saga/tools/saga.mjs',
+];
 const FORBIDDEN_PUBLISH_PATTERNS = [
   /\.map$/i,
   /^dist\/commands\//i,
@@ -44,21 +55,36 @@ export function getRequiredPublishFiles(packageJson) {
     }
   }
 
+  if (publishesSagaResources(packageJson)) {
+    for (const filePath of PUBLISHED_SAGA_RESOURCE_FILES) {
+      requiredFiles.add(filePath);
+    }
+  }
+
   return [...requiredFiles];
 }
 
 export function getAllowedPublishEntries(packageJson) {
   const allowedEntries = new Set(getRequiredPublishFiles(packageJson));
-  allowedEntries.add('dist/chunks/*.js');
   if (publishesSkills(packageJson)) {
     allowedEntries.add('skills/**');
   }
+  if (publishesSagaResources(packageJson)) {
+    for (const filePath of PUBLISHED_SAGA_RESOURCE_FILES) {
+      allowedEntries.add(filePath);
+    }
+  }
+  allowedEntries.add('dist/chunks/*.js');
 
   return [...allowedEntries];
 }
 
 export function isAllowedBundledFile(filePath, packageJson) {
   const normalizedPath = normalizePublishPath(filePath);
+
+  if (normalizedPath.startsWith('resources/saga/')) {
+    return publishesSagaResources(packageJson) && PUBLISHED_SAGA_RESOURCE_FILES.includes(normalizedPath);
+  }
 
   if (isImplicitPackedFile(normalizedPath)) {
     return true;
@@ -81,6 +107,10 @@ export function isAllowedBundledFile(filePath, packageJson) {
 
 function publishesSkills(packageJson) {
   return Array.isArray(packageJson.files) && packageJson.files.some(entry => normalizePublishPath(entry) === "skills");
+}
+
+function publishesSagaResources(packageJson) {
+  return Array.isArray(packageJson.files) && packageJson.files.some(entry => normalizePublishPath(entry) === 'resources/saga');
 }
 
 export function isImplicitPackedFile(filePath) {
