@@ -67,8 +67,10 @@ types of every removed route. When a proto DTO changes, edit or add the matching
 
 The Saga resources are owned by this repository. `resources/saga/` contains the six method prompt files, `.gitignore`,
 and `manifest.json`; there is no standalone Saga tool and no sync step. Keep the bytes raw: do not render templates or
-normalize line endings. The manifest uses schema version `1` and sorted POSIX relative paths mapped to lowercase SHA-256
-digests; it does not hash itself.
+normalize line endings. The manifest uses schema version `2` with two maps: `install` lists `.gitignore`, and `methods`
+maps each method name (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) to the digest of `prompts/<name>.md`.
+Paths are sorted POSIX relative paths and every digest is lowercase SHA-256. The manifest does not hash itself. Only
+`.gitignore` is installed into a project; the methods are read from the package with `hagi saga method`.
 
 After editing a prompt, update its digest in `manifest.json`. `tests/runtime/saga/assets.test.ts` fails on any mismatch
 between the files and the manifest, and `pnpm run pack:check` verifies the published contents.

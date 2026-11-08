@@ -14,13 +14,15 @@ hagi saga init --path "./My Project"
 hagi saga init --path "./My Project" --force --json
 ```
 
-Initialization installs the six bundled method prompts and the ignore template under `.hagicode/sagas`. It does not repair
-or overwrite existing Saga contracts, metadata, or runtime records.
+Initialization installs only the ignore rule under `.hagicode/sagas/.gitignore`. It creates no `prompts/` directory and
+never installs method prompts into the project: the six bundled method prompts are read from the CLI package with
+`hagi saga method <name>` (see [Published methods](#published-methods)). It does not repair or overwrite existing Saga
+contracts, metadata, or runtime records.
 
-By default, differing managed resources are preserved as conflicts while missing nonconflicting resources are still
-installed. The command prints each file's `created`, `unchanged`, `merged`, `replaced`, or `conflict` outcome and exits
-with code `4` if any conflicts remain. Use `--force` to replace differing managed resources with the bundled versions;
-identical resources remain untouched. Forced initialization never discards custom `.gitignore` entries.
+Existing project-local `prompts/` files from an earlier installation are left in place. Initialization does not read,
+compare, replace, or report them, so it never flags them as outdated or as conflicts. `--force` is still accepted, so
+existing scripts keep working, but it changes nothing: no managed resource can be replaced or conflict any more. The
+command prints each file's `created`, `unchanged`, or `merged` outcome and exits `0`. Forced initialization never discards custom `.gitignore` entries.
 
 The `.gitignore` rule `**/runtime/` is merged as a separate exact line. Existing bytes, line endings, and entries are
 preserved; LF and CRLF files are supported, and repeated initialization does not append duplicate rules.
@@ -30,8 +32,38 @@ regular files, and that writes will not replace unsafe hard-linked resources. Re
 failures rather than followed outside the selected project. Exact resources are not rewritten on repeat runs, preserving
 their modes and modification times.
 
-With `--json`, stdout contains the installation root, `force` setting, per-file `path`/`outcome` entries, and any
-conflicts. A conflict report is still emitted before the command reports the code-4 error on stderr.
+With `--json`, stdout contains the installation root, the `force` setting, per-file `path`/`outcome` entries, and an
+empty `conflicts` array. The `files` array holds only the `.gitignore` entry.
+
+## Published methods
+
+The six method prompts (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) ship inside the installed CLI package,
+not in the project. Read one with:
+
+```bash
+hagi saga method run
+hagi saga method run --json
+```
+
+Plain output prints the method bytes unchanged. `--json` prints `{ "name", "sha256", "content" }`, where `sha256` is the
+lowercase SHA-256 of the same bytes. The command takes no `--path` or `--project-id`, reads no backend or project file,
+writes nothing, and works before a project has any Saga files. An unknown name, or a selector flag, exits `2`. Before
+returning any method, the CLI verifies every bundled resource against `resources/saga/manifest.json`; a missing or
+modified resource exits `30`, names the file, and prints no method content.
+
+`freeze` records the six digests in a `methods:` section of `contract.lock`, for revision 1 and for every later
+revision. The CLI computes the digests itself. A repeat freeze on an unchanged contract leaves the lock untouched,
+including a lock written before this section existed, and `revisions/rN.lock` keeps its own section byte for byte.
+
+`check --phase run --json` adds `methods: { "recorded", "drift": [{ "name", "recorded", "current" }] }` when a lock exists.
+`recorded` is `false` for a lock without the section, and then `drift` is empty. Drift means the installed CLI's method
+differs from the one the Saga was frozen under, which is expected after a CLI upgrade. It is a notice only: it never adds
+an error, never changes the exit code, and never writes a file. Human output prints one `notice:` line per drifted method.
+`execute` tells the user which methods changed and continues only after confirmation; a changed digest is not treated as
+tampering. The plan phase never reports methods.
+
+Project-local `prompts/` files are no longer used by any command. `execute` leaves them in place, ignores them, and says in
+its report that they may be deleted.
 
 ## Create and inspect Sagas
 
@@ -56,8 +88,9 @@ The `--json` result identifies the Saga directory and includes the metadata writ
 }
 ```
 
-The human result names the installed goal prompt and the four planning files to write. From the project root, the prompt is
-`.hagicode/sagas/prompts/goal.md`; the planning files are `goal.md`, `research.md`, `acceptance.md`, and `progress.md`.
+The human result names `hagi saga method goal` as the way to read the planning method, and the four planning files to
+write: `goal.md`, `research.md`, `acceptance.md`, and `progress.md`. `status` gives the same direction for the next artifact,
+for example `hagi saga method research`.
 
 Then inspect the Saga with the read-only commands:
 
@@ -119,7 +152,7 @@ least one active item, every active item has an acceptance `cmd:`, and every acc
 and the proof of every ticked item (an evidence file and a `Status: PASS` or `状态: PASS` report). Any other `--phase`
 value is a usage error (code `2`). Checks write nothing.
 
-`freeze` writes `contract.lock` revision 1 for a valid first contract. A repeat on an unchanged contract exits `0`, reports
+`freeze` writes `contract.lock` revision 1 for a valid first contract, including the `methods:` section. A repeat on an unchanged contract exits `0`, reports
 the existing revision, and leaves the lock bytes intact. After a contract change, freeze writes revision N+1 only when an
 amendment is merged into `rN+1` and no frozen item disappeared without a superseded row. The previous lock moves to
 `revisions/rN.lock`, each ticked item whose acceptance command changed is reopened, and its evidence and report move to
@@ -202,7 +235,7 @@ is replaced atomically, so a concurrent reader always sees a complete document.
 | `0` | Success. |
 | `1` | Refusal or failed check. Every reason is printed; nothing was changed. |
 | `2` | Usage error: bad selector, missing or invalid argument, or `--token` with `--project-id` (with either selector for `session create`). |
-| `4` | Init resource conflict (see above). |
+| `4` | Reserved. `init` no longer produces conflicts, so no current command returns it. |
 | `24` | Saga or project not found. |
 | `30` | Operation failed, including a `new` collision. |
 
@@ -217,11 +250,11 @@ Human output prints a one-line outcome and one line per refusal reason.
 
 ## Runtime ignore precondition
 
-Before any command writes a file under a Saga's `runtime/` directory (`claim`, `set-status`, `tick`, `block`, and a
-`freeze` that moves history), it makes sure `.hagicode/sagas/.gitignore` ignores runtime directories. An existing
+Before any command writes a file under a Saga's `runtime/` directory (`claim`, `set-status`, `tick`, `block`, `session create`,
+and a `freeze` that moves history), it makes sure `.hagicode/sagas/.gitignore` ignores runtime directories. An existing
 `**/runtime/` line is kept byte for byte; otherwise `**/runtime/` is appended with the file's line endings.
 If the ignore file cannot be written, the command stops before `runtime/` is created.
 
 ## Read-only projection and ownership
 
-Every write and check command is implemented by the CLI and never executes a separate tool. The CLI installs only the method prompts and the ignore rule; there is no installed tool to run.
+Every write and check command is implemented by the CLI and never executes a separate tool. The CLI installs only the ignore rule and reads the method prompts from its own package; there is no installed tool to run.

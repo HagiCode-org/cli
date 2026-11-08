@@ -45,7 +45,7 @@ describe('Saga asset maintenance guidance', () => {
     expect(localDevelopment).toContain('.gitignore');
     expect(localDevelopment).toContain('manifest.json');
     expect(localDevelopment).toMatch(/Keep the bytes raw.*do not render templates or\s+normalize line endings/s);
-    expect(localDevelopment).toMatch(/schema version `1`.*sorted POSIX.*SHA-256/s);
+    expect(localDevelopment).toMatch(/schema version `2`.*sorted POSIX.*SHA-256/s);
   });
 
   it('describes native-only usage and never names the standalone tool', () => {
@@ -86,16 +86,17 @@ describe('Saga asset maintenance guidance', () => {
   });
 
   it('documents initialization outcomes, force behavior, ignore merging, and containment', () => {
-    expect(readme).toContain('Conflicts exit with code `4`');
-    expect(readme).toContain('`.gitignore` is always merged additively');
+    expect(readme).toContain('installs only the runtime ignore rule');
+    expect(readme).toContain('merged additively');
     expect(readme).toContain('redirected or unsafe targets');
     expect(readme).toContain('Saga command reference');
 
     for (const detail of [
-      'missing nonconflicting resources are still',
-      'with code `4` if any conflicts remain',
-      '`created`, `unchanged`, `merged`, `replaced`, or `conflict`',
-      'Use `--force` to replace differing managed resources',
+      'installs only the ignore rule',
+      'creates no `prompts/` directory',
+      'Existing project-local `prompts/` files',
+      '`created`, `unchanged`, or `merged`',
+      '`--force` is still accepted',
       'never discards custom `.gitignore` entries',
       'LF and CRLF files are supported',
       'does not append duplicate rules',
@@ -121,7 +122,8 @@ describe('Saga asset maintenance guidance', () => {
     expect(sagaReference).toContain('code `30`');
     expect(sagaReference).toContain('identifies the Saga directory and includes the metadata written to `saga.json`');
     expect(sagaReference).toMatch(/writes no runtime file/);
-    expect(sagaReference).toContain('.hagicode/sagas/prompts/goal.md');
+    expect(sagaReference).toContain('hagi saga method goal');
+    expect(sagaReference).not.toContain('.hagicode/sagas/prompts/goal.md');
 
     const example = sagaReference.match(/```json\n([\s\S]*?)\n```/)?.[1];
     expect(example).toBeDefined();

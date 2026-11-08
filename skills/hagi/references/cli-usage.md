@@ -119,6 +119,7 @@ Shared `--base-url`, `--token`, `--lang`, and `--json` options are accepted.
 
 ```bash
 hagi saga init --path "./My Project"
+hagi saga method run --json
 hagi saga new demo --path "./My Project" --json
 hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json

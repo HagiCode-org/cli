@@ -86,6 +86,7 @@ that contain spaces.
 
 ```bash
 hagi saga init --path "./My Project"
+hagi saga method run --json
 hagi saga new demo --path "./My Project" --json
 hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
@@ -96,7 +97,7 @@ hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --j
 ```
 
 Write and check commands (`claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`,
-`archive`) run in the CLI itself; the CLI installs only the six method prompts and the ignore rule, and no standalone Saga tool. Mutating commands read the execution token
+`archive`) run in the CLI itself. The CLI installs only the ignore rule and reads the six method prompts from its own package with `hagi saga method <name>`; there is no standalone Saga tool and no project-local copy of the methods. Mutating commands read the execution token
 from `--token` or `SAGA_EXECUTION_TOKEN`; with `--project-id`, `--token` is rejected because it is the backend token, so use
 `SAGA_EXECUTION_TOKEN` there. Exit code `0` means success, `1` a refusal or failed check, and `2` a usage error.
 
@@ -110,11 +111,13 @@ See the [Saga command reference](skills/hagi/references/saga.md#worker-sessions)
 With `--project-id`, the CLI uses the normal base URL, token, and language settings to resolve the project through the
 backend. The returned project path must exist on the machine running the CLI; it is not a remote filesystem path.
 
-`saga init` installs managed resources without overwriting differing files by default: it preserves conflicts, installs
-missing resources, and reports each file outcome. Conflicts exit with code `4`; `--force` replaces differing managed
-resources, while `.gitignore` is always merged additively. Initialization refuses redirected or unsafe targets and
-leaves identical resources untouched on repeat runs. See the [Saga command reference](skills/hagi/references/saga.md)
-for outcomes, safety behavior, and JSON details.
+`saga init` installs only the runtime ignore rule in `.hagicode/sagas/.gitignore`, merged additively, and creates no
+`prompts/` directory. Existing project-local `prompts/` files are left untouched and are no longer read. `saga method <name>`
+prints a published method (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) from the installed package, verified
+against its manifest, with `--json` returning `{ name, sha256, content }`. `freeze` records the method digests in
+`contract.lock`, and `check --phase run --json` reports method drift as a notice that never fails the check. Initialization
+refuses redirected or unsafe targets and leaves identical resources untouched on repeat runs. See the
+[Saga command reference](skills/hagi/references/saga.md) for outcomes, safety behavior, and JSON details.
 
 For offline use, install the package or use a cached `npx` package. An uncached `npx @hagicode/cli` invocation may need
 network access to download the package even though `saga ... --path` itself does not use a backend, except `saga session create`, which does.

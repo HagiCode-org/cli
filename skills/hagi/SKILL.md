@@ -12,6 +12,7 @@ Use this skill when the user asks to:
 - enable or disable a built-in skill
 - run or verify the `hagi` CLI
 - run, explain, or verify local `saga init`, `saga new`, `saga list`, `saga status`, or `saga items` operations
+- read a published Saga method (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) with `saga method <name>`
 - run, explain, or verify local Saga ownership, checks, and writes: `claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`, `archive`, and `session create` (Saga Worker chat sessions)
 - explain or execute `project`, `proposal`, `chat`, `hagitask`, `vault`, `plan`, `skills`, or `saga` commands
 - explain the OpenSpec workflow behind `proposal` commands, which stage each command starts, or how to follow a run until it settles
