@@ -15,8 +15,10 @@ import {
   readSagaPlanRows,
   readSagaRevision,
   readSagaStatus,
+  SNAPSHOT_STATES,
   type SagaStatus,
 } from '../../../src/runtime/saga/read';
+import { WRITABLE_STATES } from '../../../src/runtime/saga/statusWrite';
 
 const progress = [
   '- [ ] pending Create | pending evidence',
@@ -52,6 +54,31 @@ function writeFile(root: string, relativePath: string, contents: string): void {
   const target = path.join(root, ...relativePath.split('/'));
   mkdirSync(path.dirname(target), { recursive: true });
   writeFileSync(target, contents);
+}
+
+function snapshotOf(filePath: string): { contents: string; size: number; mode: number; mtimeMs: number } {
+  const stat = statSync(filePath);
+  return { contents: readFileSync(filePath, 'utf8'), size: stat.size, mode: stat.mode, mtimeMs: stat.mtimeMs };
+}
+
+function makeSagaDirectory(root: string, sagaId: string): string {
+  const directory = path.join(root, '.hagicode', 'sagas', sagaId);
+  mkdirSync(directory, { recursive: true });
+  return directory;
+}
+
+function writeDoneSaga(directory: string): void {
+  writeFile(directory, 'goal.md', 'goal\n');
+  writeFile(directory, 'research.md', 'research\n');
+  writeFile(directory, 'acceptance.md', '## item\ncmd: true\n');
+  writeFile(directory, 'progress.md', '- [x] item Finished | evidence/done.log\n');
+  writeFile(directory, 'contract.lock', lock.replace('revision: 2', 'revision: 1'));
+}
+
+function writePlannedSaga(directory: string): void {
+  for (const artifact of ['goal.md', 'research.md', 'acceptance.md', 'progress.md']) {
+    writeFile(directory, artifact, 'complete\n');
+  }
 }
 
 function createProject(projectRoot: string): string {
@@ -192,23 +219,127 @@ describe('read-only Saga projections', () => {
     });
   });
 
-  it('ignores stale paused status cache data and leaves it byte-for-byte unchanged', () => {
-    const subjectRoot = createProject(path.join(temporaryRoot, 'stale-subject'));
-    const statusPath = path.join(subjectRoot, 'demo', 'runtime', 'status.json');
-    const stale = JSON.stringify({
+  it('reports a stored paused state and note while counts and items come from the Saga files', () => {
+    const subjectRoot = createProject(path.join(temporaryRoot, 'paused-subject'));
+    const sagaDirectory = path.join(subjectRoot, 'demo');
+    const statusPath = path.join(sagaDirectory, 'runtime', 'status.json');
+    writeFile(subjectRoot, 'demo/runtime/status.json', JSON.stringify({
       schema: 'saga-status/2',
       state: 'paused',
-      note: 'old execution note',
+      note: 'freeze refused',
       updatedAt: '2000-01-01T00:00:00Z',
-    });
-    writeFile(subjectRoot, 'demo/runtime/status.json', stale);
-    const before = statSync(statusPath);
+      counts: { total: 99, done: 99, blocked: 0, pending: 0, superseded: 0 },
+      items: [],
+    }));
+    const before = snapshotOf(statusPath);
 
-    const actual = readSagaStatus('demo', path.join(subjectRoot, 'demo'));
-    expect(actual.note).toBe('');
-    expect(actual.state).toBe('running');
-    expect(statSync(statusPath)).toMatchObject({ size: before.size, mode: before.mode, mtimeMs: before.mtimeMs });
-    expect(readFileSync(statusPath, 'utf8')).toBe(stale);
+    const actual = readSagaStatus('demo', sagaDirectory);
+    expect(actual).toMatchObject({
+      state: 'paused',
+      note: 'freeze refused',
+      revision: 2,
+      nextArtifact: 'research',
+      openAmendments: 2,
+      counts: { total: 4, done: 1, blocked: 2, pending: 1, superseded: 1 },
+    });
+    expect(actual.items.map(item => [item.id, item.state])).toEqual([
+      ['pending', 'blocked'],
+      ['done', 'done'],
+      ['blocked', 'blocked'],
+      ['no-command', 'pending'],
+      ['old', 'superseded'],
+    ]);
+    expect(actual.updatedAt).not.toBe('2000-01-01T00:00:00Z');
+    expect(snapshotOf(statusPath)).toEqual(before);
+  });
+
+  it('lets a stored paused state override a derived done state', () => {
+    const directory = makeSagaDirectory(path.join(temporaryRoot, 'paused-over-done'), 'done');
+    writeDoneSaga(directory);
+    writeFile(directory, 'runtime/status.json', JSON.stringify({ state: 'paused', note: 'hold for review' }));
+    const statusPath = path.join(directory, 'runtime', 'status.json');
+    const before = snapshotOf(statusPath);
+
+    expect(readSagaStatus('done', directory)).toMatchObject({ state: 'paused', note: 'hold for review' });
+    expect(snapshotOf(statusPath)).toEqual(before);
+  });
+
+  it('reports a stored done state with its note when the derivation is also done', () => {
+    const directory = makeSagaDirectory(path.join(temporaryRoot, 'stored-done'), 'done');
+    writeDoneSaga(directory);
+    writeFile(directory, 'runtime/status.json', JSON.stringify({ state: 'done', note: 'gate passed' }));
+    const statusPath = path.join(directory, 'runtime', 'status.json');
+    const before = snapshotOf(statusPath);
+
+    expect(readSagaStatus('done', directory)).toMatchObject({ state: 'done', note: 'gate passed' });
+    expect(snapshotOf(statusPath)).toEqual(before);
+  });
+
+  it('honors a stored running state with its note when the derivation is also running', () => {
+    const subjectRoot = createProject(path.join(temporaryRoot, 'running-subject'));
+    const sagaDirectory = path.join(subjectRoot, 'demo');
+    const statusPath = path.join(sagaDirectory, 'runtime', 'status.json');
+    writeFile(subjectRoot, 'demo/runtime/status.json', JSON.stringify({ state: 'running', note: 'live run' }));
+    const before = snapshotOf(statusPath);
+
+    expect(readSagaStatus('demo', sagaDirectory)).toMatchObject({ state: 'running', note: 'live run' });
+    expect(snapshotOf(statusPath)).toEqual(before);
+  });
+
+  it('falls back to the derivation for a stale running state, with an empty note', () => {
+    const doneDirectory = makeSagaDirectory(path.join(temporaryRoot, 'stale-done'), 'done');
+    writeDoneSaga(doneDirectory);
+    writeFile(doneDirectory, 'runtime/status.json', JSON.stringify({ state: 'running', note: 'dead run' }));
+    const donePath = path.join(doneDirectory, 'runtime', 'status.json');
+    const doneBefore = snapshotOf(donePath);
+    expect(readSagaStatus('done', doneDirectory)).toMatchObject({ state: 'done', note: '' });
+    expect(snapshotOf(donePath)).toEqual(doneBefore);
+
+    const plannedDirectory = makeSagaDirectory(path.join(temporaryRoot, 'stale-planned'), 'planned');
+    writePlannedSaga(plannedDirectory);
+    writeFile(plannedDirectory, 'runtime/status.json', JSON.stringify({ state: 'running', note: 'dead run' }));
+    expect(readSagaStatus('planned', plannedDirectory)).toMatchObject({ state: 'planned', note: '' });
+
+    const draftDirectory = makeSagaDirectory(path.join(temporaryRoot, 'stale-draft'), 'draft');
+    writeFile(draftDirectory, 'runtime/status.json', JSON.stringify({ state: 'running', note: 'dead run' }));
+    expect(readSagaStatus('draft', draftDirectory)).toMatchObject({ state: 'draft', note: '' });
+  });
+
+  it('uses the derivation without creating a runtime directory when the snapshot is missing', () => {
+    const sagaDirectory = makeSagaDirectory(path.join(temporaryRoot, 'no-snapshot'), 'bare');
+    expect(readSagaStatus('bare', sagaDirectory)).toMatchObject({ state: 'draft', note: '' });
+    expect(existsSync(path.join(sagaDirectory, 'runtime'))).toBe(false);
+  });
+
+  it('uses the derivation for unparsable, non-object and invalid-state snapshots, leaving each unchanged', () => {
+    const subjectRoot = createProject(path.join(temporaryRoot, 'invalid-subject'));
+    const sagaDirectory = path.join(subjectRoot, 'demo');
+    const statusPath = path.join(sagaDirectory, 'runtime', 'status.json');
+    for (const contents of [
+      '{invalid',
+      '[]',
+      '"paused"',
+      'null',
+      JSON.stringify({ state: 'stopped', note: 'not a state' }),
+      JSON.stringify({ note: 'no state' }),
+    ]) {
+      writeFileSync(statusPath, contents);
+      const before = snapshotOf(statusPath);
+      expect(readSagaStatus('demo', sagaDirectory)).toMatchObject({ state: 'running', note: '' });
+      expect(snapshotOf(statusPath)).toEqual(before);
+    }
+  });
+
+  it('reports a stored paused state in saga list rows', () => {
+    const subjectRoot = createProject(path.join(temporaryRoot, 'list-subject'));
+    const statusPath = path.join(subjectRoot, 'demo', 'runtime', 'status.json');
+    writeFile(subjectRoot, 'demo/runtime/status.json', JSON.stringify({ state: 'paused', note: 'freeze refused' }));
+    const before = snapshotOf(statusPath);
+
+    const rows = readSagaList(subjectRoot);
+    expect(rows.find(row => row.sagaId === 'demo')).toMatchObject({ state: 'paused' });
+    expect(readSagaStatus('demo', path.join(subjectRoot, 'demo'))).toMatchObject({ state: 'paused' });
+    expect(snapshotOf(statusPath)).toEqual(before);
   });
 
   it('reports malformed and unreadable existing data with its path', () => {
@@ -235,5 +366,11 @@ describe('read-only Saga projections', () => {
     const missingRoot = path.join(temporaryRoot, 'missing');
     expect(readSagaList(missingRoot)).toEqual([]);
     expect(existsSync(missingRoot)).toBe(false);
+  });
+});
+
+describe('saga snapshot state vocabulary', () => {
+  it('keeps the states read from a stored snapshot equal to the writable states', () => {
+    expect([...SNAPSHOT_STATES]).toEqual([...WRITABLE_STATES]);
   });
 });

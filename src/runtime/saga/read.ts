@@ -184,6 +184,35 @@ export function readSagaItems(sagaDirectory: string): SagaItem[] {
   return projectSagaItems(sagaDirectory);
 }
 
+/** The `state` values a `runtime/status.json` snapshot may carry; kept equal to `WRITABLE_STATES` by a test. */
+export const SNAPSHOT_STATES = ['draft', 'planned', 'running', 'paused', 'done'] as const;
+
+/**
+ * Reads the stored `state` and `note` from `runtime/status.json`. Returns `undefined` when the file is missing,
+ * unparsable, not a JSON object, or carries a `state` outside `SNAPSHOT_STATES`, so the caller falls back to the
+ * derivation. A non-regular file or an I/O error still throws through `readRegularFile`.
+ */
+function readStoredSnapshotState(sagaDirectory: string): { state: SagaStatus['state']; note: string } | undefined {
+  const contents = readRegularFile(path.join(sagaDirectory, 'runtime', 'status.json'));
+  if (contents === undefined) {
+    return undefined;
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(contents);
+  } catch {
+    return undefined;
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  const { state, note } = value as { state?: unknown; note?: unknown };
+  if (typeof state !== 'string' || !(SNAPSHOT_STATES as readonly string[]).includes(state)) {
+    return undefined;
+  }
+  return { state: state as SagaStatus['state'], note: typeof note === 'string' ? note : '' };
+}
+
 export function readSagaStatus(sagaId: string, sagaDirectory: string): SagaStatus {
   const revision = readSagaRevision(sagaDirectory);
   const items = projectSagaItems(sagaDirectory);
@@ -191,9 +220,15 @@ export function readSagaStatus(sagaId: string, sagaDirectory: string): SagaStatu
   const activeItems = items.filter(item => item.state !== 'superseded');
   const done = items.filter(item => item.state === 'done').length;
   const nextArtifact = ARTIFACTS.find(([name]) => !artifacts[name])?.[0] ?? null;
-  const state = revision === 0
+  const derivedState: SagaStatus['state'] = revision === 0
     ? nextArtifact ? 'draft' : 'planned'
     : done === activeItems.length ? 'done' : 'running';
+  // `running` is the only stored state that can go stale after an orchestrator exits, so it is honored only when the
+  // derivation agrees. Every other valid stored state is reported as written.
+  const stored = readStoredSnapshotState(sagaDirectory);
+  const useStored = stored !== undefined && (stored.state !== 'running' || derivedState === 'running');
+  const state = useStored ? stored.state : derivedState;
+  const note = useStored ? stored.note : '';
   const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
   return {
@@ -202,7 +237,7 @@ export function readSagaStatus(sagaId: string, sagaDirectory: string): SagaStatu
     revision,
     state,
     updatedAt: timestamp,
-    note: '',
+    note,
     artifacts,
     nextArtifact,
     counts: {
