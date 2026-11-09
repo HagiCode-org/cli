@@ -149,6 +149,12 @@ describe('Saga asset maintenance guidance', () => {
       expect(sagaReference).toContain(field);
     }
     expect(sagaReference).toMatch(/does not refresh or rewrite that stored status/);
+    expect(sagaReference).toMatch(/`state` and `note` come from the stored snapshot in `runtime\/status\.json` when it is valid/);
+    expect(sagaReference).toMatch(/a stored\s+`paused` or `done` is reported even when the files derive another state/);
+    expect(sagaReference).toMatch(/honored, with its note, only when the derived state/);
+    expect(sagaReference).toMatch(/falls back to\s+the derived state with an empty `note`/);
+    expect(sagaReference).toMatch(/never repairs it, and creates no `runtime\/` file or directory/);
+    expect(sessionData).toMatch(/a stored `running` only\s+when the files also derive `running`/);
     expect(sagaReference).toMatch(/strictly read-only.*do not initialize or repair resources/s);
     expect(sagaReference).toContain('or execute acceptance commands');
     expect(sagaReference).toMatch(/Every write and check command is implemented by the CLI.*never executes/s);

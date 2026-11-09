@@ -108,9 +108,19 @@ and `updatedAt`. `items <saga-id> --json` returns `{ "sagaId": "...", "items": [
 canonical `id`, `title`, `state`, `cmd`, and `note`.
 
 `status <saga-id> --json` returns the `saga-status/2` projection directly, with `schema`, `sagaId`, `revision`, `state`,
-`updatedAt`, `note`, `artifacts`, `nextArtifact`, `counts`, `openAmendments`, and `items`. It derives this view from the
-Saga files; `updatedAt` is the time of this observation, not the execution heartbeat in `runtime/status.json`. The query
-does not refresh or rewrite that stored status, and its default `note` is empty rather than a cached execution note.
+`updatedAt`, `note`, `artifacts`, `nextArtifact`, `counts`, `openAmendments`, and `items`. Counts, artifacts, `nextArtifact`,
+`openAmendments`, and `items` are derived from the Saga files at read time.
+
+`state` and `note` come from the stored snapshot in `runtime/status.json` when it is valid: a `state` of `draft`,
+`planned`, `running`, `paused`, or `done`. The reported `state` and `note` are the stored values as written, so a stored
+`paused` or `done` is reported even when the files derive another state. A stored `running` is the one exception: it is
+honored, with its note, only when the derived state (from the contract revision, artifacts, and item counts) is also
+`running`. Otherwise the derived state applies with an empty `note`, because `running` is the state that goes stale when
+an orchestrator exits. A missing file, unparsable JSON, a non-object document, or any other `state` value falls back to
+the derived state with an empty `note`.
+
+`updatedAt` is the time of this observation, not the execution heartbeat in `runtime/status.json`. The query
+does not refresh or rewrite that stored status, never repairs it, and creates no `runtime/` file or directory.
 
 All three queries are strictly read-only: they do not initialize or repair resources, create runtime files, run the Saga
 tool, or execute acceptance commands. Missing optional draft files use canonical empty-data behavior; malformed or
