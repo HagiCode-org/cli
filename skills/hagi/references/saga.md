@@ -139,6 +139,13 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
 - `claim --session <id>` creates the lock exclusively and returns the token once, in the human output and as `token` in
   JSON. A second claim is refused with code `1` and names the owning session. A lock is never taken over because of its
   age, and a refused claim changes no file.
+- After the lock is taken, `claim` marks the owner session as the Saga's orchestrator: it adds `saga.id` (the Saga) and
+  `saga.role=master` to that session's `userMetadata` through the backend, so the session lists show the orchestrator
+  inside the Saga's group with its Workers. The mark is best effort and never fails the claim: an owner ID that is not a
+  HagiCode session, an unreachable backend, or a session that already carries another `saga.id` is reported as
+  `master: { "marked": false, "reason": "..." }` in JSON and as `master mark    not set: <reason>` in the human output. A
+  successful mark is `master: { "sessionId": "<id>", "marked": true }`. Stored entries are never changed. Pass
+  `--no-mark-session` to skip the mark.
 - While a lock exists, a mutating command needs the holder's token. A missing or different token is refused with exit
   code `1` and changes no file. Without a lock, mutating commands run under their own gates, so a Saga created before ownership stays runnable.
 - `assert-owner` exits `0` when no lock exists or the token matches, and `1` otherwise.
