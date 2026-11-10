@@ -93,6 +93,7 @@ import {
   SessionProposalService,
 } from '../generated/grpc/hagicode/session/v1/session_proposal_pb';
 import {
+  AddSessionUserMetadataResponseSchema,
   ArchiveChatSessionResponseSchema,
   CreateChatSessionRequestSchema,
   CreateHagiTaskSessionRequestSchema,
@@ -381,6 +382,11 @@ export interface HagiApi {
   /** Reads the creation schema of one active HagiTask. Unknown and disabled ids reject with 404. */
   getHagiTaskSchema(presetTaskId: string): Promise<PCode_Web_Controllers_PresetTaskCreationSchemaDto>;
   updateSession(sessionId: string, requestBody: PCode_Web_Controllers_UpdateSessionRequest): Promise<unknown>;
+  /**
+   * Adds user metadata entries to an existing session through the `AddSessionUserMetadata` RPC. Stored entries never change:
+   * a key stored with another value is refused (InvalidArgument), a key stored with the same value changes nothing.
+   */
+  addSessionUserMetadata(sessionId: string, entries: SessionMetadataMap): Promise<PCode_Models_SessionResponseDto>;
   deleteSession(sessionId: string, deleteFiles?: boolean): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   sendMessage(sessionId: string, requestBody: PCode_Web_Controllers_PostMessageRequest): Promise<PCode_Application_Contracts_Dto_PostMessageResponseDto>;
   /** Hands the content to the session's running task through the `SteerSession` RPC. One call; the outcome is `steered` or `queued`. */
@@ -549,6 +555,8 @@ export function createGrpcHagiApi(): HagiApi {
         SaveSessionResponseSchema,
         sessions().saveSession({ sessionId, body: dtoToProto(UpdateSessionRequestSchema, requestBody) }),
       ),
+    addSessionUserMetadata: async (sessionId, entries) =>
+      result(AddSessionUserMetadataResponseSchema, sessions().addSessionUserMetadata({ sessionId, entries })),
     deleteSession: async (sessionId, deleteFiles) =>
       result(DeleteSessionResponseSchema, sessions().deleteSession({ sessionId, deleteFiles: deleteFiles ?? false })),
     sendMessage: async (sessionId, requestBody) =>

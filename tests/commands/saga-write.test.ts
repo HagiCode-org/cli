@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { EXIT_CODES } from '../../src/runtime/errors';
 import { loadSagaAssets } from '../../src/runtime/saga/assets';
@@ -83,6 +83,48 @@ describe('saga claim, assert-owner and release', () => {
     expect(body.token.length).toBeGreaterThan(0);
     expect(body.createdAt).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/);
     expect(result.stderr).toBe('');
+  });
+
+  it('marks the owner session as the Saga master through the backend', async () => {
+    createPlannedSaga();
+    const result = await saga(['claim', 'demo', '--path', projectPath, '--session', 's1', '--json']);
+    const body = JSON.parse(result.stdout);
+
+    expect(result.api.addSessionUserMetadata).toHaveBeenCalledWith('s1', { 'saga.id': 'demo', 'saga.role': 'master' });
+    expect(body.master).toEqual({ sessionId: 's1', marked: true });
+  });
+
+  it('keeps the claim when the backend cannot mark the owner session, and says why', async () => {
+    createPlannedSaga();
+    const harness = createDependencies({ addSessionUserMetadata: vi.fn().mockRejectedValue(new Error('session not found')) });
+    const exitCode = await runCli(
+      ['node', 'hagi', 'saga', 'claim', 'demo', '--path', projectPath, '--session', 'orchestrator-1'],
+      harness.dependencies,
+    );
+    const stdout = harness.stdout.join('');
+
+    expect(exitCode).toBe(0);
+    expect(existsSync(runtimeFile('execute.lock'))).toBe(true);
+    expect(stdout).toContain('master mark    not set: session not found');
+  });
+
+  it('skips the mark with --no-mark-session', async () => {
+    createPlannedSaga();
+    const result = await saga(['claim', 'demo', '--path', projectPath, '--session', 's1', '--no-mark-session', '--json']);
+    const body = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.api.addSessionUserMetadata).not.toHaveBeenCalled();
+    expect(body.master).toEqual({ sessionId: 's1', marked: false, reason: 'skipped by --no-mark-session' });
+  });
+
+  it('does not try to mark the owner session when the claim is refused', async () => {
+    createPlannedSaga();
+    await saga(['claim', 'demo', '--path', projectPath, '--session', 'first']);
+    const second = await saga(['claim', 'demo', '--path', projectPath, '--session', 'second']);
+
+    expect(second.exitCode).toBe(EXIT_CODES.REFUSED);
+    expect(second.api.addSessionUserMetadata).not.toHaveBeenCalled();
   });
 
   it('rejects a missing or empty session as a usage error without creating runtime files', async () => {

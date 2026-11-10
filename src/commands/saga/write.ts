@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import type { AppDependencies } from '../../runtime/commandContext';
+import { createCommandContext, type AppDependencies } from '../../runtime/commandContext';
 import { formatJson } from '../../formatters/json';
 import { formatSagaRefusalExtras, formatSagaRefusalHuman, formatSagaWriteHuman } from '../../formatters/saga';
 import { CliSagaRefusalError, CliUsageError } from '../../runtime/errors';
@@ -16,6 +16,8 @@ export type SagaWriteRequest = {
   sagaRoot: string;
   /** Execution token from `--token` or `SAGA_EXECUTION_TOKEN`; undefined for commands that do not take one. */
   token: string | undefined;
+  /** The running command, for operations that also reach the backend. */
+  command: Command;
 };
 
 export type SagaWriteSpec = {
@@ -28,7 +30,11 @@ export type SagaWriteSpec = {
   /** Usage checks that run before any backend access or file access. */
   preflight?: (options: Record<string, unknown>) => void;
   /** Performs the operation; refusals are thrown as CliSagaRefusalError and reported by the handler. */
-  run: (request: SagaWriteRequest, options: Record<string, unknown>, positionals: string[]) => Record<string, unknown>;
+  run: (
+    request: SagaWriteRequest,
+    options: Record<string, unknown>,
+    positionals: string[],
+  ) => Record<string, unknown> | Promise<Record<string, unknown>>;
 };
 
 /**
@@ -55,7 +61,7 @@ export function sagaWriteAction(dependencies: AppDependencies, spec: SagaWriteSp
       if (spec.guard) {
         assertOwner(context.sagaRoot, sagaId, token);
       }
-      const details = spec.run({ sagaId, sagaRoot: context.sagaRoot, token }, options, positionals);
+      const details = await spec.run({ sagaId, sagaRoot: context.sagaRoot, token, command: this }, options, positionals);
       const result = { sagaId, command: spec.name, ok: true, ...details };
       emit(context.outputJson ? formatJson(result) : formatSagaWriteHuman(spec.name, result));
     } catch (error) {
@@ -77,14 +83,50 @@ function requireSession(options: Record<string, unknown>): void {
   }
 }
 
+/** How long the claim waits for the backend to mark the owner session before it reports the mark as not done. */
+export const MASTER_MARK_TIMEOUT_MS = 10_000;
+
+export type MasterMark = { sessionId: string; marked: true } | { sessionId: string; marked: false; reason: string };
+
+/**
+ * Marks the owner session as the Saga's orchestrator: adds `saga.id` and `saga.role=master` to its user metadata, so the
+ * session lists show it inside the Saga's group. The lock is already taken, so a failure (an owner id that is not a
+ * HagiCode session, an unreachable backend, a session that already names another Saga) is reported, never fatal.
+ */
+async function markMasterSession(
+  command: Command,
+  dependencies: AppDependencies,
+  sagaId: string,
+  sessionId: string,
+): Promise<MasterMark> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const { api } = createCommandContext(command, dependencies);
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`no answer within ${MASTER_MARK_TIMEOUT_MS / 1000} s`)), MASTER_MARK_TIMEOUT_MS);
+    });
+    await Promise.race([api.addSessionUserMetadata(sessionId, { 'saga.id': sagaId, 'saga.role': 'master' }), timeout]);
+    return { sessionId, marked: true };
+  } catch (error) {
+    return { sessionId, marked: false, reason: error instanceof Error ? error.message : String(error) };
+  } finally {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+    }
+  }
+}
+
 export function claimSaga(dependencies: AppDependencies) {
   return sagaWriteAction(dependencies, {
     name: 'claim',
     takesToken: false,
     preflight: requireSession,
-    run: ({ sagaId, sagaRoot }, options) => {
+    run: async ({ sagaId, sagaRoot, command }, options) => {
       const owner = claimExecution(sagaRoot, sagaId, options.session as string);
-      return { ownerSession: owner.ownerSession, token: owner.token, createdAt: owner.createdAt };
+      const master: MasterMark = options.markSession === false
+        ? { sessionId: owner.ownerSession, marked: false, reason: 'skipped by --no-mark-session' }
+        : await markMasterSession(command, dependencies, sagaId, owner.ownerSession);
+      return { ownerSession: owner.ownerSession, token: owner.token, createdAt: owner.createdAt, master };
     },
   });
 }

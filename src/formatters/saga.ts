@@ -141,6 +141,15 @@ function formatList(value: unknown): string {
 }
 
 /** Human output of a successful write or check; `result` is the same object the `--json` mode prints. */
+// The claim's mark of the owner session as the Saga's orchestrator, as one line.
+function masterMarkLines(master: unknown): string[] {
+  if (!master || typeof master !== 'object') {
+    return [];
+  }
+  const mark = master as { marked?: boolean; reason?: string };
+  return [mark.marked ? 'master mark    saga.role=master set' : `master mark    not set: ${String(mark.reason)}`];
+}
+
 export function formatSagaWriteHuman(command: string, result: Record<string, unknown>): string {
   const sagaId = String(result.sagaId);
   switch (command) {
@@ -150,6 +159,7 @@ export function formatSagaWriteHuman(command: string, result: Record<string, unk
         `owner session  ${String(result.ownerSession)}`,
         `token          ${String(result.token)}`,
         `created at     ${String(result.createdAt)}`,
+        ...masterMarkLines(result.master),
         '',
       ].join('\n');
     case 'assert-owner':

@@ -140,6 +140,10 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
 
   addSagaOptions(saga.command('claim <saga-id>').description('Claim exclusive execution ownership of a Saga.'))
     .requiredOption('--session <id>', 'Owner session identifier recorded in the lock.')
+    .option(
+      '--no-mark-session',
+      'Do not add saga.id and saga.role=master to the owner session (by default the claim marks it, so session lists group it with its Workers).',
+    )
     .action(claimSaga(dependencies));
   addExecutionTokenOption(addSagaOptions(saga.command('assert-owner <saga-id>').description('Check the execution token before dispatch.')))
     .action(assertSagaOwner(dependencies));
