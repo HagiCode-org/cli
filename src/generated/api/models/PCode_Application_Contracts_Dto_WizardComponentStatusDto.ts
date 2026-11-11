@@ -32,7 +32,7 @@ export type PCode_Application_Contracts_Dto_WizardComponentStatusDto = {
    */
   failureReason?: string | null;
   /**
-   * Required version range hint for display (e.g. ">=1.0 <2.0").
+   * Required version range hint for display (e.g. ">=1.0 <3.0").
    * Null for components that have no version requirement.
    */
   requiredVersionRange?: string | null;
