@@ -47,6 +47,70 @@ describe('saga method command', () => {
     }
   });
 
+  it('plan method requires one Mermaid dependency graph and forbids every other dependency form', async () => {
+    try {
+      const { dependencies, stdout, stderr } = createDependencies();
+      expect(await runCli(['node', 'hagi', 'saga', 'method', 'plan'], dependencies)).toBe(0);
+
+      const text = stdout.join('');
+      expect(stderr).toEqual([]);
+      for (const rule of [
+        'exactly one Mermaid `flowchart`',
+        'The node ID equals the item ID',
+        'edge `A --> B` means B cannot start until A is ticked',
+        'one `subgraph` per module',
+        'start with a letter and use only letters, digits and underscores',
+        'Never use the word `end`',
+        'absence of a path',
+        'note column after `|` of an item row',
+        'second diagram',
+        'format `- [ ] <ID> <name> | <evidence>` unchanged',
+      ]) {
+        expect(text, rule).toContain(rule);
+      }
+      expect(readdirSync(temporaryRoot)).toEqual([]);
+    } finally {
+      cleanUp();
+    }
+  });
+
+  it('run method dispatches the ready set concurrently by the graph, with overlap, cap, goal, quota and downstream rules', async () => {
+    try {
+      const { dependencies, stdout, stderr } = createDependencies();
+      expect(await runCli(['node', 'hagi', 'saga', 'method', 'run'], dependencies)).toBe(0);
+
+      const text = stdout.join('');
+      expect(stderr).toEqual([]);
+      for (const rule of [
+        'Dispatch by the dependency graph',
+        'Ready set.',
+        'every predecessor of it in the graph',
+        'No graph, serial.',
+        'listed order',
+        'Graph problems pause.',
+        'an item missing from the graph',
+        'Goal forces serial.',
+        'Hold back overlap.',
+        'share a subgraph module or are likely to edit the same files',
+        'At most 3 Workers run at once by default',
+        'The goal may name a different cap',
+        'Fan out.',
+        'Workers never tick or block items themselves',
+        'Concurrent Workers.',
+        'its own quota check',
+        'A held dispatch never stops a running Worker',
+        'heartbeat at every check of a running Worker',
+        'A blocked item blocks everything downstream of it',
+        'Items with no path from the blocked item continue',
+        'the items waiting on a blocked item',
+      ]) {
+        expect(text, rule).toContain(rule);
+      }
+    } finally {
+      cleanUp();
+    }
+  });
+
   it('prints one JSON object with the name, digest and content when --json is given', async () => {
     try {
       const { dependencies, stdout } = createDependencies();
