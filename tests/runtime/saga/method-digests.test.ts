@@ -156,6 +156,23 @@ describe('check reports method drift without failing', () => {
     );
   });
 
+  it('reports a Saga frozen with the pre-change run digest as a notice only, and still passes', () => {
+    // The run prompt gained the --hero clause; a Saga frozen before that carries the old digest and must only be told.
+    const PRE_HERO_RUN_DIGEST = '915f34584cb15bf5c66a32bbe377c54343b0acae3353fc045cf276b09b99e08e';
+    freezeContract(sagaRoot, 'demo');
+    const lock = readLock();
+    writeLock({ ...lock, methods: { ...lock.methods, run: PRE_HERO_RUN_DIGEST } });
+
+    expect(methodDigests().run).not.toBe(PRE_HERO_RUN_DIGEST);
+    const result = checkRun(sagaRoot, 'demo', 'run');
+    expect(result.errors).toEqual([]);
+    expect(result.methods).toEqual({
+      recorded: true,
+      drift: [{ name: 'run', recorded: PRE_HERO_RUN_DIGEST, current: methodDigests().run }],
+    });
+    expect(formatMethodNotices(result.methods)).toContain('notice: method run differs from the digest recorded at freeze');
+  });
+
   it('reports recorded false and no drift for a legacy lock', () => {
     freezeContract(sagaRoot, 'demo');
     writeLock({ ...readLock(), methods: undefined });

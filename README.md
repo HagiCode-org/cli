@@ -101,12 +101,14 @@ Write and check commands (`claim`, `assert-owner`, `release`, `freeze`, `check`,
 from `--token` or `SAGA_EXECUTION_TOKEN`; with `--project-id`, `--token` is rejected because it is the backend token, so use
 `SAGA_EXECUTION_TOKEN` there. Exit code `0` means success, `1` a refusal or failed check, and `2` a usage error.
 
-`saga session create --saga <id> --path <root> --title <title> --role implementation|verification --master <session-id> [--item <id>]`
-creates one Worker chat session and records it in `runtime/sessions.md`. Unlike the other Saga commands it calls the
+`saga session create --saga <id> --path <root> --title <title> --role implementation|verification --master <session-id> [--item <id>] [--hero <name-or-id>]`
+creates one Worker chat session and records it in `runtime/sessions.md`. `--hero` binds the Worker to a Hero by name or ID (a GUID is an ID); the Hero is not written to the metadata or the record, and the human result and `--json` show it as `chatHero` when the backend returns one. Unlike the other Saga commands it calls the
 backend even with `--path`: the registered project whose real path matches `<root>` supplies the project ID, and no match
 or several matches is a refusal. The execution token comes only from `SAGA_EXECUTION_TOKEN`; `--token` is refused with
 either selector. The session carries `saga.*` metadata. The command sends no message and does not archive the session.
 See the [Saga command reference](skills/hagi/references/saga.md#worker-sessions) for the options, metadata keys and exit codes.
+
+`saga session list <saga-id>` reads the Worker records of a Saga without a token. `saga log append <saga-id> --message <text>` appends one line to `runtime/orchestrator-log.md` under the execution token. Both are described in the [run records](skills/hagi/references/saga.md#run-records) section.
 
 With `--project-id`, the CLI uses the normal base URL, token, and language settings to resolve the project through the
 backend. The returned project path must exist on the machine running the CLI; it is not a remote filesystem path.
@@ -505,6 +507,8 @@ SUPER_COMMIT_ID=$(hagi hagitask create \
 Start a Super Commit only when the user asked for it. Add `--need-push` only when the user asked for a push. See [references/super-commit.md](skills/hagi/references/super-commit.md) for the options, the branch modes, the result and the explicit-request rule.
 
 Use `--prompt-id` instead of `--task-id` for a prompt template with no structured input. `--input` needs `--task-id`. Input is read from a file, or from stdin with `--input -`. The CLI only checks that the input is a JSON object. The backend checks the keys and values. It rejects a key that the schema does not list, and a missing required value. Its error is printed unchanged, and no session is reported as created. `--hero-selection-mode` takes `first` (the default) or `random`.
+
+`--hero <name-or-id>` picks the Hero the session runs. A GUID is sent as a Hero ID; any other value is a Hero name, matched without regard to letter case or surrounding spaces. Give `--hero` or `--hero-id`, not both: the CLI exits `2` before any request. A name that matches no Hero, or a request that names both a Hero ID and a name, fails with the backend's message and creates no session. The CLI only sends the reference; the backend checks it. The Hero-name field needs a backend that includes it; an older backend ignores the name and runs its default Hero.
 
 The backend must have a hero available for the task's script. Without one, `hagitask create` fails with a 400 whose error is `no-executable-hero`.
 

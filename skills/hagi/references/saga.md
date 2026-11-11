@@ -184,6 +184,12 @@ Set `SAGA_EXECUTION_TOKEN` to the token that `claim` printed, then create a Work
 hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
 ```
 
+To bind the Worker to a Hero, add `--hero <name-or-id>`, for example `--hero Nova` or a Hero ID:
+
+```bash
+hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --hero Nova --json
+```
+
 - The command creates one ordinary chat session in the project and appends one line to `runtime/sessions.md`. It sends
   no message and does not archive the session; `hagi chat archive --session-id <id>` stays a separate step.
 - Required and nonblank: `--saga <id>`, `--title <title>`, `--role implementation|verification`, and `--master <session-id>`
@@ -198,6 +204,12 @@ hagi saga session create --saga demo --path "./My Project" --title "T1 implement
   names the path or the matching IDs, and creates nothing. `--project-id` looks the project up directly.
 - After the project and the Saga are resolved, the owner check of `assert-owner` runs with the token. A Saga without a lock
   still passes once a token is set. A wrong token is a refusal (code `1`), and an unknown Saga is code `24`.
+- `--hero <name-or-id>` is optional. A GUID is sent as `heroId`; any other nonblank value is sent as `heroName`, matched
+  like Hero names (trimmed, case-insensitive). A blank value is a usage error (code `2`), and no file is touched. Without
+  `--hero` the request is the same as before. The Hero is never written to `userMetadata` or `sessions.md`. A Hero the
+  backend rejects (an unknown name, a name and an ID together, or a disabled Hero) fails with the backend's message, the
+  record line is not written, and no Worker is recorded. With `--json` the `session.chatHero` object names the Hero the
+  backend bound, and the human result shows it on a `hero` line. An older backend ignores the name and runs its default Hero.
 - The new session's `userMetadata` holds `saga.id` (the Saga), `saga.role` (always `worker`), `saga.worker` (the `--role`
   value), `saga.master` (the `--master` value), and `saga.item` only when `--item` is given. The backend checks the key
   format (`^[a-z][a-z0-9._-]{0,63}$`), at most 16 entries, and value length (1 to 512 characters). The metadata is
@@ -210,7 +222,14 @@ hagi saga session create --saga demo --path "./My Project" --title "T1 implement
 - If the append fails after the session was created, the command exits `1` and names the created session ID, in the
   human output and as `session.sessionId` in `--json` with `ok` false.
 - `--json` success is one object: `{ "sagaId": "demo", "command": "session create", "ok": true, "session": { "sessionId": "...", "userMetadata": { ... } }, "record": "<path to sessions.md>" }`.
-- Exit codes: `0` created and recorded; `1` refused, or the record failed after creation; `2` usage error; `24` Saga not found.
+- Exit codes: `0` created and recorded; `1` refused, or the record failed after creation; `2` usage error; `20` the backend rejected the request, as with a Hero it cannot bind; `24` Saga not found.
+
+### Run records
+
+Two commands replace the hand-written steps of the run prompt. Both take the Saga's path, as the other local Saga commands do.
+
+- `hagi saga session list <saga-id> --path <root> [--json]` lists the Worker records in `runtime/sessions.md`: session ID, UTC creation time, role, item (`null` for `-`) and title, in file order. It is read-only and needs no token. A Saga with no `sessions.md` lists nothing and exits `0`. An unknown Saga exits `24`. `--json` returns `{ "sagaId", "command": "session list", "ok": true, "sessions": [...] }`.
+- `hagi saga log append <saga-id> --message <text> --path <root>` appends one line, `- <UTC time> | <message>`, to `runtime/orchestrator-log.md`. It needs the execution token of the Saga owner, from `SAGA_EXECUTION_TOKEN` or `--token`, and refuses a token that does not match the lock with exit `1`. Whitespace and line breaks in the message collapse to one line. A blank message is a usage error (exit `2`) before any file or token check. The runtime directory is created when missing, and a redirected log file is refused before any byte is written.
 
 ## Items, amendments, and archive
 

@@ -92,7 +92,7 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create
+|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create | session list | log append
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
@@ -225,7 +225,8 @@ Start one only when the user asked for it. See [super-commit.md](super-commit.md
 
 - `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
 - `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
-- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`.
+- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`. `requested` carries `heroId` or `heroName` when a Hero was given, and `session.chatHero` names the Hero the backend bound when it returns one.
+- `create --hero <name-or-id>` picks the Hero. A GUID is sent as `heroId`; any other value is sent as `heroName` (trimmed, matched without regard to case). Give `--hero` or `--hero-id`, not both: that is a usage error (exit `2`) and sends nothing. A blank value is also exit `2`. An unknown name, or both fields in one request, fails with the backend's message and creates no session. Needs a backend that includes the `hero_name` field; an older backend ignores the name and runs its default Hero.
 
 Example `input.json` for a task with one required input:
 
