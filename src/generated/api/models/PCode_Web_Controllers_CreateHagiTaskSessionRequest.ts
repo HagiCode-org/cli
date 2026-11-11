@@ -135,6 +135,11 @@ export type PCode_Web_Controllers_CreateHagiTaskSessionRequest = {
    */
   heroId?: string | null;
   /**
+   * Optional Hero name, an alternative to heroId. Matched after trimming and ignoring case.
+   * Giving both fields, or a name that matches no Hero, is rejected and no session is created.
+   */
+  heroName?: string | null;
+  /**
    * Optional hero selection mode used when HeroId is not provided.
    * Supported values: first (default, also used when omitted or blank) and random.
    * Random picks uniformly among the eligible members of the first scenario tier that has any.

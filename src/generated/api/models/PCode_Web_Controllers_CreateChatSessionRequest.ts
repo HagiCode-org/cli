@@ -13,6 +13,10 @@ export type PCode_Web_Controllers_CreateChatSessionRequest = {
    * Optional saved hero binding used to personalize normal chat sessions.
    */
   heroId?: string | null;
+  /**
+   * Optional Hero name, an alternative to heroId. Matched after trimming and ignoring case.
+   */
+  heroName?: string | null;
   executorType?: PCode_Models_AIProviderType;
 };
 

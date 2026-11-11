@@ -105,3 +105,35 @@ describe('userMetadata in session views', () => {
     expect(formatSessionSummaryHuman(toSessionView({ ...session, userMetadata: {} }))).toBe(without);
   });
 });
+
+describe('chatHero in session views', () => {
+  const session = createSession('session-1', PCode_Models_SessionType.CHAT);
+  const withHero = { ...session, chatHero: { heroId: 'hero-1', name: 'Nova' } };
+
+  it('leaves chatHero out of the view when the response has none', () => {
+    expect(toSessionView(session)).not.toHaveProperty('chatHero');
+    expect(toSessionView({ ...session, chatHero: undefined })).not.toHaveProperty('chatHero');
+  });
+
+  it('leaves chatHero out of the view when the response carries an empty heroId', () => {
+    expect(toSessionView({ ...session, chatHero: { heroId: '', name: 'Nova' } })).not.toHaveProperty('chatHero');
+  });
+
+  it('sets chatHero from the response when it names a Hero', () => {
+    expect(toSessionView(withHero).chatHero).toEqual({ heroId: 'hero-1', name: 'Nova' });
+  });
+
+  it('shows chatHero in the JSON view', () => {
+    const json = JSON.parse(JSON.stringify(toSessionView(withHero)));
+    expect(json.chatHero).toEqual({ heroId: 'hero-1', name: 'Nova' });
+  });
+
+  it('adds one chatHero line to the human summary only when a Hero is bound', () => {
+    const summary = formatSessionSummaryHuman(toSessionView(withHero));
+    const lines = summary.split('\n').filter(line => line.startsWith('chatHero'));
+    expect(lines.map(line => line.replace(/\s+/g, ' '))).toEqual(['chatHero Nova (hero-1)']);
+
+    const without = formatSessionSummaryHuman(toSessionView(session));
+    expect(without).not.toContain('chatHero');
+  });
+});

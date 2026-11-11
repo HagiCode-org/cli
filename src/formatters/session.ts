@@ -26,6 +26,8 @@ export type SessionView = {
   /** The write-once user metadata entries. Set only when the session has some; the human view shows them sorted by key. */
   userMetadata?: Record<string, string>;
   chatExecutorType?: string;
+  /** The Hero the session is bound to. Set only when the response carries one, so output without it is unchanged. */
+  chatHero?: { heroId: string; name: string };
 };
 
 /** A session response, plus the `user_metadata` map the OpenAPI session model does not carry. */
@@ -51,6 +53,12 @@ function readUserMetadata(session: SessionResponseWithUserMetadata): Record<stri
   return entries && Object.keys(entries).length > 0 ? { ...entries } : undefined;
 }
 
+/** The bound Hero of a response, or undefined when it has none (the output then omits the field). */
+function readChatHero(session: SessionResponseWithUserMetadata): { heroId: string; name: string } | undefined {
+  const hero = session.chatHero;
+  return hero?.heroId ? { heroId: hero.heroId, name: hero.name } : undefined;
+}
+
 /** `key=value` pairs, sorted by key and joined with ", ". */
 export function formatUserMetadata(entries: Record<string, string>): string {
   return Object.keys(entries)
@@ -61,6 +69,7 @@ export function formatUserMetadata(entries: Record<string, string>): string {
 
 export function toSessionView(session: SessionResponseWithUserMetadata): SessionView {
   const userMetadata = readUserMetadata(session);
+  const chatHero = readChatHero(session);
   return {
     sessionId: readIdValue(session.sessionId),
     title: session.title,
@@ -75,6 +84,7 @@ export function toSessionView(session: SessionResponseWithUserMetadata): Session
     metadata: session.metadata ?? undefined,
     ...(userMetadata ? { userMetadata } : {}),
     chatExecutorType: session.chatExecutorType ?? undefined,
+    ...(chatHero ? { chatHero } : {}),
   };
 }
 
@@ -117,6 +127,7 @@ export function formatSessionSummaryHuman(
     ['independentWorkspace', String(session.enableIndependentWorkspace)],
     ['baseBranch', session.baseBranch],
     ['chatExecutorType', session.chatExecutorType],
+    ['chatHero', session.chatHero ? `${session.chatHero.name} (${session.chatHero.heroId})` : undefined],
     ['metadata', session.metadata],
     ['userMetadata', session.userMetadata ? formatUserMetadata(session.userMetadata) : undefined],
     ...extras,

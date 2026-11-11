@@ -193,6 +193,86 @@ describe('hagitask commands', () => {
       expect(stderr.join('')).toContain('Preset task input contains undefined key "foo".');
       expect(stdout.join('')).not.toContain('HagiTask session created');
     });
+
+    const HERO_GUID = '3f2a9c1e-8b7d-4e5f-9a1b-0c2d3e4f5a6b';
+    const baseCreateArgs = ['node', 'hagi', 'hagitask', 'create', '--title', 'T', '--project-id', 'p-1', '--prompt-id', 'research.en-US'];
+
+    it('sends a Hero name as heroName and echoes it in requested', async () => {
+      const { dependencies, api, stdout } = createDependencies();
+
+      expect(await runCli([...baseCreateArgs, '--hero', ' Nova ', '--json'], dependencies)).toBe(0);
+
+      const request = api.createHagiTaskSession.mock.calls[0][0];
+      expect(request.heroName).toBe('Nova');
+      expect(request.heroId).toBeUndefined();
+      const output = JSON.parse(stdout.join(''));
+      expect(output.requested.heroName).toBe('Nova');
+      expect(output.requested).not.toHaveProperty('heroId');
+    });
+
+    it('sends a GUID given through --hero as heroId', async () => {
+      const { dependencies, api, stdout } = createDependencies();
+
+      expect(await runCli([...baseCreateArgs, '--hero', HERO_GUID, '--json'], dependencies)).toBe(0);
+
+      const request = api.createHagiTaskSession.mock.calls[0][0];
+      expect(request.heroId).toBe(HERO_GUID);
+      expect(request.heroName).toBeUndefined();
+      const output = JSON.parse(stdout.join(''));
+      expect(output.requested.heroId).toBe(HERO_GUID);
+      expect(output.requested).not.toHaveProperty('heroName');
+    });
+
+    it('shows the Hero reference in the human summary', async () => {
+      const { dependencies, stdout } = createDependencies();
+
+      expect(await runCli([...baseCreateArgs, '--hero', 'Nova'], dependencies)).toBe(0);
+
+      expect(stdout.join('')).toContain('heroName');
+      expect(stdout.join('')).toContain('Nova');
+    });
+
+    it('rejects --hero together with --hero-id as a usage error before any request', async () => {
+      const { dependencies, api, stderr } = createDependencies();
+      const exitCode = await runCli([...baseCreateArgs, '--hero', 'Nova', '--hero-id', HERO_GUID], dependencies);
+
+      expect(exitCode).toBe(EXIT_CODES.USAGE);
+      expect(api.createHagiTaskSession).not.toHaveBeenCalled();
+      expect(stderr.join('')).toContain('--hero and --hero-id cannot be given together');
+    });
+
+    it('rejects a blank --hero value as a usage error before any request', async () => {
+      const { dependencies, api, stderr } = createDependencies();
+      const exitCode = await runCli([...baseCreateArgs, '--hero', '   '], dependencies);
+
+      expect(exitCode).toBe(EXIT_CODES.USAGE);
+      expect(api.createHagiTaskSession).not.toHaveBeenCalled();
+      expect(stderr.join('')).toContain('--hero needs a nonblank Hero name or ID.');
+    });
+
+    it('sends neither Hero field when --hero and --hero-id are both absent', async () => {
+      const { dependencies, api, stdout } = createDependencies();
+
+      expect(await runCli([...baseCreateArgs, '--json'], dependencies)).toBe(0);
+
+      const request = api.createHagiTaskSession.mock.calls[0][0];
+      expect(request.heroId).toBeUndefined();
+      expect(request.heroName).toBeUndefined();
+      expect(JSON.parse(stdout.join('')).requested).not.toHaveProperty('heroName');
+    });
+
+    it('prints the backend rejection of an unknown Hero name and reports no created session', async () => {
+      const { dependencies, stdout, stderr } = createDependencies({
+        createHagiTaskSession: async () => {
+          throw createApiError(400, { error: "Hero 'Nobody' was not found." });
+        },
+      });
+      const exitCode = await runCli([...baseCreateArgs, '--hero', 'Nobody'], dependencies);
+
+      expect(exitCode).toBe(EXIT_CODES.HTTP_BAD_REQUEST);
+      expect(stderr.join('')).toContain("Hero 'Nobody' was not found.");
+      expect(stdout.join('')).not.toContain('HagiTask session created');
+    });
   });
 
   describe('list', () => {

@@ -14,6 +14,7 @@ import {
   type AppDependencies,
 } from '../../runtime/commandContext';
 import { CliUsageError } from '../../runtime/errors';
+import { parseHeroReference } from '../../runtime/heroReference';
 import { loadStructuredJson } from '../../runtime/inputLoader';
 
 type HagiTaskCreateOptions = {
@@ -31,6 +32,7 @@ type HagiTaskCreateOptions = {
   referenceVaultId?: string[];
   editableVaultId?: string[];
   heroId?: string;
+  hero?: string;
   heroSelectionMode?: string;
   needPush?: boolean;
   pullRebase?: boolean;
@@ -88,6 +90,10 @@ function validateCreateOptions(options: HagiTaskCreateOptions, taskId?: string, 
   if (heroSelectionMode && !HERO_SELECTION_MODES.includes(heroSelectionMode)) {
     throw new CliUsageError('--hero-selection-mode must be first or random.');
   }
+
+  if (options.hero !== undefined && options.heroId !== undefined) {
+    throw new CliUsageError('--hero and --hero-id cannot be given together; use one of them.');
+  }
 }
 
 export function registerHagiTaskCreateCommand(parent: Command, dependencies: AppDependencies): void {
@@ -110,7 +116,8 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
     .option('--reference-vault-id <ids...>', 'Reference vault ids the session may read.')
     .option('--editable-vault-id <ids...>', 'Vault ids the session may edit.')
     .option('--hero-id <id>', 'Preferred hero id. Takes precedence over --hero-selection-mode.')
-    .option('--hero-selection-mode <mode>', 'Hero choice when --hero-id is not given: first (default) or random.')
+    .option('--hero <name-or-id>', 'Preferred hero by name or ID. A GUID is an ID, any other value is a name; cannot be combined with --hero-id.')
+    .option('--hero-selection-mode <mode>', 'Hero choice when no --hero or --hero-id is given: first (default) or random.')
     .option('--need-push', 'Request a push after commit creation when supported.')
     .option('--pull-rebase', 'Run git pull --rebase before pushing, when push is requested.')
     .option('--target-branch-mode <mode>', 'Target branch mode: current, new-custom or ai-generated-new. new-custom needs --target-branch-name.')
@@ -120,6 +127,7 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
       const taskId = normalizeOptionalString(options.taskId);
       const promptId = normalizeOptionalString(options.promptId);
       validateCreateOptions(options, taskId, promptId);
+      const hero = options.hero !== undefined ? parseHeroReference(options.hero) : undefined;
 
       const presetTaskInput = options.input !== undefined
         ? await loadHagiTaskInput(requireOptionValue(options.input, '--input'))
@@ -140,7 +148,8 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
         outputVaultId: normalizeOptionalString(options.outputVaultId),
         referenceVaultIds: normalizeOptionalStringArray(options.referenceVaultId),
         editableVaultIds: normalizeOptionalStringArray(options.editableVaultId),
-        heroId: normalizeOptionalString(options.heroId),
+        heroId: hero && 'heroId' in hero ? hero.heroId : normalizeOptionalString(options.heroId),
+        heroName: hero && 'heroName' in hero ? hero.heroName : undefined,
         heroSelectionMode: normalizeOptionalString(options.heroSelectionMode),
         needPush: options.needPush ? true : undefined,
         pullRebaseBeforePush: options.pullRebase ? true : undefined,
@@ -172,6 +181,7 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
         ['targetBranchName', request.targetBranchName ?? undefined],
         ['scriptKey', request.scriptKey ?? undefined],
         ['heroId', request.heroId ?? undefined],
+        ['heroName', request.heroName ?? undefined],
         ['heroSelectionMode', request.heroSelectionMode ?? undefined],
       ])}`);
     });
