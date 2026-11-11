@@ -423,3 +423,92 @@ describe('saga session create: output and secrecy', () => {
     expect(help).toContain('at most 16 entries');
   });
 });
+
+describe('saga session create: --hero', () => {
+  const HERO_GUID = '3f2a9c1e-8b7d-4e5f-9a1b-0c2d3e4f5a6b';
+
+  it('sends a Hero name as heroName, with the same metadata and the same record line as without --hero', async () => {
+    const plain = await sessionCreate(validArgs());
+    const plainRecord = readFileSync(recordFile(), 'utf8');
+    rmSync(recordFile());
+
+    const named = await sessionCreate(validArgs(['--hero', ' Nova ']));
+
+    const plainBody = plain.createChatSession.mock.calls[0][0];
+    expect(named.createChatSession).toHaveBeenCalledWith({ ...plainBody, heroName: 'Nova' });
+    expect(named.createChatSession.mock.calls[0][0]).not.toHaveProperty('heroId');
+    expect(readFileSync(recordFile(), 'utf8')).toBe(plainRecord);
+  });
+
+  it('sends a GUID given through --hero as heroId and no heroName', async () => {
+    const result = await sessionCreate(validArgs(['--hero', HERO_GUID]));
+
+    const body = result.createChatSession.mock.calls[0][0];
+    expect(body.heroId).toBe(HERO_GUID);
+    expect(body).not.toHaveProperty('heroName');
+  });
+
+  it('sends the same request as before when --hero is absent', async () => {
+    const result = await sessionCreate(validArgs());
+
+    expect(Object.keys(result.createChatSession.mock.calls[0][0]).sort()).toEqual(['metadata', 'projectId', 'title']);
+  });
+
+  it('refuses a blank --hero value with exit 2 before any file access or backend request', async () => {
+    const result = await sessionCreate(validArgs(['--hero', '   ']));
+
+    expect(result.exitCode).toBe(EXIT_CODES.USAGE);
+    expect(result.stderr).toContain('--hero needs a nonblank Hero name or ID.');
+    expectNoBackendCall(result);
+    expect(result.createChatSession).not.toHaveBeenCalled();
+    expect(existsSync(path.join(sagaDirectory(), 'runtime'))).toBe(false);
+    expect(existsSync(recordFile())).toBe(false);
+  });
+
+  it('passes the backend rejection of an unknown Hero name through and writes no record line', async () => {
+    const result = await sessionCreate(validArgs(['--hero', 'Nobody']), {
+      createChatSession: vi.fn().mockRejectedValue(createApiError(400, { error: "Hero 'Nobody' was not found." })),
+    });
+
+    expect(result.exitCode).toBe(EXIT_CODES.HTTP_BAD_REQUEST);
+    expect(result.stderr).toContain("Hero 'Nobody' was not found.");
+    expect(existsSync(recordFile())).toBe(false);
+  });
+
+  it('shows the bound Hero in the human result and in the JSON session when the backend returns one', async () => {
+    const bound = vi.fn().mockResolvedValue({
+      ...createSession('worker-1', PCode_Models_SessionType.CHAT),
+      chatHero: { heroId: HERO_GUID, name: 'Nova' },
+    });
+
+    const human = await sessionCreate(validArgs(['--hero', 'Nova']), { createChatSession: bound });
+    expect(human.stdout).toContain(`hero          Nova (${HERO_GUID})`);
+
+    const json = await sessionCreate([...validArgs(['--hero', 'Nova']), '--json'], { createChatSession: bound });
+    expect(JSON.parse(json.stdout).session.chatHero).toEqual({ heroId: HERO_GUID, name: 'Nova' });
+  });
+
+  it('shows no Hero line when the response carries no chat Hero', async () => {
+    const result = await sessionCreate(validArgs());
+
+    expect(result.stdout).not.toContain('hero ');
+  });
+
+  it('runs the --hero example from the Saga reference against the fake backend', async () => {
+    const result = await sessionCreate([
+      '--saga', 'demo', '--path', projectPath, '--title', 'T1 implementation', '--role', 'implementation',
+      '--master', 'orchestrator-1', '--item', 'T1', '--hero', 'Nova', '--json',
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.createChatSession.mock.calls[0][0]).toMatchObject({ heroName: 'Nova' });
+    expect(JSON.parse(result.stdout).ok).toBe(true);
+  });
+
+  it('lists --hero and its rule in the create help', async () => {
+    const result = await sessionCreate(['--help']);
+
+    expect(result.stdout).toContain('--hero <name-or-id>');
+    expect(result.stdout).toContain('a GUID is sent as a Hero ID');
+  });
+});

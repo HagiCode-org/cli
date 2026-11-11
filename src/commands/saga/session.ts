@@ -5,6 +5,7 @@ import { formatSagaRefusalHuman, formatSagaSessionCreateHuman } from '../../form
 import { toSessionView } from '../../formatters/session';
 import { createCommandContext, type AppDependencies } from '../../runtime/commandContext';
 import { CliSagaRefusalError, CliUsageError } from '../../runtime/errors';
+import { parseHeroReference, type HeroReference } from '../../runtime/heroReference';
 import { assertOwner } from '../../runtime/saga/ownership';
 import { resolveSagaProjectIdentity, type SagaSelector } from '../../runtime/saga/project';
 import { requireSagaDirectory } from '../../runtime/saga/read';
@@ -26,6 +27,7 @@ export type SessionCreateOptions = SagaSelectorOptions & {
   role?: string;
   master?: string;
   item?: string;
+  hero?: string;
   token?: string;
   json?: boolean;
 };
@@ -37,6 +39,8 @@ export type SessionCreateRequest = {
   role: WorkerRole;
   masterSessionId: string;
   item: string | undefined;
+  /** The Hero the Worker runs, when --hero is given. Only the chat creation request carries it, never the metadata or the record. */
+  hero: HeroReference | undefined;
   executionToken: string;
   selector: SagaSelector;
 };
@@ -75,6 +79,7 @@ export function preflightSessionCreate(options: SessionCreateOptions, env: NodeJ
   const role = requireRole(options.role);
   const masterSessionId = requireNonBlank(options.master, '--master');
   const item = options.item === undefined ? undefined : requirePathSafe(requireNonBlank(options.item, '--item'), '--item');
+  const hero = options.hero === undefined ? undefined : parseHeroReference(options.hero, '--hero');
 
   if (options.token !== undefined) {
     throw new CliUsageError(
@@ -92,6 +97,7 @@ export function preflightSessionCreate(options: SessionCreateOptions, env: NodeJ
     role,
     masterSessionId,
     item,
+    hero,
     executionToken,
     selector: parseSagaSelector(options),
   };
@@ -142,6 +148,8 @@ export function createSagaSessionAction(dependencies: AppDependencies) {
           masterSessionId: request.masterSessionId,
           item: request.item,
         }),
+        // Without --hero this spreads nothing, so the request is the same as before the option existed.
+        ...request.hero,
       });
       const view = toSessionView(session);
 

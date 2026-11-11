@@ -2,6 +2,8 @@ import type { SagaInstallOutcome, SagaInstallReport } from '../runtime/saga/inst
 import type { SagaMetadata } from '../runtime/saga/create';
 import type { SagaItem, SagaListRow, SagaStatus } from '../runtime/saga/read';
 import type { MethodsReport } from '../runtime/saga/check';
+import type { WorkerRecord } from '../runtime/saga/runRecords';
+import { renderTable } from './table';
 
 export type SagaCreationResult = {
   id: string;
@@ -93,7 +95,11 @@ export function formatSagaItemsHuman(payload: { sagaId: string; items: SagaItem[
 
 export type SagaSessionCreateResult = {
   sagaId: string;
-  session: { sessionId: string; userMetadata?: Record<string, string> };
+  session: {
+    sessionId: string;
+    userMetadata?: Record<string, string>;
+    chatHero?: { heroId: string; name: string };
+  };
   record: string;
 };
 
@@ -102,10 +108,12 @@ export function formatSagaSessionCreateHuman(result: SagaSessionCreateResult): s
   const metadata = Object.entries(result.session.userMetadata ?? {})
     .map(([key, value]) => `${key}=${value}`)
     .join(', ');
+  const hero = result.session.chatHero;
   return [
     `session created: ${result.session.sessionId}`,
     `saga          ${result.sagaId}`,
     `metadata      ${metadata || 'none'}`,
+    ...(hero ? [`hero          ${hero.name} (${hero.heroId})`] : []),
     `recorded in   ${result.record}`,
     '',
   ].join('\n');
@@ -150,9 +158,33 @@ function masterMarkLines(master: unknown): string[] {
   return [mark.marked ? 'master mark    saga.role=master set' : `master mark    not set: ${String(mark.reason)}`];
 }
 
+/** Human output of `saga session list`: one row per Worker record, or a line saying there are none. */
+export function formatWorkerRecordsHuman(result: { sagaId: string; sessions: WorkerRecord[] }): string {
+  if (result.sessions.length === 0) {
+    return `no Worker sessions recorded for ${result.sagaId}\n`;
+  }
+
+  return `${renderTable(
+    [
+      { header: 'Session ID', value: (record: WorkerRecord) => record.sessionId },
+      { header: 'Created', value: (record: WorkerRecord) => record.createdAt },
+      { header: 'Role', value: (record: WorkerRecord) => record.role },
+      { header: 'Item', value: (record: WorkerRecord) => record.item ?? '-' },
+      { header: 'Title', value: (record: WorkerRecord) => record.title },
+    ],
+    result.sessions,
+  )}\n`;
+}
+
 export function formatSagaWriteHuman(command: string, result: Record<string, unknown>): string {
   const sagaId = String(result.sagaId);
   switch (command) {
+    case 'log append':
+      return [
+        `logged: ${sagaId}`,
+        `line           ${String(result.line)}`,
+        '',
+      ].join('\n');
     case 'claim':
       return [
         `claimed: ${sagaId}`,

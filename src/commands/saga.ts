@@ -26,6 +26,7 @@ import {
   requireSagaDirectory,
 } from '../runtime/saga/read';
 import { createSagaSessionAction } from './saga/session';
+import { appendOrchestratorLog, listWorkerSessions } from './saga/runRecords';
 import { resolveSagaCommandContext } from './saga/shared';
 import {
   amendSagaCommand,
@@ -179,10 +180,18 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
     .option('--role <role>', 'implementation or verification.')
     .option('--master <session-id>', 'Session ID of the orchestrating (master) session.')
     .option('--item <id>', 'Plan item the Worker serves; recorded as "-" when omitted.')
+    .option('--hero <name-or-id>', 'Hero the Worker runs, by name or ID. A GUID is an ID, any other value is a name. Without it the backend picks the Hero.')
     .option('--path <directory>', 'Project directory. The backend is called to find the registered project with this real path.')
     .option('--project-id <id>', 'Backend project ID.')
     .addHelpText('after', `\n${SESSION_CREATE_HELP}\n`)
     .action(createSagaSessionAction(dependencies));
+  addSagaOptions(sessionGroup.command('list <saga-id>').description('List the Worker sessions recorded in runtime/sessions.md. Read-only.'))
+    .action(listWorkerSessions(dependencies));
+
+  const logGroup = saga.command('log').description('Write the orchestrator run record of a Saga.');
+  addExecutionTokenOption(addSagaOptions(logGroup.command('append <saga-id>').description('Append one line to runtime/orchestrator-log.md under the execution token.')))
+    .requiredOption('--message <text>', 'Text of the log line. Whitespace and line breaks collapse to one line.')
+    .action(appendOrchestratorLog(dependencies));
 }
 
 const SESSION_CREATE_HELP = [
@@ -192,6 +201,10 @@ const SESSION_CREATE_HELP = [
   '  saga.worker    the --role value',
   '  saga.master    the --master value',
   '  saga.item      the --item value (only when --item is given)',
+  '',
+  '--hero binds the Worker session to a Hero: a GUID is sent as a Hero ID, any other value as a Hero name. A Hero the backend',
+  'rejects (an unknown name, or both a Hero ID and a name) fails with the backend message and records nothing. The Hero is not',
+  'written to the metadata or to sessions.md.',
   '',
   'The execution token comes only from SAGA_EXECUTION_TOKEN; --token is refused because it is the backend bearer token.',
   'The command creates and records the session. It sends no message and does not archive it (see hagi chat archive).',
