@@ -1,7 +1,12 @@
 import type { Command } from 'commander';
 import { createCommandContext, type AppDependencies } from '../../runtime/commandContext';
 import { formatJson } from '../../formatters/json';
-import { formatSagaRefusalExtras, formatSagaRefusalHuman, formatSagaWriteHuman } from '../../formatters/saga';
+import {
+  formatSagaMarkHuman,
+  formatSagaRefusalExtras,
+  formatSagaRefusalHuman,
+  formatSagaWriteHuman,
+} from '../../formatters/saga';
 import { CliSagaRefusalError, CliUsageError } from '../../runtime/errors';
 import { checkRun, type CheckPhase } from '../../runtime/saga/check';
 import { freezeContract } from '../../runtime/saga/freeze';
@@ -9,6 +14,7 @@ import { amendSaga, archiveSaga, blockItem, tickItem } from '../../runtime/saga/
 import { isWritableState, setStatus, WRITABLE_STATES } from '../../runtime/saga/statusWrite';
 import { assertOwner, claimExecution, releaseExecution } from '../../runtime/saga/ownership';
 import { requireSagaDirectory } from '../../runtime/saga/read';
+import { resolveSessionId } from '../../runtime/lockOwner';
 import { resolveExecutionToken, resolveSagaCommandContext } from './shared';
 
 export type SagaWriteRequest = {
@@ -93,7 +99,7 @@ export type MasterMark = { sessionId: string; marked: true } | { sessionId: stri
  * session lists show it inside the Saga's group. The lock is already taken, so a failure (an owner id that is not a
  * HagiCode session, an unreachable backend, a session that already names another Saga) is reported, never fatal.
  */
-async function markMasterSession(
+export async function markMasterSession(
   command: Command,
   dependencies: AppDependencies,
   sagaId: string,
@@ -114,6 +120,32 @@ async function markMasterSession(
       clearTimeout(timer);
     }
   }
+}
+
+/**
+ * `saga mark`: writes the same pair `claim` writes to a planning session, and nothing else. It takes no token and no lock,
+ * and changes no Saga file. The session is resolved before the Saga is looked up, so a missing session never reaches a
+ * project or the backend. A failed mark prints its outcome, then exits 1 through a reported refusal.
+ */
+export function markSaga(dependencies: AppDependencies) {
+  return async function sagaMarkCommand(this: Command, ...args: unknown[]): Promise<void> {
+    // Commander passes the positional arguments, then the options object, then the command itself.
+    const positionals = args.slice(0, -2).map(String);
+    const sessionId = resolveSessionId(this.opts<{ session?: string }>().session, dependencies.env);
+    const context = await resolveSagaCommandContext(this, dependencies);
+    const sagaId = positionals[0];
+    if (!sagaId) {
+      throw new CliUsageError('mark requires a Saga ID.');
+    }
+    requireSagaDirectory(context.sagaRoot, sagaId);
+
+    const mark = await markMasterSession(this, dependencies, sagaId, sessionId);
+    const result = { sagaId, ...mark };
+    context.io.stdout(context.outputJson ? formatJson(result) : formatSagaMarkHuman(result));
+    if (!mark.marked) {
+      throw new CliSagaRefusalError([mark.reason], { reported: true });
+    }
+  };
 }
 
 export function claimSaga(dependencies: AppDependencies) {

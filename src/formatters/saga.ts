@@ -158,6 +158,15 @@ function masterMarkLines(master: unknown): string[] {
   return [mark.marked ? 'master mark    saga.role=master set' : `master mark    not set: ${String(mark.reason)}`];
 }
 
+/** One line for `saga mark`: the marked session, or the one-line reason it was not marked. */
+export function formatSagaMarkHuman(result: { sagaId: string; sessionId: string; marked: boolean; reason?: string }): string {
+  if (result.marked) {
+    return `marked: ${result.sagaId} (session ${result.sessionId})\n`;
+  }
+  const reason = String(result.reason ?? 'no reason given').replace(/\s+/g, ' ').trim();
+  return `mark failed: ${result.sagaId} (session ${result.sessionId}): ${reason}\n`;
+}
+
 /** Human output of `saga session list`: one row per Worker record, or a line saying there are none. */
 export function formatWorkerRecordsHuman(result: { sagaId: string; sessions: WorkerRecord[] }): string {
   if (result.sessions.length === 0) {

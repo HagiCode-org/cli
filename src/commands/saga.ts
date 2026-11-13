@@ -36,6 +36,7 @@ import {
   checkSaga,
   claimSaga,
   freezeSaga,
+  markSaga,
   releaseSaga,
   setStatusSaga,
   tickSaga,
@@ -146,6 +147,10 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
       'Do not add saga.id and saga.role=master to the owner session (by default the claim marks it, so session lists group it with its Workers).',
     )
     .action(claimSaga(dependencies));
+  addSagaOptions(saga.command('mark <saga-id>').description('Mark a planning session as the Saga master (saga.id and saga.role=master). Takes no ownership.'))
+    .option('--session <id>', 'Session to mark (or set HAGI_SESSION_ID).')
+    .addHelpText('after', `\n${SAGA_MARK_HELP}\n`)
+    .action(markSaga(dependencies));
   addExecutionTokenOption(addSagaOptions(saga.command('assert-owner <saga-id>').description('Check the execution token before dispatch.')))
     .action(assertSagaOwner(dependencies));
   addExecutionTokenOption(addSagaOptions(saga.command('release <saga-id>').description('Release execution ownership after a paused or done snapshot.')))
@@ -193,6 +198,21 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
     .requiredOption('--message <text>', 'Text of the log line. Whitespace and line breaks collapse to one line.')
     .action(appendOrchestratorLog(dependencies));
 }
+
+const SAGA_MARK_HELP = [
+  'Writes exactly the pair claim writes, saga.id=<saga-id> and saga.role=master, to the session user metadata. Nothing else',
+  'is written: it takes no execution token, creates or changes no lock or Saga file, and takes no ownership.',
+  '',
+  'The session is --session, else HAGI_SESSION_ID. With neither, the command exits 2 before any backend or file access.',
+  'The backend call gives up after 10 seconds. Marking the same session for the same Saga again succeeds unchanged. A session',
+  'already marked for another Saga is not overwritten (add-only); that refusal is a failed mark.',
+  '',
+  'Exit codes: 0 marked; 1 mark failed (rejected, conflict, backend unreachable or no answer within 10 s, with a one-line',
+  'reason); 2 usage error, nothing sent; 24 Saga not found.',
+  '',
+  'Example:',
+  '  hagi saga mark demo --path <root> --session <your-session-id> --json',
+].join('\n');
 
 const SESSION_CREATE_HELP = [
   'Metadata written to the session (userMetadata):',

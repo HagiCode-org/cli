@@ -25,6 +25,19 @@ export function resolveLockOwner(flag: string | undefined, env: NodeJS.ProcessEn
   return owner;
 }
 
+/**
+ * The session ID a command acts on: `--session`, else `HAGI_SESSION_ID`. Blank values count as missing. With neither the
+ * command stops before any backend or file access.
+ */
+export function resolveSessionId(flag: string | undefined, env: NodeJS.ProcessEnv): string {
+  const sessionId = clean(flag) ?? clean(env[SESSION_ID_ENV]);
+  if (!sessionId) {
+    throw new CliUsageError(`No session ID. Pass --session <session-id>, or set ${SESSION_ID_ENV}.`);
+  }
+
+  return sessionId;
+}
+
 export type LockAddress = {
   lockId?: string;
   server?: string;

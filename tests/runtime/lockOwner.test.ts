@@ -1,8 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CliUsageError } from '../../src/runtime/errors';
-import { resolveLockId, resolveLockOwner } from '../../src/runtime/lockOwner';
+import { resolveLockId, resolveLockOwner, resolveSessionId } from '../../src/runtime/lockOwner';
 import { runCli } from '../../src/main';
 import { createDependencies } from '../commands/testHelpers';
+
+describe('resolveSessionId', () => {
+  it('lets the option win over HAGI_SESSION_ID', () => {
+    expect(resolveSessionId(' s1 ', { HAGI_SESSION_ID: 's2' })).toBe('s1');
+  });
+
+  it('falls back to a trimmed HAGI_SESSION_ID', () => {
+    expect(resolveSessionId(undefined, { HAGI_SESSION_ID: '  s2  ' })).toBe('s2');
+  });
+
+  it('ignores whitespace-only values in both places', () => {
+    expect(() => resolveSessionId('   ', { HAGI_SESSION_ID: '  ' })).toThrow(CliUsageError);
+    expect(resolveSessionId('   ', { HAGI_SESSION_ID: 's2' })).toBe('s2');
+  });
+
+  it('fails with a usage error when neither is set and does not use the lock owner variables', () => {
+    expect(() => resolveSessionId(undefined, {})).toThrow(CliUsageError);
+    expect(() => resolveSessionId(undefined, { HAGI_LOCK_OWNER: 'owner' })).toThrow(/--session <session-id>/);
+  });
+});
 
 describe('resolveLockOwner', () => {
   it('uses the --owner flag', () => {
