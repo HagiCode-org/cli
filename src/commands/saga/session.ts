@@ -5,6 +5,7 @@ import { formatSagaRefusalHuman, formatSagaSessionCreateHuman } from '../../form
 import { toSessionView } from '../../formatters/session';
 import { createCommandContext, type AppDependencies } from '../../runtime/commandContext';
 import { CliSagaRefusalError, CliUsageError } from '../../runtime/errors';
+import { SESSION_ID_ENV } from '../../runtime/lockOwner';
 import { parseHeroReference, type HeroReference } from '../../runtime/heroReference';
 import { assertOwner } from '../../runtime/saga/ownership';
 import { resolveSagaProjectIdentity, type SagaSelector } from '../../runtime/saga/project';
@@ -54,6 +55,17 @@ function requireNonBlank(value: unknown, flag: string): string {
   return value.trim();
 }
 
+/** `--master`, else `HAGI_SESSION_ID`. Blank values count as missing; with neither the command stops before any request. */
+function resolveMasterSessionId(flag: unknown, env: NodeJS.ProcessEnv): string {
+  const fromFlag = typeof flag === 'string' ? flag.trim() : '';
+  const fromEnv = env[SESSION_ID_ENV]?.trim() ?? '';
+  const value = fromFlag || fromEnv;
+  if (!value) {
+    throw new CliUsageError('session create requires --master <session-id>, or HAGI_SESSION_ID set to your session ID.');
+  }
+  return value;
+}
+
 /** A Saga or item identifier must not carry a path separator or a traversal segment; it is refused before any file access. */
 function requirePathSafe(value: string, flag: string): string {
   if (PATH_SEPARATOR.test(value) || value === '.' || value === '..' || value.includes('\0')) {
@@ -77,7 +89,7 @@ export function preflightSessionCreate(options: SessionCreateOptions, env: NodeJ
   const sagaId = requirePathSafe(requireNonBlank(options.saga, '--saga'), '--saga');
   const title = requireNonBlank(options.title, '--title');
   const role = requireRole(options.role);
-  const masterSessionId = requireNonBlank(options.master, '--master');
+  const masterSessionId = resolveMasterSessionId(options.master, env);
   const item = options.item === undefined ? undefined : requirePathSafe(requireNonBlank(options.item, '--item'), '--item');
   const hero = options.hero === undefined ? undefined : parseHeroReference(options.hero, '--hero');
 

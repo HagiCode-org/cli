@@ -9,7 +9,7 @@ import type { HagiApi } from '../../src/runtime/hagiApi';
 import { createApiError, createDependencies, createProject, createSession } from './testHelpers';
 
 const TOKEN = 'execution-token-under-test';
-const DEFAULT_ENV: Record<string, string | undefined> = { SAGA_EXECUTION_TOKEN: TOKEN };
+const DEFAULT_ENV: Record<string, string | undefined> = { SAGA_EXECUTION_TOKEN: TOKEN, HAGI_SESSION_ID: undefined };
 
 let workspace: string;
 let projectPath: string;
@@ -276,6 +276,55 @@ describe('saga session create: project and Saga resolution', () => {
     expect(result.exitCode).toBe(EXIT_CODES.HTTP_NOT_FOUND);
     expect(result.createChatSession).not.toHaveBeenCalled();
     expect(existsSync(sagaDirectory('missing-saga'))).toBe(false);
+  });
+});
+
+describe('saga session create: --master from HAGI_SESSION_ID', () => {
+  it('uses HAGI_SESSION_ID as saga.master when --master is absent', async () => {
+    const args = validArgs();
+    args.splice(args.indexOf('--master'), 2);
+
+    const result = await sessionCreate(args, { env: { HAGI_SESSION_ID: 'env-master' } });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.createChatSession).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ 'saga.master': 'env-master' }) }),
+    );
+  });
+
+  it('uses HAGI_SESSION_ID when --master is blank', async () => {
+    const args = validArgs();
+    args[args.indexOf('--master') + 1] = '   ';
+
+    const result = await sessionCreate(args, { env: { HAGI_SESSION_ID: 'env-master' } });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.createChatSession).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ 'saga.master': 'env-master' }) }),
+    );
+  });
+
+  it('lets an explicit --master win over HAGI_SESSION_ID', async () => {
+    const result = await sessionCreate(validArgs(), { env: { HAGI_SESSION_ID: 'env-master' } });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.createChatSession).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ 'saga.master': 'm-1' }) }),
+    );
+  });
+
+  it('exits 2 with neither --master nor HAGI_SESSION_ID, and sends no request or file', async () => {
+    const args = validArgs();
+    args.splice(args.indexOf('--master'), 2);
+
+    const result = await sessionCreate(args);
+
+    expect(result.exitCode).toBe(EXIT_CODES.USAGE);
+    expect(result.stderr).toContain('--master');
+    expect(result.stderr).toContain('HAGI_SESSION_ID');
+    expectNoBackendCall(result);
+    expect(result.createChatSession).not.toHaveBeenCalled();
+    expect(existsSync(recordFile())).toBe(false);
   });
 });
 

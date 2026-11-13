@@ -236,10 +236,32 @@ describe('claimSaga', () => {
     mocks.claimExecution.mockReturnValue({ ownerSession: 'owner-1', token: 'new-token', createdAt: '2026-11-12T00:00:00Z' });
   });
 
-  it.each([undefined, '', '   ', 5])('requires a nonempty --session, got %j', async session => {
-    await expect(claim({ session })).rejects.toThrow('claim requires a nonempty --session <owner-session-id>.');
+  it.each([undefined, '', '   ', 5])('requires --session or HAGI_SESSION_ID, got %j', async session => {
+    await expect(claim({ session })).rejects.toThrow('No session ID. Pass --session <session-id>, or set HAGI_SESSION_ID.');
     expect(mocks.claimExecution).not.toHaveBeenCalled();
     expect(mocks.resolveContext).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, '', '   '])('falls back to HAGI_SESSION_ID when --session is %j, and marks that session as master', async session => {
+    mocks.claimExecution.mockImplementation((_root: string, _id: string, owner: string) => ({
+      ownerSession: owner,
+      token: 'new-token',
+      createdAt: '2026-11-12T00:00:00Z',
+    }));
+    const envDependencies = { env: { HAGI_SESSION_ID: 'env-owner' } } as never;
+
+    await run(claimSaga(envDependencies), ['saga-1'], { session });
+
+    expect(mocks.claimExecution).toHaveBeenCalledWith('/projects/demo/.hagicode/sagas', 'saga-1', 'env-owner');
+    expect(mocks.addSessionUserMetadata).toHaveBeenCalledWith('env-owner', { 'saga.id': 'saga-1', 'saga.role': 'master' });
+  });
+
+  it('lets an explicit --session win over HAGI_SESSION_ID', async () => {
+    const envDependencies = { env: { HAGI_SESSION_ID: 'env-owner' } } as never;
+
+    await run(claimSaga(envDependencies), ['saga-1'], { session: 'owner-1' });
+
+    expect(mocks.claimExecution).toHaveBeenCalledWith('/projects/demo/.hagicode/sagas', 'saga-1', 'owner-1');
   });
 
   it('claims the Saga, marks the owner session as master and reports the token', async () => {

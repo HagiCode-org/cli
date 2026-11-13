@@ -141,7 +141,7 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
     .action(listSagaItems(dependencies));
 
   addSagaOptions(saga.command('claim <saga-id>').description('Claim exclusive execution ownership of a Saga.'))
-    .requiredOption('--session <id>', 'Owner session identifier recorded in the lock.')
+    .option('--session <id>', 'Owner session identifier recorded in the lock (or set HAGI_SESSION_ID).')
     .option(
       '--no-mark-session',
       'Do not add saga.id and saga.role=master to the owner session (by default the claim marks it, so session lists group it with its Workers).',
@@ -183,7 +183,7 @@ export function registerSagaCommands(program: Command, dependencies: AppDependen
     .option('--saga <id>', 'Saga whose Worker this is.')
     .option('--title <title>', 'Title of the Worker chat session.')
     .option('--role <role>', 'implementation or verification.')
-    .option('--master <session-id>', 'Session ID of the orchestrating (master) session.')
+    .option('--master <session-id>', 'Session ID of the orchestrating (master) session (or set HAGI_SESSION_ID).')
     .option('--item <id>', 'Plan item the Worker serves; recorded as "-" when omitted.')
     .option('--hero <name-or-id>', 'Hero the Worker runs, by name or ID. A GUID is an ID, any other value is a name. Without it the backend picks the Hero.')
     .option('--path <directory>', 'Project directory. The backend is called to find the registered project with this real path.')
@@ -225,6 +225,9 @@ const SESSION_CREATE_HELP = [
   '--hero binds the Worker session to a Hero: a GUID is sent as a Hero ID, any other value as a Hero name. A Hero the backend',
   'rejects (an unknown name, or both a Hero ID and a name) fails with the backend message and records nothing. The Hero is not',
   'written to the metadata or to sessions.md.',
+  '',
+  '--master defaults to HAGI_SESSION_ID when the flag is absent or blank; an explicit flag always wins. With neither, the',
+  'command exits 2 before any request is sent.',
   '',
   'The execution token comes only from SAGA_EXECUTION_TOKEN; --token is refused because it is the backend bearer token.',
   'The command creates and records the session. It sends no message and does not archive it (see hagi chat archive).',

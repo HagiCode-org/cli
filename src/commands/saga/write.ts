@@ -83,10 +83,9 @@ export function sagaWriteAction(dependencies: AppDependencies, spec: SagaWriteSp
   };
 }
 
-function requireSession(options: Record<string, unknown>): void {
-  if (typeof options.session !== 'string' || options.session.trim() === '') {
-    throw new CliUsageError('claim requires a nonempty --session <owner-session-id>.');
-  }
+/** The owner session of `claim`: `--session`, else `HAGI_SESSION_ID`. Stops before any file or backend access when neither is set. */
+function resolveClaimSession(options: Record<string, unknown>, env: NodeJS.ProcessEnv): string {
+  return resolveSessionId(typeof options.session === 'string' ? options.session : undefined, env);
 }
 
 /** How long the claim waits for the backend to mark the owner session before it reports the mark as not done. */
@@ -152,9 +151,11 @@ export function claimSaga(dependencies: AppDependencies) {
   return sagaWriteAction(dependencies, {
     name: 'claim',
     takesToken: false,
-    preflight: requireSession,
+    preflight: options => {
+      resolveClaimSession(options, dependencies.env);
+    },
     run: async ({ sagaId, sagaRoot, command }, options) => {
-      const owner = claimExecution(sagaRoot, sagaId, options.session as string);
+      const owner = claimExecution(sagaRoot, sagaId, resolveClaimSession(options, dependencies.env));
       const master: MasterMark = options.markSession === false
         ? { sessionId: owner.ownerSession, marked: false, reason: 'skipped by --no-mark-session' }
         : await markMasterSession(command, dependencies, sagaId, owner.ownerSession);
