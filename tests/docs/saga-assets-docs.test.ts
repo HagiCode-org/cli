@@ -316,3 +316,45 @@ describe('Saga asset maintenance guidance', () => {
     }
   });
 });
+
+describe('HAGI_SESSION_ID and project variables in the reference docs', () => {
+  it('lists the nine runtime variables in session-data.md', () => {
+    for (const variable of [
+      'HAGI_API_BASE_URL',
+      'HAGI_VERSION',
+      'HAGI_DEPLOYMENT_TYPE',
+      'HAGI_API_LANG',
+      'HAGI_SESSION_ID',
+      'HAGI_PROJECT_ID',
+      'HAGI_PROJECT_NAME',
+      'HAGI_PROJECT_PATH',
+      'HAGI_WORKING_DIRECTORY',
+    ]) {
+      expect(sessionData).toContain(`\`${variable}\``);
+    }
+    expect(sessionData).toContain('nine variables');
+  });
+
+  it('no longer ties injection to the skill being enabled or to five providers, or says no path is ever carried', () => {
+    const flat = sessionData.replace(/\s+/g, ' ');
+    expect(flat).not.toContain('only when the skill is enabled');
+    expect(flat).not.toMatch(/only Claude Code, Pi, OpenCode, GitHub Copilot or omp/);
+    expect(flat).not.toContain('never carry a token or a file path');
+    expect(flat).toContain('whether or not the built-in `hagi` skill is enabled');
+    expect(flat).toMatch(/no secret: never a token, a credential or an API key/);
+  });
+
+  it('documents the claim and session create fallbacks and the exit-2 rule in saga.md', () => {
+    const flat = sagaReference.replace(/\s+/g, ' ');
+    expect(flat).toContain('`--session` may be left out: `claim` then uses `HAGI_SESSION_ID`');
+    expect(flat).toContain('`--master <session-id>`');
+    expect(flat).toContain('may be left out: the command then uses `HAGI_SESSION_ID`');
+    expect(flat).toMatch(/With neither, `claim` exits `2` before it creates or reads any lock or runtime directory/);
+    expect(flat).toMatch(/with neither the command exits `2` before any request/);
+  });
+
+  it('documents the session variable fallbacks in the CLI environment table', () => {
+    expect(cliUsage).toMatch(/\| `HAGI_SESSION_ID` \| Your own HagiCode session ID\./);
+    expect(cliUsage).toContain('`HAGI_PROJECT_PATH`');
+  });
+});

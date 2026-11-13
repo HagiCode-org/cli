@@ -139,6 +139,8 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
 - `claim --session <id>` creates the lock exclusively and returns the token once, in the human output and as `token` in
   JSON. A second claim is refused with code `1` and names the owning session. A lock is never taken over because of its
   age, and a refused claim changes no file.
+- `--session` may be left out: `claim` then uses `HAGI_SESSION_ID`. An explicit `--session` always wins, and a blank value
+  counts as missing. With neither, `claim` exits `2` before it creates or reads any lock or runtime directory.
 - After the lock is taken, `claim` marks the owner session as the Saga's orchestrator: it adds `saga.id` (the Saga) and
   `saga.role=master` to that session's `userMetadata` through the backend, so the session lists show the orchestrator
   inside the Saga's group with its Workers. The mark is best effort and never fails the claim: an owner ID that is not a
@@ -217,8 +219,9 @@ hagi saga session create --saga demo --path "./My Project" --title "T1 implement
 
 - The command creates one ordinary chat session in the project and appends one line to `runtime/sessions.md`. It sends
   no message and does not archive the session; `hagi chat archive --session-id <id>` stays a separate step.
-- Required and nonblank: `--saga <id>`, `--title <title>`, `--role implementation|verification`, and `--master <session-id>`
-  (the orchestrator's own session ID). `--item <id>` is optional. `--saga` and `--item` are identifiers: a path separator
+- Required and nonblank: `--saga <id>`, `--title <title>`, and `--role implementation|verification`. `--master <session-id>`
+  (the orchestrator's own session ID) may be left out: the command then uses `HAGI_SESSION_ID`. An explicit `--master`
+  always wins, and with neither the command exits `2` before any request. `--item <id>` is optional. `--saga` and `--item` are identifiers: a path separator
   or a traversal segment is a usage error (code `2`). Exactly one of `--path <directory>` or `--project-id <id>` is
   required.
 - The execution token comes only from `SAGA_EXECUTION_TOKEN`, which must be set and nonempty. `--token` is refused with

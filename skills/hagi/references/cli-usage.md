@@ -68,6 +68,8 @@ Explicit flags always override environment variables.
 | `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
+| `HAGI_SESSION_ID` | Your own HagiCode session ID. Fallback for `--session` (`saga claim`, `saga mark`, the lock commands) and for `--master` (`saga session create`) when the flag is absent or blank. An explicit flag wins. |
+| `HAGI_PROJECT_ID`, `HAGI_PROJECT_NAME`, `HAGI_PROJECT_PATH`, `HAGI_WORKING_DIRECTORY` | Set by HagiCode for an agent run, not read by the CLI. `HAGI_PROJECT_PATH` and `HAGI_WORKING_DIRECTORY` are file system paths. See [Session data](session-data.md#runtime-variables). |
 | `HAGI_SEND_STEER` | Turns Steer on (`1`, `true`, `yes`, `on`) or off (`0`, `false`, `no`, `off`) for `chat`, `proposal` and `hagitask send`. Any other value exits with code `2`. See [Steer for send commands](#steer-for-send-commands). |
 
 ## Config file

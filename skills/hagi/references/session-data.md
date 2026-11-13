@@ -5,7 +5,7 @@ Read-only inspection comes first. Change state only when the user asked for that
 
 ## Runtime variables
 
-A HagiCode session can give you four variables. Each one is defined here, once:
+A HagiCode session can give you nine variables. Each one is defined here, once:
 
 | Variable | Carries |
 | --- | --- |
@@ -13,15 +13,23 @@ A HagiCode session can give you four variables. Each one is defined here, once:
 | `HAGI_VERSION` | Version of the HagiCode server that started the session. |
 | `HAGI_DEPLOYMENT_TYPE` | Deployment type of that server. |
 | `HAGI_API_LANG` | The user's effective AI language, `zh-CN` or `en-US`. `hagi` sends it as `Accept-Language`. |
+| `HAGI_SESSION_ID` | The HagiCode session ID of this run. It is your own session ID: `hagi saga claim` and `hagi saga session create` use it when `--session` or `--master` is absent. |
+| `HAGI_PROJECT_ID` | ID of the project this session belongs to. |
+| `HAGI_PROJECT_NAME` | Name of that project. |
+| `HAGI_PROJECT_PATH` | Root path of that project on the machine that runs the agent. |
+| `HAGI_WORKING_DIRECTORY` | Working directory of this run. |
 
-The server adds them to an agent run only when all of these hold:
-
-- the built-in `hagi` skill is installed and enabled;
-- the run is on Claude Code, Pi, OpenCode, GitHub Copilot or omp, the agent CLIs that load built-in skills at launch;
-- the value is one the server can determine. A value it cannot determine is left out, and the run still starts.
+The server adds them to an agent run whether or not the built-in `hagi` skill is enabled, and whichever agent CLI runs it.
+Each variable is added only when the server can determine its value. A value it cannot determine is left out, with a
+warning, and the run still starts.
 
 A value the user already set in the environment is kept, not replaced.
-The variables carry facts about the server and the language only. They never carry a token or a file path.
+The variables carry no secret: never a token, a credential or an API key. `HAGI_PROJECT_PATH` and `HAGI_WORKING_DIRECTORY`
+are file system paths, and anyone who can read the session can read them.
+
+OpenCode is the exception for now. An OpenCode server that HagiCode starts receives only the four server variables. An
+attached OpenCode server, one that HagiCode did not start, receives none of them. In either case `HAGI_SESSION_ID` may be
+absent: say so and ask the user for the session ID.
 
 If a variable you rely on is absent, say that it is absent and ask the user. Do not guess a value, install software, or retry in a loop.
 
