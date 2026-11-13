@@ -27,9 +27,9 @@ A value the user already set in the environment is kept, not replaced.
 The variables carry no secret: never a token, a credential or an API key. `HAGI_PROJECT_PATH` and `HAGI_WORKING_DIRECTORY`
 are file system paths, and anyone who can read the session can read them.
 
-OpenCode is the exception for now. An OpenCode server that HagiCode starts receives only the four server variables. An
-attached OpenCode server, one that HagiCode did not start, receives none of them. In either case `HAGI_SESSION_ID` may be
-absent: say so and ask the user for the session ID.
+OpenCode is the one provider with a different route. An OpenCode server that HagiCode starts receives the session and project
+variables for each run, and each session gets its own server. An attached OpenCode server, one that HagiCode did not start,
+receives none of these variables, so `HAGI_SESSION_ID` may be absent there: say so and ask the user for the session ID.
 
 If a variable you rely on is absent, say that it is absent and ask the user. Do not guess a value, install software, or retry in a loop.
 
