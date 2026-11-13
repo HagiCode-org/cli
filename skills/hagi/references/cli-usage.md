@@ -296,8 +296,8 @@ Scheduled plans save a proposal or HagiTask input with a schedule and, for HagiT
 hagi plan
 |-- list
 |-- get      --id <id>
-|-- create   --input <file|-> [--name <name>] [--hero-id <id>] [--disabled]
-|-- update   --id <id> [--input <file|->] [--name <name>] [--hero-id <id>] [--enabled | --disabled]
+|-- create   --input <file|-> [--name <name>] [--hero-id <id>] [--disabled] [--window-start <instant>] [--window-end <instant>] [--first-at <instant>] [--every <duration>] [--time-zone <iana>]
+|-- update   --id <id> [--input <file|->] [--name <name>] [--hero-id <id>] [--enabled | --disabled] [--window-start <instant>] [--window-end <instant>] [--first-at <instant>] [--every <duration>] [--time-zone <iana>]
 |-- enable   --id <id>
 |-- disable  --id <id>
 |-- delete   --id <id>
@@ -306,6 +306,7 @@ hagi plan
 
 - `create` enables the plan unless the document sets `enabled` or `--disabled` is passed.
 - `update`, `enable` and `disable` read the current plan and send it back whole, so unchanged fields are kept. `update --input` replaces each top-level key it contains as a whole value.
+- Interval schedule flags (`--window-start`, `--window-end`, `--first-at`, `--every`, `--time-zone`) build an `interval` schedule on `create` and `update`. Instants need a UTC offset (`Z` or `+hh:mm`), `--every` takes `<n>m`, `<n>h` or `<n>d` and the minimum is 5 minutes. A bad value, or a missing flag, exits `2` with no backend call. On `update` of an interval plan, each flag replaces only its field; on any other plan all four are required. The backend checks order rules and prints each problem by field.
 - `run` creates a session now and waits for it. `run --background` returns `{ planId, accepted: true }` once the backend accepts the run, before the session exists.
 - A manual run does not change the plan's state or next run time, and works for disabled and completed plans.
 
@@ -325,7 +326,16 @@ A one-time proposal plan document for `plan create --input`:
 }
 ```
 
-The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow.
+An interval plan that fires every 3 hours on 14 November, Los Angeles time (eight runs, from 00:00 to 21:00):
+
+```bash
+hagi plan create --input release-watch.json \
+  --window-start 2026-11-14T00:00-08:00 --window-end 2026-11-14T23:59-08:00 \
+  --first-at 2026-11-14T00:00-08:00 --every 3h --time-zone America/Los_Angeles
+hagi plan update --id "$PLAN_ID" --every 2h --json
+```
+
+The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow, and its "Interval plans" subsection lists the flags.
 
 ## Skills commands
 

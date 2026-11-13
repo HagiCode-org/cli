@@ -618,6 +618,33 @@ PLAN_ID=$(hagi plan create --input nightly-review.json --json | json_field '.pla
 
 A plan is **enabled by default**. `create` sends `enabled: true` unless the document sets `enabled` or you pass `--disabled`. `--name` and `--hero-id` replace the document's `name` and agent pool, and `--hero-id` builds the single-agent `random` pool. Server-owned fields (`id`, `createdAt`, `updatedAt`, `state`, `nextRunAt`) in the document are ignored.
 
+### Interval plans
+
+A recurring plan can also fire every few hours inside one window. Give `create` or `update` these flags instead of writing the schedule by hand:
+
+| Flag | Meaning |
+| --- | --- |
+| `--window-start <instant>` | Window start. Triggers start no earlier than this. |
+| `--window-end <instant>` | Window end. A trigger may fall exactly on it. |
+| `--first-at <instant>` | First trigger. It must be at or after the window start and before the window end. |
+| `--every <duration>` | Interval between triggers: `<n>m`, `<n>h` or `<n>d`, such as `90m`, `3h` or `1d`. Sent as whole minutes; the minimum is 5 minutes. |
+| `--time-zone <iana>` | Time zone of the schedule, such as `America/Los_Angeles`. Defaults to the document's, then to this machine's. |
+
+An instant is ISO-8601 with a UTC offset, `Z` or `+hh:mm`/`-hh:mm`, such as `2026-11-14T00:00-08:00`. An instant without an offset, a duration without a unit and a missing flag are usage errors (exit code `2`), and nothing is sent. Order and minimum rules are checked by the backend, and each problem prints under its field name.
+
+```bash
+hagi plan create --input release-watch.json \
+  --window-start 2026-11-14T00:00-08:00 \
+  --window-end 2026-11-14T23:59-08:00 \
+  --first-at 2026-11-14T00:00-08:00 \
+  --every 3h \
+  --time-zone America/Los_Angeles
+```
+
+That plan runs at 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00 and 21:00 on 14 November, then completes. The `--input` document may leave out `schedule`; the flags build it. A document that already holds an interval schedule keeps it when no schedule flag is passed.
+
+On `update`, the flags change the plan's current interval schedule field by field. `--every 2h` alone keeps the window, first trigger and time zone. On a plan with another rule, all four interval flags are required and they replace the whole schedule. `plan list` and `plan get` show an interval plan as `interval 3h 2026-11-14 00:00..2026-11-14 23:59 first 2026-11-14 00:00 America/Los_Angeles`, with the window in the plan's time zone.
+
 ### Update, enable, disable and delete
 
 `plan update` reads the current plan, applies your changes and sends the full plan back, so fields you do not mention keep their values:
