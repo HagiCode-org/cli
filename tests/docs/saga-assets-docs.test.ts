@@ -176,7 +176,7 @@ describe('Saga asset maintenance guidance', () => {
     const rootHelp = createDependencies();
     expect(await runCli(['node', 'hagi', 'saga', '--help'], rootHelp.dependencies)).toBe(0);
     for (const command of [
-      'init', 'new', 'list', 'status', 'items',
+      'init', 'new', 'list', 'status', 'items', 'mark',
       'claim', 'assert-owner', 'release', 'freeze', 'check', 'tick', 'block', 'set-status', 'amend', 'archive',
     ]) {
       expect(rootHelp.stdout.join('')).toContain(command);
@@ -206,6 +206,32 @@ describe('Saga asset maintenance guidance', () => {
       expect(sagaReference).toContain(`hagi saga ${command}`);
       const help = createDependencies();
       expect(await runCli(['node', 'hagi', 'saga', command, '--help'], help.dependencies)).toBe(0);
+    }
+  });
+
+  it('documents saga mark beside claim with its pair, no-ownership rule, add-only refusal, exit codes and JSON shape', async () => {
+    const reference = sagaReference.replace(/\s+/g, ' ');
+    for (const detail of [
+      '### Marking a planning session',
+      'hagi saga mark demo --path "./My Project" --session <your-session-id> --json',
+      'writes the same `saga.id` and `saga.role=master` pair that `claim` writes',
+      'reads no execution token',
+      'takes no lock',
+      'takes no ownership',
+      'HAGI_SESSION_ID',
+      'add-only',
+      'succeeds unchanged',
+      'gives up after 10 seconds',
+      '`{ "sagaId", "sessionId", "marked": true }`',
+      '`{ "sagaId", "sessionId", "marked": false, "reason" }`',
+      '`0` marked; `1` mark failed; `2` usage error',
+      '`24` Saga not found',
+    ]) {
+      expect(reference).toContain(detail.replace(/\s+/g, ' '));
+    }
+    expect(skillManifest).toContain('`mark`, which marks a planning session as the Saga master');
+    for (const documentation of [cliUsage, readme]) {
+      expect(documentation).toContain('hagi saga mark demo --path "./My Project"');
     }
   });
 

@@ -91,12 +91,12 @@ settings do not affect that local operation. The one exception is `saga session 
 hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create | session list | log append
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages | answer
+|-- saga      init | new | list | status | items | mark | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create | session list | log append
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- hagitask  list | schema | create | send | get | messages
+|-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
 |-- skills    local list | enable | disable | uninstall
 |             gallery search | detail | install
@@ -126,6 +126,7 @@ hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
 hagi saga items demo --path "./My Project" --json
 hagi saga claim demo --path "./My Project" --session orchestrator-1 --json
+hagi saga mark demo --path "./My Project" --session orchestrator-1 --json
 hagi saga check demo --path "./My Project" --phase run --json
 hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --json
 hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
@@ -179,6 +180,7 @@ hagi proposal messages --session-id <session-id> --last 1 --json
 
 - `--wait` settles on any status other than Optimizing, Openspecing, Executing or Archiving. WaitingForReply counts as settled, because a person must answer.
 - `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
+- `proposal messages --pending-question` prints only the pending question of the session, from the same read; it exits `24` when none is pending. `proposal answer` answers that question. See [Answering a pending question](#answering-a-pending-question).
 - Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
 
 ## Session metadata
@@ -213,7 +215,24 @@ hagi hagitask messages --session-id <session-id> --last 1 --json
 hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
 ```
 
-`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above.
+`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above. `hagi hagitask answer` answers the pending question of a HagiTask session, as described in [Answering a pending question](#answering-a-pending-question).
+
+## Answering a pending question
+
+When an agent asks the user a question, the session stops at `WaitingForReply`. Four steps follow, for `proposal` and `hagitask` alike:
+
+```bash
+hagi proposal get --session-id <session-id> --wait --json                 # 1. wait: settles at WaitingForReply; the output names the pending question
+hagi proposal messages --session-id <session-id> --pending-question       # 2. read the question: header, numbered options, single or multi-select, custom answer, state
+hagi proposal answer --session-id <session-id> --option staging           # 3. answer: --option (label or 1-based number), --text, --input <file|->, or --reject
+hagi proposal get --session-id <session-id> --wait --json                 # 4. wait again for the run to continue
+```
+
+- `answer` reads the newest messages once, finds the pending question, checks the answer against it, and sends one request. It never retries. `--option` repeats for a multi-select question; a label that is a number goes through `--input`. `--question <n>` addresses one question (default 1). A prompt with several questions is answered with `--input`, a JSON document such as `{"answers":[{"question":1,"options":["staging"]},{"question":2,"text":["a note"]}]}`; `--input` cannot be combined with `--option`, `--text`, `--question` or `--reject`.
+- Exit codes: `0` accepted (`delivered` or `resumed`); `35` the answer was refused, by the CLI before sending or by the backend, with the reason printed; `36` the question was already answered or is no longer open; `24` no pending question, or the message or question was not found. A usage error exits `2` before any request.
+- A secret question's answer never appears in the output, the `--json` result or an error message.
+- `messages --pending-question --json` prints `{ sessionId, messageId, userQuestion }`. `wait.pendingQuestion` in the `--wait --json` output names the question at `WaitingForReply`; the five existing `wait` fields do not change.
+- **`answer` changes session state.** Run it only on an explicit user request or an explicit Saga instruction. Never answer on your own judgment: when a question is pending and nobody has asked you to answer it, tell the user and wait.
 
 Super Commit is a prompt, not a preset task, so it has no schema and takes no `--input`. Start it with a prompt id:
 
@@ -380,6 +399,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `34` | Quota unavailable: `hagi usage limits` could not read a usable figure, either on a plain read or after a wait's retries. Nothing is known about the quota, so none is claimed. Low quota is not this code: it exits `0` |
+| `35` | Answer refused: `proposal answer` or `hagitask answer` found the answer invalid, by its own checks or by the backend (`invalid`, with its reason). Nothing was changed |
+| `36` | Question already answered or no longer open: `proposal answer` or `hagitask answer` found it answered or cancelled. Nothing was changed by this call |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

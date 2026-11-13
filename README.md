@@ -92,9 +92,14 @@ hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
 hagi saga items demo --path "./My Project" --json
 hagi saga claim demo --path "./My Project" --session orchestrator-1 --json
+hagi saga mark demo --path "./My Project" --session orchestrator-1 --json
 hagi saga check demo --path "./My Project" --phase run --json
 hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --json
 ```
+
+`mark --session <id>` (or `HAGI_SESSION_ID`) marks a planning session as the Saga master: it adds the same `saga.id` and
+`saga.role=master` pair that `claim` writes, takes no execution token and no ownership, and changes no Saga file. A failed mark
+exits `1` with one reason line. See the [Saga command reference](skills/hagi/references/saga.md#marking-a-planning-session).
 
 Write and check commands (`claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`,
 `archive`) run in the CLI itself. The CLI installs only the ignore rule and reads the six method prompts from its own package with `hagi saga method <name>`; there is no standalone Saga tool and no project-local copy of the methods. Mutating commands read the execution token
@@ -161,12 +166,12 @@ $ echo $?
 hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages | answer
+|-- saga      init | new | list | status | items | mark | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- hagitask  list | schema | create | send | get | messages
+|-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
 |-- skills    local list | enable | disable | uninstall
 |             gallery search | detail | install
@@ -535,6 +540,21 @@ hagi hagitask messages --session-id "$SUPER_COMMIT_ID" --last 1 --json
 
 `hagitask get` reads one session. With `--wait` it polls every `--interval` seconds (default 5) until the status is no longer Optimizing, Openspecing, Executing or Archiving. `--timeout` (default 900) and `--grace` (default 10, `0` disables) are seconds, and `--timeout`, `--interval` and `--grace` need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31` and prints the last status. `hagitask messages --last <n>` reads the n newest messages; `--json` prints the list unchanged.
 
+**Answering a session question:** when an agent asks the user a question, the session stops at `WaitingForReply`. Four steps follow it, and the same steps work for `proposal` and `hagitask`:
+
+```bash
+hagi proposal get --session-id "$PROPOSAL_ID" --wait --json                  # 1. wait: settles at WaitingForReply and names the pending question
+hagi proposal messages --session-id "$PROPOSAL_ID" --pending-question        # 2. read the question: header, numbered options, single or multi-select, custom answer, state
+hagi proposal answer --session-id "$PROPOSAL_ID" --option staging            # 3. answer: --option (label or number), --text, --input <file|->, or --reject
+hagi proposal get --session-id "$PROPOSAL_ID" --wait --json                  # 4. wait again for the run to continue
+```
+
+- `answer` reads the newest messages once, finds the pending question, checks the answer against it, and sends one request. It never retries. `--option` takes an option label or its 1-based number as the question prints it, and repeats for a multi-select question. `--text` gives a free-text answer when the question allows one. `--question <n>` addresses one question (default 1). A prompt with several questions is answered with `--input` (JSON such as `{"answers":[{"question":1,"options":["staging"]}]}`); `--input` cannot be combined with the other answer flags.
+- Exit codes: `0` accepted (`delivered` or `resumed`); `35` the answer was refused, by the CLI before sending or by the backend, and the reason is printed; `36` the question was already answered or is no longer open; `24` no pending question, or the message or question was not found. A usage error exits `2` before any request.
+- A secret question's answer never appears in the output, the `--json` result or an error message.
+- `messages --pending-question` prints only the pending question; `--json` prints `{ sessionId, messageId, userQuestion }`, and exits `24` when nothing is pending. `wait.pendingQuestion` in the `--wait --json` output names the question at `WaitingForReply`; the five existing `wait` fields do not change.
+- `answer` changes session state. Run it only on an explicit user request or an explicit Saga instruction; the CLI cannot tell whether the answer is wanted.
+
 **Migration from AutoTask:** `hagi hagitask create` and `hagi hagitask send` replace `hagi autotask create` and `hagi autotask send`. There is no `autotask` alias, so an `autotask` command now fails as an unknown command. Read the task schema with `hagitask schema` to find the input keys that replace the old flags.
 
 ## Plan Commands
@@ -849,6 +869,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
+| `35` | Answer refused: `proposal answer` or `hagitask answer` found the answer invalid, either by its own checks (unknown option, too many values, custom answer not allowed, too long) or by the backend (`invalid`, with its reason). Nothing was changed |
+| `36` | Question already answered or no longer open: `proposal answer` or `hagitask answer` found the question answered or cancelled. Nothing was changed by this call |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

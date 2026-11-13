@@ -146,6 +146,31 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
   `master: { "marked": false, "reason": "..." }` in JSON and as `master mark    not set: <reason>` in the human output. A
   successful mark is `master: { "sessionId": "<id>", "marked": true }`. Stored entries are never changed. Pass
   `--no-mark-session` to skip the mark.
+### Marking a planning session
+
+`mark` writes the same `saga.id` and `saga.role=master` pair that `claim` writes, to a session that does not take the Saga's
+execution lock. The Saga `new` prompt calls it right after `saga new`, so the planning session joins the Saga's group in the
+session lists.
+
+```bash
+hagi saga mark demo --path "./My Project" --session <your-session-id> --json
+```
+
+- `--session <id>`, else `HAGI_SESSION_ID`, names the session. With neither the command exits `2` before any backend or file
+  access. `mark` reads no execution token, takes no lock, and changes no Saga file, so it runs whether or not another session
+  holds `runtime/execute.lock`. It takes no ownership and has no `--no-mark-session` option (that option belongs to `claim`).
+- A repeat mark of the same session for the same Saga succeeds unchanged. The backend is add-only: a session that already
+  carries a different `saga.id` is not overwritten, and that refusal is a failed mark.
+- The backend call gives up after 10 seconds. A rejected call, an unreachable backend, a timeout or a conflict exits `1` with
+  one reason line, so the caller can retry once and report the result. A retry after a timeout is safe because the add is
+  idempotent.
+- JSON success is `{ "sagaId", "sessionId", "marked": true }`; JSON failure is `{ "sagaId", "sessionId", "marked": false,
+  "reason" }`. Unlike the other write commands, the object has no `command` or `ok` field. The human output is one line:
+  `marked: <saga> (session <id>)` or `mark failed: <saga> (session <id>): <reason>`.
+- Exit codes: `0` marked; `1` mark failed; `2` usage error (no session ID, or no selector); `24` Saga not found.
+- Use `claim` when the session should own execution. `claim` also writes this pair, but it takes the lock, and a failed mark
+  never fails a claim. `mark` has one job, so a failed mark exits `1` for the caller to see.
+
 - While a lock exists, a mutating command needs the holder's token. A missing or different token is refused with exit
   code `1` and changes no file. Without a lock, mutating commands run under their own gates, so a Saga created before ownership stays runnable.
 - `assert-owner` exits `0` when no lock exists or the token matches, and `1` otherwise.

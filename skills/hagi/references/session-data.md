@@ -137,15 +137,17 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | Family | Commands that change state |
 | --- | --- |
 | `project` | `create`, `update`, `delete` |
-| `proposal` | `create`, `optimize-description`, `generate`, `annotate`, `execute`, `archive`, `status`, `complete`, `send` |
+| `proposal` | `create`, `optimize-description`, `generate`, `annotate`, `execute`, `archive`, `status`, `complete`, `send`, `answer` |
 | `vault` | `create`, `update`, `delete` (`delete --delete-local-files` also removes files) |
 | `chat` | `create`, `archive`, `delete`, `send` |
-| `hagitask` | `create`, `send` |
+| `hagitask` | `create`, `send`, `answer` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
 | `saga` | `init`, `new`, `session create` |
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
+
+`answer` changes state too: it answers the session's pending question, and the run continues from the answer. Run `proposal answer` or `hagitask answer` only when the user explicitly asks for that answer in the conversation, or when an explicit Saga instruction says to. Never answer a pending question on your own judgment. Reading the question with `messages --pending-question` changes nothing and is always safe.
 
 `saga session create` creates a chat session for a Saga Worker and records it in the Saga's `runtime/sessions.md`. Creating a Worker changes state, so run it only when the user or a Saga run explicitly asks for it. It takes the execution token from `SAGA_EXECUTION_TOKEN` only, and with `--path` it calls the backend to find the project. See [`saga.md`](saga.md#worker-sessions).
 
@@ -165,7 +167,9 @@ When you name the action and its target before running `proposal create`, name i
 | --- | --- | --- |
 | `2` | No base URL, or a usage error | The session did not provide `HAGI_API_BASE_URL`, or the command was malformed. Name the missing piece. |
 | `21` / `23` | Unauthorized / forbidden | The backend rejected the request. Report the code; do not try a token. |
-| `24` | Not found | Name the id that was not found and suggest a `list` command to find the right one. |
+| `24` | Not found | Name the id that was not found and suggest a `list` command to find the right one. For `answer` and `messages --pending-question`, it also means no question is pending: read the messages again before answering. |
+| `35` | Answer refused, by the CLI or the backend | Quote the reason the output names (for example an unknown option or a value too long). Nothing changed. Ask the user for a valid answer; do not retry the same answer. |
+| `36` | Question already answered or no longer open | Read the messages again and report the state. Do not answer it again. |
 | `30` | Operation failed: the backend refused a change and returned a result with `succeeded` false, for example `skills local enable` or `disable` on a name that is not a built-in skill | Quote the backend message from the output and stop. Nothing changed. |
 | `60` | Transport or connection failure | Say the backend is unreachable at the named base URL. Do not retry in a loop, and do not guess another address. |
 | other non-zero | HTTP or unknown error | Quote the error message and stop. |
