@@ -35,9 +35,66 @@ function optionalString(value?: string | null): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+/** Interval as the largest whole unit: `1d`, `3h`, `90m`. */
+function formatIntervalMinutes(minutes: number): string {
+  if (minutes % 1440 === 0) {
+    return `${minutes / 1440}d`;
+  }
+  if (minutes % 60 === 0) {
+    return `${minutes / 60}h`;
+  }
+  return `${minutes}m`;
+}
+
+/** An instant as wall-clock time `YYYY-MM-DD HH:mm` in the plan's zone. Falls back to the raw text. */
+function formatInstantInZone(value: string, timeZone?: string): string {
+  const date = new Date(value);
+  if (!timeZone || Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(date);
+    const part = (type: string) => parts.find(entry => entry.type === type)?.value ?? '';
+    return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}`;
+  } catch {
+    return value;
+  }
+}
+
+/** `interval 3h 2026-11-14 00:00..2026-11-14 23:59 first 2026-11-14 00:00 America/Los_Angeles`, in the plan's zone. */
+function summarizeIntervalSchedule(schedule: PCode_Web_Controllers_ScheduledPlanScheduleDto): string {
+  const timeZone = optionalString(schedule.timeZone);
+  const repeat = schedule.repeat;
+  const windowStart = optionalString(repeat?.windowStart);
+  const windowEnd = optionalString(repeat?.windowEnd);
+  const firstRunAt = optionalString(repeat?.firstRunAt);
+  const every = typeof repeat?.intervalMinutes === 'number' ? formatIntervalMinutes(repeat.intervalMinutes) : undefined;
+
+  return [
+    'interval',
+    every,
+    windowStart && windowEnd
+      ? `${formatInstantInZone(windowStart, timeZone)}..${formatInstantInZone(windowEnd, timeZone)}`
+      : undefined,
+    firstRunAt ? `first ${formatInstantInZone(firstRunAt, timeZone)}` : undefined,
+    timeZone,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 /**
- * One-line schedule label: `once <runAt>`, `daily HH:mm <zone>` or `weekly mon,fri HH:mm <zone>`.
- * Any other rule is shown as the backend sent it, so a new rule is never hidden.
+ * One-line schedule label: `once <runAt>`, `daily HH:mm <zone>`, `weekly mon,fri HH:mm <zone>` or an interval
+ * summary. Any other rule is shown as the backend sent it, so a new rule is never hidden.
  */
 export function summarizePlanSchedule(schedule?: PCode_Web_Controllers_ScheduledPlanScheduleDto): string {
   if (!schedule) {
@@ -47,6 +104,10 @@ export function summarizePlanSchedule(schedule?: PCode_Web_Controllers_Scheduled
   const mode = optionalString(schedule.mode);
   if (mode === 'once') {
     return ['once', optionalString(schedule.runAt)].filter(Boolean).join(' ');
+  }
+
+  if (optionalString(schedule.repeat?.rule) === 'interval') {
+    return summarizeIntervalSchedule(schedule);
   }
 
   const rule = optionalString(schedule.repeat?.rule) ?? mode ?? '';

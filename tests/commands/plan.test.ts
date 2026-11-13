@@ -7,9 +7,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   buildAgentPool,
   buildFlagChanges,
+  buildScheduleChange,
   loadPlanDocument,
+  machineTimeZone,
   mergePlan,
+  parseDurationMinutes,
+  parseInstant,
+  parseScheduleFlags,
   stripServerFields,
+  type PlanSchedule,
 } from '../../src/commands/plan/input';
 import { runCli } from '../../src/main';
 import { CliUsageError, EXIT_CODES } from '../../src/runtime/errors';
@@ -562,6 +568,494 @@ describe('plan run command', () => {
     });
 
     expect(await runCli(['node', 'hagi', 'plan', 'run', '--id', 'plan-1', ...extraArgs], dependencies)).toBe(exitCode);
+  });
+});
+
+describe('interval schedule input', () => {
+  const dailySchedule: PlanSchedule = {
+    mode: 'recurring',
+    timeZone: 'Asia/Shanghai',
+    startDate: '2026-04-01',
+    endDate: null,
+    timeOfDay: '02:00',
+    repeat: { rule: 'daily', weekdays: null },
+  };
+  const intervalSchedule: PlanSchedule = {
+    mode: 'recurring',
+    timeZone: 'America/Los_Angeles',
+    repeat: {
+      rule: 'interval',
+      windowStart: '2026-11-14T08:00:00Z',
+      windowEnd: '2026-11-15T07:59:00Z',
+      firstRunAt: '2026-11-14T08:00:00Z',
+      intervalMinutes: 180,
+    },
+  };
+
+  describe('parseInstant', () => {
+    it('keeps the offset the user typed and writes the seconds the protobuf parser needs', () => {
+      expect(parseInstant('2026-11-14T00:00-08:00', '--first-at')).toBe('2026-11-14T00:00:00-08:00');
+      expect(parseInstant('2026-11-14T00:00:30+05:30', '--first-at')).toBe('2026-11-14T00:00:30+05:30');
+      expect(parseInstant('2026-11-14T00:00Z', '--first-at')).toBe('2026-11-14T00:00:00Z');
+      expect(parseInstant('2026-11-14T23:59:59.250Z', '--first-at')).toBe('2026-11-14T23:59:59.250Z');
+    });
+
+    it.each([
+      ['no offset', '2026-11-14T00:00'],
+      ['a space instead of T', '2026-11-14 00:00-08:00'],
+      ['a date only', '2026-11-14'],
+      ['a February 30', '2026-02-30T00:00Z'],
+      ['hour 24', '2026-11-14T24:00Z'],
+      ['an offset hour above 23', '2026-11-14T00:00+24:00'],
+      ['a plain word', 'tomorrow'],
+    ])('rejects %s with a usage error that names the flag', (_label, value) => {
+      expect(() => parseInstant(value, '--window-end')).toThrow(CliUsageError);
+      expect(() => parseInstant(value, '--window-end')).toThrow('--window-end must be an ISO-8601 instant with a UTC offset');
+    });
+  });
+
+  describe('parseDurationMinutes', () => {
+    it('converts m, h and d to whole minutes', () => {
+      expect(parseDurationMinutes('90m')).toBe(90);
+      expect(parseDurationMinutes('3h')).toBe(180);
+      expect(parseDurationMinutes('1d')).toBe(1440);
+      expect(parseDurationMinutes('0m')).toBe(0);
+    });
+
+    it.each(['5', '1.5h', '3H', '3 h', '', 'h', '-3h', '2w'])('rejects %j because it is not <n>m, <n>h or <n>d', value => {
+      expect(() => parseDurationMinutes(value)).toThrow(CliUsageError);
+      expect(() => parseDurationMinutes(value)).toThrow('--every must be a whole number with a unit');
+    });
+
+    it('rejects a value too large for the backend int32 field', () => {
+      expect(() => parseDurationMinutes('99999999999d')).toThrow('--every is too large');
+    });
+  });
+
+  describe('parseScheduleFlags', () => {
+    it('parses each passed flag and leaves the others out', () => {
+      expect(parseScheduleFlags({ every: '3h', timeZone: ' America/Los_Angeles ' })).toEqual({
+        intervalMinutes: 180,
+        timeZone: 'America/Los_Angeles',
+      });
+      expect(parseScheduleFlags({})).toEqual({});
+    });
+
+    it('rejects an empty time zone and names the flag of a bad instant', () => {
+      expect(() => parseScheduleFlags({ timeZone: '  ' })).toThrow('--time-zone must not be empty.');
+      expect(() => parseScheduleFlags({ windowStart: '2026-11-14T00:00' })).toThrow('--window-start must be an ISO-8601 instant');
+      expect(() => parseScheduleFlags({ firstAt: '2026-11-14T00:00Z', every: '3' })).toThrow('--every must be a whole number');
+    });
+  });
+
+  describe('buildScheduleChange', () => {
+    const fullFlags = {
+      windowStart: '2026-11-14T00:00:00-08:00',
+      windowEnd: '2026-11-14T23:59:00-08:00',
+      firstRunAt: '2026-11-14T00:00:00-08:00',
+      intervalMinutes: 180,
+    };
+
+    it('returns undefined when no schedule flag was passed, so the document or plan schedule stands', () => {
+      expect(buildScheduleChange({}, dailySchedule)).toBeUndefined();
+    });
+
+    it('builds an interval schedule from the four flags with no date, time or weekday fields', () => {
+      expect(buildScheduleChange({ ...fullFlags, timeZone: 'America/Los_Angeles' }, dailySchedule)).toEqual({
+        mode: 'recurring',
+        timeZone: 'America/Los_Angeles',
+        repeat: {
+          rule: 'interval',
+          windowStart: '2026-11-14T00:00:00-08:00',
+          windowEnd: '2026-11-14T23:59:00-08:00',
+          firstRunAt: '2026-11-14T00:00:00-08:00',
+          intervalMinutes: 180,
+        },
+      });
+    });
+
+    it('defaults the time zone to the base schedule, then to the machine zone', () => {
+      expect(buildScheduleChange(fullFlags, dailySchedule)?.timeZone).toBe('Asia/Shanghai');
+      expect(buildScheduleChange(fullFlags)?.timeZone).toBe(machineTimeZone());
+    });
+
+    it('names every missing interval flag when a create has only some of them', () => {
+      expect(() => buildScheduleChange({ windowStart: '2026-11-14T00:00:00Z' })).toThrow(
+        'Missing: --window-end, --first-at, --every.',
+      );
+    });
+
+    it('keeps the other interval fields when only the interval changes on an interval plan', () => {
+      expect(buildScheduleChange({ intervalMinutes: 120 }, intervalSchedule)).toEqual({
+        mode: 'recurring',
+        timeZone: 'America/Los_Angeles',
+        repeat: { ...intervalSchedule.repeat, intervalMinutes: 120 },
+      });
+    });
+
+    it('moves only the window on an interval plan and keeps the first trigger and interval', () => {
+      const moved = buildScheduleChange(
+        { windowStart: '2026-11-15T00:00:00Z', windowEnd: '2026-11-16T00:00:00Z' },
+        intervalSchedule,
+      );
+
+      expect(moved?.repeat).toEqual({
+        rule: 'interval',
+        windowStart: '2026-11-15T00:00:00Z',
+        windowEnd: '2026-11-16T00:00:00Z',
+        firstRunAt: '2026-11-14T08:00:00Z',
+        intervalMinutes: 180,
+      });
+    });
+
+    it('replaces a daily schedule as a whole when all four interval flags are given', () => {
+      expect(buildScheduleChange(fullFlags, dailySchedule)).not.toHaveProperty('startDate');
+      expect(buildScheduleChange(fullFlags, dailySchedule)).not.toHaveProperty('timeOfDay');
+      expect(buildScheduleChange(fullFlags, dailySchedule)?.repeat).not.toHaveProperty('weekdays');
+      expect(Object.keys(buildScheduleChange(fullFlags, dailySchedule) ?? {}).sort()).toEqual(['mode', 'repeat', 'timeZone']);
+    });
+
+    it('names the missing flags when a daily plan gets only some interval flags', () => {
+      expect(() => buildScheduleChange({ intervalMinutes: 60 }, dailySchedule)).toThrow(
+        'Missing: --window-start, --window-end, --first-at.',
+      );
+    });
+
+    it('changes only the time zone of a daily plan when --time-zone is the only schedule flag', () => {
+      expect(buildScheduleChange({ timeZone: 'Europe/Berlin' }, dailySchedule)).toEqual({
+        ...dailySchedule,
+        timeZone: 'Europe/Berlin',
+      });
+    });
+
+    it('changes only the time zone of an interval plan when --time-zone is the only schedule flag', () => {
+      expect(buildScheduleChange({ timeZone: 'Europe/Berlin' }, intervalSchedule)?.repeat).toEqual(intervalSchedule.repeat);
+    });
+
+    it('rejects --time-zone alone when there is no schedule to apply it to', () => {
+      expect(() => buildScheduleChange({ timeZone: 'Europe/Berlin' })).toThrow('--time-zone needs a schedule');
+    });
+  });
+});
+
+describe('plan schedule flags on create and update', () => {
+  const laDocument = {
+    type: 'hagitask',
+    name: 'Release watch',
+    schedule: dailyScheduleFixture(),
+    agentPool: { strategy: 'random', agents: [{ heroId: 'hero-1' }] },
+    payload: { title: 'Release watch', message: 'Watch the release', projectId: 'project-1' },
+  };
+
+  function dailyScheduleFixture() {
+    return {
+      mode: 'recurring',
+      timeZone: 'America/Los_Angeles',
+      startDate: '2026-04-01',
+      endDate: null,
+      timeOfDay: '02:00',
+      repeat: { rule: 'daily', weekdays: null },
+    };
+  }
+
+  const intervalFlags = [
+    '--window-start', '2026-11-14T00:00-08:00',
+    '--window-end', '2026-11-14T23:59-08:00',
+    '--first-at', '2026-11-14T00:00-08:00',
+    '--every', '3h',
+    '--time-zone', 'America/Los_Angeles',
+  ];
+
+  const expectedIntervalSchedule = {
+    mode: 'recurring',
+    timeZone: 'America/Los_Angeles',
+    repeat: {
+      rule: 'interval',
+      windowStart: '2026-11-14T00:00:00-08:00',
+      windowEnd: '2026-11-14T23:59:00-08:00',
+      firstRunAt: '2026-11-14T00:00:00-08:00',
+      intervalMinutes: 180,
+    },
+  };
+
+  describe('plan create', () => {
+    it('sends the interval schedule from the flags and replaces the document schedule', async () => {
+      const { dependencies, api, stdout } = createDependencies();
+
+      expect(await runCli(
+        ['node', 'hagi', 'plan', 'create', '--input', writePlanFile(laDocument), ...intervalFlags],
+        dependencies,
+      )).toBe(0);
+      expect(api.createPlan).toHaveBeenCalledWith({
+        enabled: true,
+        ...laDocument,
+        schedule: expectedIntervalSchedule,
+      });
+      expect(stdout.join('')).toContain('Plan created');
+    });
+
+    it('keeps an interval schedule given in the document when no schedule flag is passed', async () => {
+      const { dependencies, api } = createDependencies();
+      const document = { ...laDocument, schedule: expectedIntervalSchedule };
+
+      await runCli(['node', 'hagi', 'plan', 'create', '--input', writePlanFile(document)], dependencies);
+      expect(api.createPlan).toHaveBeenCalledWith({ enabled: true, ...document });
+    });
+
+    it('defaults the time zone to this machine when neither the flag nor the document gives one', async () => {
+      const { dependencies, api } = createDependencies();
+      const document = { ...laDocument, schedule: undefined };
+      const flags = intervalFlags.filter((_, index) => index < intervalFlags.length - 2);
+
+      await runCli(['node', 'hagi', 'plan', 'create', '--input', writePlanFile(document), ...flags], dependencies);
+      const body = (api.createPlan as ReturnType<typeof vi.fn>).mock.calls[0][0];
+      expect(body.schedule.timeZone).toBe(machineTimeZone());
+    });
+
+    it.each([
+      ['90m', 90],
+      ['3h', 180],
+      ['1d', 1440],
+    ])('sends --every %s as %i minutes', async (every, minutes) => {
+      const { dependencies, api } = createDependencies();
+
+      await runCli(['node', 'hagi', 'plan', 'create', '--input', writePlanFile(laDocument), ...intervalFlags.slice(0, -2), '--every', every], dependencies);
+      expect(api.createPlan).toHaveBeenCalledWith(expect.objectContaining({
+        schedule: expect.objectContaining({ repeat: expect.objectContaining({ intervalMinutes: minutes }) }),
+      }));
+    });
+
+    it('names the missing flags, exits 2 and sends nothing when only some interval flags are given', async () => {
+      const { dependencies, api, stderr } = createDependencies();
+
+      expect(await runCli(
+        ['node', 'hagi', 'plan', 'create', '--input', writePlanFile(laDocument), '--window-start', '2026-11-14T00:00-08:00'],
+        dependencies,
+      )).toBe(EXIT_CODES.USAGE);
+      expect(stderr.join('')).toContain('Missing: --window-end, --first-at, --every.');
+      expect(api.createPlan).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['an instant without an offset', ['--window-start', '2026-11-14T00:00'], '--window-start'],
+      ['a duration without a unit', ['--every', '180'], '--every'],
+      ['an impossible date', ['--first-at', '2026-02-30T00:00Z'], '--first-at'],
+    ])('exits 2 for %s without calling the backend', async (_label, args, flag) => {
+      const { dependencies, api, stderr } = createDependencies();
+
+      expect(await runCli(
+        ['node', 'hagi', 'plan', 'create', '--input', writePlanFile(laDocument), ...args],
+        dependencies,
+      )).toBe(EXIT_CODES.USAGE);
+      expect(stderr.join('')).toContain(flag);
+      expect(api.createPlan).not.toHaveBeenCalled();
+    });
+
+    it('shows each backend validation problem of an interval plan field by field', async () => {
+      const { dependencies, stderr } = createDependencies({
+        createPlan: vi.fn().mockRejectedValue(
+          createApiError(400, {
+            error: 'Scheduled plan is invalid.',
+            errors: [
+              { field: 'schedule.repeat.windowEnd', message: 'The window end must be after the window start.' },
+              { field: 'schedule.repeat.intervalMinutes', message: 'The interval must be at least 5 minutes.' },
+            ],
+          }),
+        ),
+      });
+
+      expect(await runCli(
+        ['node', 'hagi', 'plan', 'create', '--input', writePlanFile(laDocument), ...intervalFlags],
+        dependencies,
+      )).toBe(EXIT_CODES.HTTP_BAD_REQUEST);
+      expect(stderr.join('')).toBe(
+        'Scheduled plan is invalid. (status=400)\n' +
+          '  - schedule.repeat.windowEnd: The window end must be after the window start.\n' +
+          '  - schedule.repeat.intervalMinutes: The interval must be at least 5 minutes.\n',
+      );
+    });
+  });
+
+  describe('plan update', () => {
+    const intervalPlan = createPlan('plan-1', {
+      schedule: {
+        mode: 'recurring',
+        timeZone: 'America/Los_Angeles',
+        repeat: {
+          rule: 'interval',
+          windowStart: '2026-11-14T08:00:00Z',
+          windowEnd: '2026-11-15T07:59:00Z',
+          firstRunAt: '2026-11-14T08:00:00Z',
+          intervalMinutes: 180,
+        },
+      },
+    });
+
+    it('changes only the interval of an interval plan and keeps the other fields', async () => {
+      const { dependencies, api } = createDependencies({
+        getPlan: vi.fn().mockResolvedValue(intervalPlan),
+      });
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', '--every', '2h'], dependencies)).toBe(0);
+      expect(api.updatePlan).toHaveBeenCalledWith('plan-1', expect.objectContaining({
+        schedule: {
+          mode: 'recurring',
+          timeZone: 'America/Los_Angeles',
+          repeat: {
+            rule: 'interval',
+            windowStart: '2026-11-14T08:00:00Z',
+            windowEnd: '2026-11-15T07:59:00Z',
+            firstRunAt: '2026-11-14T08:00:00Z',
+            intervalMinutes: 120,
+          },
+        },
+      }));
+    });
+
+    it('switches a daily plan to an interval and sends no daily fields', async () => {
+      const { dependencies, api } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', ...intervalFlags], dependencies)).toBe(0);
+      const body = (api.updatePlan as ReturnType<typeof vi.fn>).mock.calls[0][1];
+      expect(body.schedule).toEqual(expectedIntervalSchedule);
+    });
+
+    it('counts interval flags alone as a change', async () => {
+      const { dependencies, api, stderr } = createDependencies({
+        getPlan: vi.fn().mockResolvedValue(intervalPlan),
+      });
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', '--window-end', '2026-11-16T00:00Z'], dependencies)).toBe(0);
+      expect(api.updatePlan).toHaveBeenCalledOnce();
+      expect(stderr.join('')).toBe('');
+    });
+
+    it('names the missing flags and sends no update when a daily plan gets partial interval flags', async () => {
+      const { dependencies, api, stderr } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', '--every', '2h'], dependencies)).toBe(EXIT_CODES.USAGE);
+      expect(stderr.join('')).toContain('Missing: --window-start, --window-end, --first-at.');
+      expect(api.updatePlan).not.toHaveBeenCalled();
+    });
+
+    it('exits 2 for a bad instant before reading the plan', async () => {
+      const { dependencies, api } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', '--first-at', 'tomorrow'], dependencies))
+        .toBe(EXIT_CODES.USAGE);
+      expect(api.getPlan).not.toHaveBeenCalled();
+      expect(api.updatePlan).not.toHaveBeenCalled();
+    });
+
+    it('shows backend problems of an interval update field by field', async () => {
+      const { dependencies, stderr } = createDependencies({
+        getPlan: vi.fn().mockResolvedValue(intervalPlan),
+        updatePlan: vi.fn().mockRejectedValue(
+          createApiError(400, {
+            error: 'Scheduled plan is invalid.',
+            errors: [{ field: 'schedule.repeat.firstRunAt', message: 'The first run must be inside the window.' }],
+          }),
+        ),
+      });
+
+      expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-1', '--first-at', '2026-11-20T00:00Z'], dependencies))
+        .toBe(EXIT_CODES.HTTP_BAD_REQUEST);
+      expect(stderr.join('')).toContain('  - schedule.repeat.firstRunAt: The first run must be inside the window.\n');
+    });
+  });
+
+  describe('help', () => {
+    it.each([['create'], ['update']])('plan %s --help lists the schedule flags with formats and the five-minute minimum', async action => {
+      const { dependencies, stdout } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', action, '--help'], dependencies)).toBe(0);
+      const help = stdout.join('').replace(/\s+/g, ' ');
+      for (const flag of ['--window-start <instant>', '--window-end <instant>', '--first-at <instant>', '--every <duration>', '--time-zone <iana>']) {
+        expect(help).toContain(flag);
+      }
+      expect(help).toContain('UTC offset (Z or +/-hh:mm)');
+      expect(help).toContain('<n>m, <n>h or <n>d');
+      expect(help).toContain('minimum is 5 minutes');
+    });
+  });
+});
+
+describe('plan interval output', () => {
+  const intervalSchedule = {
+    mode: 'recurring',
+    timeZone: 'America/Los_Angeles',
+    repeat: {
+      rule: 'interval',
+      windowStart: '2026-11-14T08:00:00Z',
+      windowEnd: '2026-11-15T07:59:00Z',
+      firstRunAt: '2026-11-14T08:00:00Z',
+      intervalMinutes: 180,
+    },
+  };
+  const intervalSummary = 'interval 3h 2026-11-14 00:00..2026-11-14 23:59 first 2026-11-14 00:00 America/Los_Angeles';
+  const intervalPlan = createPlan('plan-2', { schedule: intervalSchedule, nextRunAt: '2026-11-14T11:00:00Z' });
+
+  it('shows the interval summary and next run in plan list', async () => {
+    const { dependencies, stdout } = createDependencies({ listPlans: vi.fn().mockResolvedValue([intervalPlan]) });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'list'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain(intervalSummary);
+    expect(stdout.join('')).toContain('2026-11-14T11:00:00Z');
+  });
+
+  it('shows the interval window, first trigger and next run in plan get', async () => {
+    const { dependencies, stdout } = createDependencies({ getPlan: vi.fn().mockResolvedValue(intervalPlan) });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-2'], dependencies)).toBe(0);
+    expect(stdout.join('')).toMatch(/^nextRun\s+2026-11-14T11:00:00Z$/m);
+    expect(stdout.join('')).toMatch(new RegExp(`^schedule\\s+${intervalSummary.replace(/[.]/g, '\\.')}$`, 'm'));
+  });
+
+  it('shows the interval summary in the create result and prints the interval fields in json', async () => {
+    const document = writePlanFile({ type: 'hagitask', name: 'Release watch', payload: { title: 'Release watch' } });
+    const { dependencies, stdout } = createDependencies({ createPlan: vi.fn().mockResolvedValue(intervalPlan) });
+
+    expect(await runCli([
+      'node', 'hagi', 'plan', 'create', '--input', document,
+      '--window-start', '2026-11-14T00:00-08:00', '--window-end', '2026-11-14T23:59-08:00',
+      '--first-at', '2026-11-14T00:00-08:00', '--every', '3h', '--time-zone', 'America/Los_Angeles',
+    ], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('Plan created');
+    expect(stdout.join('')).toContain(intervalSummary);
+
+    const json = createDependencies({ createPlan: vi.fn().mockResolvedValue(intervalPlan) });
+    expect(await runCli([
+      'node', 'hagi', 'plan', 'create', '--input', document, '--every', '3h', '--json',
+      '--window-start', '2026-11-14T00:00-08:00', '--window-end', '2026-11-14T23:59-08:00',
+      '--first-at', '2026-11-14T00:00-08:00', '--time-zone', 'America/Los_Angeles',
+    ], json.dependencies)).toBe(0);
+    expect(JSON.parse(json.stdout.join('')).plan.schedule.repeat).toEqual(intervalSchedule.repeat);
+  });
+
+  it('shows the new interval in the update result and prints the interval fields in json', async () => {
+    const changed = createPlan('plan-2', {
+      schedule: { ...intervalSchedule, repeat: { ...intervalSchedule.repeat, intervalMinutes: 120 } },
+      nextRunAt: '2026-11-14T10:00:00Z',
+    });
+    const { dependencies, stdout } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(intervalPlan),
+      updatePlan: vi.fn().mockResolvedValue(changed),
+    });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-2', '--every', '2h'], dependencies)).toBe(0);
+    expect(stdout.join('')).toContain('Plan updated');
+    expect(stdout.join('')).toContain('interval 2h 2026-11-14 00:00..2026-11-14 23:59');
+
+    const json = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(intervalPlan),
+      updatePlan: vi.fn().mockResolvedValue(changed),
+    });
+    expect(await runCli(['node', 'hagi', 'plan', 'update', '--id', 'plan-2', '--every', '2h', '--json'], json.dependencies)).toBe(0);
+    expect(JSON.parse(json.stdout.join('')).plan.schedule.repeat).toMatchObject({
+      rule: 'interval',
+      intervalMinutes: 120,
+      firstRunAt: '2026-11-14T08:00:00Z',
+    });
   });
 });
 
