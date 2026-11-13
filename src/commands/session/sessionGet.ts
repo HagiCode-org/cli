@@ -3,6 +3,8 @@ import { formatJson } from '../../formatters/json';
 import {
   formatSessionSummaryHuman,
   formatSessionWaitLine,
+  formatWaitNoQuestionLine,
+  formatWaitQuestionPointer,
   toSessionView,
 } from '../../formatters/session';
 import {
@@ -13,6 +15,12 @@ import {
   type AppDependencies,
 } from '../../runtime/commandContext';
 import { CliUsageError, CliWaitTimeoutError } from '../../runtime/errors';
+import type { HagiApi } from '../../runtime/hagiApi';
+import {
+  findPendingQuestion,
+  summarizePendingQuestion,
+  type PendingQuestionSummary,
+} from '../../runtime/questionAnswers';
 import {
   DEFAULT_WAIT_GRACE_SECONDS,
   DEFAULT_WAIT_INTERVAL_SECONDS,
@@ -20,6 +28,26 @@ import {
   waitForSettledSession,
   type SessionWaitOptions,
 } from '../../runtime/sessionWait';
+
+/** The status a session shows while a person has to answer. It is stable, so `--wait` settles on it. */
+const WAITING_FOR_REPLY = 'WaitingForReply';
+
+/**
+ * One read of the newest messages, taken only when `--wait` settled at WaitingForReply. A failed read returns undefined and
+ * never fails the wait: the output then says that no pending question was found.
+ */
+async function readPendingQuestionSummary(
+  api: Pick<HagiApi, 'getSessionMessages'>,
+  sessionId: string,
+): Promise<PendingQuestionSummary | undefined> {
+  try {
+    const list = await api.getSessionMessages(sessionId, { page: 1, order: 'desc' });
+    const pending = findPendingQuestion(list.messages);
+    return pending ? summarizePendingQuestion(pending) : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /** Raw options of `proposal get` and `hagitask get`, as commander hands them over. */
 export type SessionGetOptions = {
@@ -88,7 +116,7 @@ export function parseSessionWaitOptions(options: SessionGetOptions): SessionWait
 export function registerSessionGetCommand(
   parent: Command,
   dependencies: AppDependencies,
-  options: { description: string; label: string },
+  options: { description: string; label: string; command: 'proposal' | 'hagitask' },
 ): void {
   addJsonOption(
     parent
@@ -130,11 +158,22 @@ export function registerSessionGetCommand(
         elapsedSeconds: waited.elapsedSeconds,
       };
 
+      // At WaitingForReply, the pending question is read once more. Only that status adds the pointer and `pendingQuestion`.
+      const awaitingReply = waited.settled && view.status === WAITING_FOR_REPLY;
+      const pendingQuestion = awaitingReply
+        ? await readPendingQuestionSummary(context.api, sessionId)
+        : undefined;
+
       // The result is printed before a timeout is raised, so a script and a person both see the last status.
       if (context.outputJson) {
-        context.io.stdout(formatJson({ session: view, wait }));
+        context.io.stdout(formatJson({ session: view, wait: pendingQuestion ? { ...wait, pendingQuestion } : wait }));
       } else {
-        context.io.stdout(`${formatSessionSummaryHuman(view)}${formatSessionWaitLine(wait, view.status)}`);
+        const pointer = awaitingReply
+          ? (pendingQuestion
+            ? formatWaitQuestionPointer({ command: options.command, sessionId, summary: pendingQuestion })
+            : formatWaitNoQuestionLine(options.command, sessionId))
+          : '';
+        context.io.stdout(`${formatSessionSummaryHuman(view)}${formatSessionWaitLine(wait, view.status)}${pointer}`);
       }
 
       if (waited.timedOut) {

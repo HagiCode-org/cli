@@ -18,6 +18,10 @@ export const EXIT_CODES = {
   LOCK_LOST: 32,
   /** `usage limits` could not read a usable quota figure (plain read, or after a wait's retries). Nothing is known, so nothing is claimed. */
   QUOTA_UNKNOWN: 34,
+  /** `answer` refused the answer: the CLI or the backend rejected it (unknown option, too many values, too long, invalid...). The reason is printed. */
+  QUESTION_INVALID_ANSWER: 35,
+  /** `answer` found the question already answered, or closed (cancelled). Nothing was changed by this call. */
+  QUESTION_ALREADY_ANSWERED: 36,
   HTTP_CLIENT_ERROR: 40,
   HTTP_SERVER_ERROR: 50,
   TRANSPORT: 60,
@@ -82,6 +86,31 @@ export class CliQuotaUnknownError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'CliQuotaUnknownError';
+  }
+}
+
+/**
+ * A lookup found nothing the command needed, for example no pending question in a session. Exit code 24, the existing
+ * not-found code, without an HTTP status in the message.
+ */
+export class CliNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CliNotFoundError';
+  }
+}
+
+/**
+ * An `answer` call did not get every answer accepted. `exitCode` is the code of the first item, in question order, that was
+ * not accepted (see `questionAnswers.ts`). The per-item outcomes are printed before this error is thrown.
+ */
+export class CliQuestionAnswerError extends Error {
+  readonly exitCode: number;
+
+  constructor(message: string, exitCode: number) {
+    super(message);
+    this.name = 'CliQuestionAnswerError';
+    this.exitCode = exitCode;
   }
 }
 
@@ -338,6 +367,20 @@ export function normalizeCliError(error: unknown, context: CliErrorContext = {})
   if (error instanceof CliWaitTimeoutError) {
     return {
       exitCode: EXIT_CODES.WAIT_TIMEOUT,
+      message: error.message,
+    };
+  }
+
+  if (error instanceof CliNotFoundError) {
+    return {
+      exitCode: EXIT_CODES.HTTP_NOT_FOUND,
+      message: error.message,
+    };
+  }
+
+  if (error instanceof CliQuestionAnswerError) {
+    return {
+      exitCode: error.exitCode,
       message: error.message,
     };
   }

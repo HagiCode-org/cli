@@ -6,5 +6,6 @@ export function registerHagiTaskGetCommand(parent: Command, dependencies: AppDep
   registerSessionGetCommand(parent, dependencies, {
     description: 'Read one HagiTask session by id, including a Super Commit session. With --wait, poll until its status settles.',
     label: 'HagiTask session',
+    command: 'hagitask',
   });
 }

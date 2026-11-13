@@ -6,5 +6,6 @@ export function registerProposalGetCommand(parent: Command, dependencies: AppDep
   registerSessionGetCommand(parent, dependencies, {
     description: 'Read one proposal session by id. With --wait, poll until its status settles, so a stage can be followed without guessing.',
     label: 'proposal session',
+    command: 'proposal',
   });
 }

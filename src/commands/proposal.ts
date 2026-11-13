@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import { registerProposalAnnotateCommand } from './proposal/annotate';
+import { registerProposalAnswerCommand } from './proposal/answer';
 import { registerProposalArchiveCommand } from './proposal/archive';
 import { registerProposalCompleteCommand } from './proposal/complete';
 import { registerProposalCreateCommand } from './proposal/create';
@@ -28,6 +29,7 @@ export function registerProposalCommands(program: Command, dependencies: AppDepe
   registerProposalStatusCommand(proposal, dependencies);
   registerProposalGetCommand(proposal, dependencies);
   registerProposalMessagesCommand(proposal, dependencies);
+  registerProposalAnswerCommand(proposal, dependencies);
   registerProposalCompleteCommand(proposal, dependencies);
   registerProposalSendCommand(proposal, dependencies);
 }

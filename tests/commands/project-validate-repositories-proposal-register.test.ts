@@ -180,7 +180,7 @@ describe('registerProposalCommands (src/commands/proposal.ts)', () => {
     expect(group?.description()).toContain('--wait');
   });
 
-  it('registers the twelve subcommands in order', () => {
+  it('registers the thirteen subcommands in order', () => {
     const { group } = register();
 
     expect(group?.commands.map(command => command.name())).toEqual([
@@ -194,6 +194,7 @@ describe('registerProposalCommands (src/commands/proposal.ts)', () => {
       'status',
       'get',
       'messages',
+      'answer',
       'complete',
       'send',
     ]);

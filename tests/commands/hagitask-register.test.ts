@@ -26,10 +26,10 @@ describe('registerHagiTaskCommands (src/commands/hagitask.ts)', () => {
     expect(group?.description()).toContain('--wait');
   });
 
-  it('registers the six subcommands in workflow order', () => {
+  it('registers the seven subcommands in workflow order', () => {
     const { group } = register();
 
-    expect(group?.commands.map(command => command.name())).toEqual(['list', 'schema', 'create', 'send', 'get', 'messages']);
+    expect(group?.commands.map(command => command.name())).toEqual(['list', 'schema', 'create', 'send', 'get', 'messages', 'answer']);
   });
 
   it('gives every subcommand a description', () => {
@@ -57,6 +57,6 @@ describe('registerHagiTaskCommands (src/commands/hagitask.ts)', () => {
     registerHagiTaskCommands(second, dependencies);
 
     expect(first.commands[0]).not.toBe(second.commands[0]);
-    expect(second.commands[0].commands).toHaveLength(6);
+    expect(second.commands[0].commands).toHaveLength(7);
   });
 });

@@ -1,19 +1,21 @@
 import { Command } from 'commander';
 import { formatJson } from '../../formatters/json';
-import { formatSessionMessagesHuman } from '../../formatters/session';
+import { formatPendingQuestionHuman, formatSessionMessagesHuman } from '../../formatters/session';
 import {
   addJsonOption,
   createCommandContext,
   requireOptionValue,
   type AppDependencies,
 } from '../../runtime/commandContext';
-import { CliUsageError } from '../../runtime/errors';
+import { CliNotFoundError, CliUsageError } from '../../runtime/errors';
+import { findPendingQuestion } from '../../runtime/questionAnswers';
 
 /** Raw options of `proposal messages` and `hagitask messages`. */
 export type SessionMessagesOptions = {
   sessionId: string;
   last?: string;
   json?: boolean;
+  pendingQuestion?: boolean;
 };
 
 /**
@@ -51,6 +53,7 @@ export function registerSessionMessagesCommand(
   )
     .requiredOption('--session-id <id>', 'Session id whose messages to read.')
     .option('--last <n>', 'Read only the n newest messages. Omit it to read the backend default page (50 messages).')
+    .option('--pending-question', 'Print only the question that is still pending, from the same read. Exit code 24 when none is pending.')
     .action(async function sessionMessagesAction(this: Command, rawOptions: SessionMessagesOptions) {
       const last = parseLastOption(rawOptions.last);
       const sessionId = requireOptionValue(rawOptions.sessionId, '--session-id');
@@ -60,6 +63,21 @@ export function registerSessionMessagesCommand(
         sessionId,
         last === undefined ? { page: 1, order: 'desc' } : { page: 1, pageSize: last, order: 'desc' },
       );
+
+      if (rawOptions.pendingQuestion) {
+        const pending = findPendingQuestion(response.messages);
+        if (!pending) {
+          throw new CliNotFoundError(`No pending question in session ${sessionId}.`);
+        }
+
+        if (context.outputJson) {
+          context.io.stdout(formatJson({ sessionId, messageId: pending.messageId, userQuestion: pending.userQuestion }));
+          return;
+        }
+
+        context.io.stdout(formatPendingQuestionHuman(pending));
+        return;
+      }
 
       if (context.outputJson) {
         context.io.stdout(formatJson(response));

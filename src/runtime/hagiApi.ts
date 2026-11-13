@@ -72,6 +72,8 @@ import {
 } from '../generated/grpc/hagicode/platform/v1/statistics_pb';
 import {
   AnnotationSubmissionDtoSchema,
+  AnswerSessionQuestionResponseSchema,
+  AnswerSessionQuestionsResponseSchema,
   GetSessionMessagesResponseSchema,
   PostMessageRequestSchema,
   PostSessionMessageResponseSchema,
@@ -206,6 +208,39 @@ export type SessionMessagesInput = {
   pageSize?: number;
   historyScope?: string;
   order?: 'asc' | 'desc';
+};
+
+/** The values of one question of a prompt, as sent to the backend. */
+export type AnswerValueInput = {
+  question: string;
+  values: string[];
+  rejected?: boolean;
+};
+
+/** One question id of a prompt with the answers to all of its questions, as sent to the backend. */
+export type AnswerSessionQuestionItemInput = {
+  messageId: string;
+  questionId: string;
+  answers: AnswerValueInput[];
+};
+
+/** The backend's verdict on one answer. `outcome` is one of `UserQuestionAnswerOutcomes`; `reason` is set for `invalid`. */
+export type AnswerSessionQuestionResultDto = {
+  outcome: string;
+  state?: string;
+  reason?: string;
+};
+
+export type AnswerSessionQuestionItemResultDto = AnswerSessionQuestionResultDto & {
+  messageId: string;
+  questionId: string;
+};
+
+export type AnswerSessionQuestionsResultDto = {
+  status: string;
+  items: AnswerSessionQuestionItemResultDto[];
+  invalidItemIndex?: number;
+  reason?: string;
 };
 
 /**
@@ -413,6 +448,16 @@ export interface HagiApi {
     sessionId: string,
     requestBody: PCode_Application_Contracts_Dto_AnnotationSubmissionDto,
   ): Promise<PCode_Application_Contracts_Dto_AnnotationSubmissionResponseDto>;
+  /**
+   * Answers one question of a session's pending prompt through `AnswerSessionQuestion`. One call, no retry: an answer is a
+   * state change, and a retried one would be read as already answered.
+   */
+  answerSessionQuestion(sessionId: string, item: AnswerSessionQuestionItemInput): Promise<AnswerSessionQuestionResultDto>;
+  /**
+   * Answers several questions through `AnswerSessionQuestions`, one entry per question id, in one call. Results come back in
+   * request order. One call, no retry.
+   */
+  answerSessionQuestions(sessionId: string, items: AnswerSessionQuestionItemInput[]): Promise<AnswerSessionQuestionsResultDto>;
   listProjects(): Promise<PCode_Application_Contracts_Dto_DataAggregationResponseDto>;
   /** Reads the Token Monitor snapshot: today's token use and each provider's limit windows with their reset times. Read-only. */
   getTokenMonitorUsage(): Promise<TokenMonitorUsageSnapshot>;
@@ -594,6 +639,24 @@ export function createGrpcHagiApi(): HagiApi {
       result(
         SubmitSessionAnnotationsResponseSchema,
         sessionMessaging().submitSessionAnnotations({ sessionId, body: dtoToProto(AnnotationSubmissionDtoSchema, requestBody) }),
+      ),
+    answerSessionQuestion: async (sessionId, item) =>
+      result(
+        AnswerSessionQuestionResponseSchema,
+        sessionMessaging().answerSessionQuestion({
+          sessionId,
+          messageId: item.messageId,
+          questionId: item.questionId,
+          answers: item.answers,
+        }),
+      ),
+    answerSessionQuestions: async (sessionId, items) =>
+      result(
+        AnswerSessionQuestionsResponseSchema,
+        sessionMessaging().answerSessionQuestions({
+          sessionId,
+          items: items.map(item => ({ messageId: item.messageId, questionId: item.questionId, answers: item.answers })),
+        }),
       ),
     listProjects: async () =>
       result(GetAggregatedDataResponseSchema, statistics().getAggregatedData({ forceRefresh: false })),

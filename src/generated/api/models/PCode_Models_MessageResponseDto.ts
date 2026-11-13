@@ -10,6 +10,7 @@ import type { PCode_Models_MessageMode } from './PCode_Models_MessageMode';
 import type { PCode_Models_MessageType } from './PCode_Models_MessageType';
 import type { PCode_Models_ResultContentBlock } from './PCode_Models_ResultContentBlock';
 import type { PCode_Models_SessionId } from './PCode_Models_SessionId';
+import type { PCode_Models_MessageUserQuestionDto } from './PCode_Models_MessageUserQuestionDto';
 import type { PCode_Models_TextContentBlock } from './PCode_Models_TextContentBlock';
 import type { PCode_Models_ThinkingContentBlock } from './PCode_Models_ThinkingContentBlock';
 import type { PCode_Models_ToolResultContentBlock } from './PCode_Models_ToolResultContentBlock';
@@ -25,5 +26,7 @@ export type PCode_Models_MessageResponseDto = {
   model: string | null;
   provider: string | null;
   heroSnapshot?: PCode_Models_MessageHeroSnapshotDto;
+  /** The interactive question the agent asked on this message, when it asked one. */
+  userQuestion?: PCode_Models_MessageUserQuestionDto;
 };
 

@@ -1,4 +1,5 @@
 import type { Command } from 'commander';
+import { registerHagiTaskAnswerCommand } from './hagitask/answer';
 import { registerHagiTaskCreateCommand } from './hagitask/create';
 import { registerHagiTaskGetCommand } from './hagitask/get';
 import { registerHagiTaskMessagesCommand } from './hagitask/messages';
@@ -18,4 +19,5 @@ export function registerHagiTaskCommands(program: Command, dependencies: AppDepe
   registerHagiTaskSendCommand(hagitask, dependencies);
   registerHagiTaskGetCommand(hagitask, dependencies);
   registerHagiTaskMessagesCommand(hagitask, dependencies);
+  registerHagiTaskAnswerCommand(hagitask, dependencies);
 }

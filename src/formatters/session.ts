@@ -3,6 +3,11 @@ import type { PCode_Application_Contracts_Dto_MessageListResponseDto } from '../
 import type { PCode_Application_Contracts_Dto_SessionListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SessionListResponseDto';
 import type { PCode_Models_SessionResponseDto } from '../generated/api/models/PCode_Models_SessionResponseDto';
 import { PCode_Models_SessionStatus } from '../generated/api/models/PCode_Models_SessionStatus';
+import type {
+  PCode_Models_MessageUserQuestionDto,
+  PCode_Models_MessageUserQuestionItemDto,
+} from '../generated/api/models/PCode_Models_MessageUserQuestionDto';
+import type { PendingQuestionSummary } from '../runtime/questionAnswers';
 import { renderKeyValueTable, renderTable } from './table';
 
 type IdLike =
@@ -248,8 +253,90 @@ export function formatSessionMessagesHuman(list: PCode_Application_Contracts_Dto
       lines.push(`  (${skipped} other block${skipped === 1 ? '' : 's'} not shown)`);
     }
 
+    if (message.userQuestion) {
+      lines.push(...formatQuestionLines(message.userQuestion).map(line => `  ${line}`));
+    }
+
     return lines.join('\n');
   });
 
   return `Messages (${list.messages.length} of ${list.totalCount})\n${sections.join('\n\n')}\n`;
+}
+
+/**
+ * Human lines of one interactive question: each question's position, header and text, its numbered options with their
+ * descriptions, single or multi-select, whether a custom answer is allowed, and the prompt state. An answer is shown for an
+ * answered question, except that a secret question shows "answer hidden" in place of its value.
+ */
+export function formatQuestionLines(question: PCode_Models_MessageUserQuestionDto): string[] {
+  const lines = [`Prompt ${question.questionId} · state: ${question.state}`];
+  const total = question.questions.length;
+
+  question.questions.forEach((item, index) => {
+    const header = item.header ? ` · ${item.header}` : '';
+    lines.push(`  Question ${index + 1} of ${total}${header}`);
+    lines.push(`    ${item.question}`);
+    item.options.forEach((option, optionIndex) => {
+      const description = option.description ? `   ${option.description}` : '';
+      lines.push(`      ${optionIndex + 1}. ${option.label}${description}`);
+    });
+
+    const mode = item.multiSelect ? 'Multi-select' : 'Single choice';
+    const custom = item.allowCustomAnswer
+      ? `custom answer allowed (max ${question.limits.maxAnswerLength} characters)`
+      : 'custom answer not allowed';
+    lines.push(`    ${mode} · ${custom}`);
+
+    if (question.state === 'answered') {
+      lines.push(`    Answer: ${answerTextFor(question, item)}`);
+    }
+  });
+
+  return lines;
+}
+
+function answerTextFor(question: PCode_Models_MessageUserQuestionDto, item: PCode_Models_MessageUserQuestionItemDto): string {
+  if (item.isSecret === true) {
+    return 'answer hidden';
+  }
+
+  const answer = question.answers?.find(candidate => candidate.question === item.question);
+  if (!answer) {
+    return '(no answer recorded)';
+  }
+
+  if (answer.rejected === true) {
+    return 'rejected';
+  }
+
+  return answer.values.join(', ');
+}
+
+/** Human view of the pending question that `messages --pending-question` prints. */
+export function formatPendingQuestionHuman(pending: { messageId: string; userQuestion: PCode_Models_MessageUserQuestionDto }): string {
+  return [`Pending question on message ${pending.messageId}`, ...formatQuestionLines(pending.userQuestion)].join('\n') + '\n';
+}
+
+/**
+ * The pointer `--wait` prints at WaitingForReply when a question is pending: the summary, the read command and the answer
+ * command, and the rule that an agent answers only when asked to. The command prefix is `proposal` or `hagitask`.
+ */
+export function formatWaitQuestionPointer(options: {
+  command: 'proposal' | 'hagitask';
+  sessionId: string;
+  summary: PendingQuestionSummary;
+}): string {
+  const { command, sessionId, summary } = options;
+  const count = `${summary.questionCount} question${summary.questionCount === 1 ? '' : 's'}`;
+  return [
+    `Pending question: ${count}, id ${summary.questionId}, on message ${summary.messageId}`,
+    `Read it:   hagi ${command} messages --session-id ${sessionId} --pending-question`,
+    `Answer it: hagi ${command} answer --session-id ${sessionId} --option <label|index>   (or --text, --input <file|->, --reject)`,
+    'An agent answers only on an explicit user request or an explicit Saga instruction.',
+  ].join('\n') + '\n';
+}
+
+/** The line `--wait` prints at WaitingForReply when the pending question could not be read. */
+export function formatWaitNoQuestionLine(command: 'proposal' | 'hagitask', sessionId: string): string {
+  return `No pending question was found. Read the messages with: hagi ${command} messages --session-id ${sessionId}\n`;
 }
