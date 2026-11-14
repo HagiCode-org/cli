@@ -116,6 +116,8 @@ import {
   type LockStatus,
   type LockSummary,
 } from '../generated/grpc/hagicode/coordination/v1/resource_lock_pb';
+import { HeroService, ListHeroesResponseSchema } from '../generated/grpc/hagicode/hero/v1/hero_pb';
+import type { PCode_Application_Contracts_Dto_HeroDto } from '../generated/api/models/PCode_Application_Contracts_Dto_HeroDto';
 import { dtoToProto, resultOf } from './grpc/mappers';
 import { getGrpcTransport } from './grpc/transport';
 import type { PCode_Application_Contracts_Dto_AnnotationSubmissionDto } from '../generated/api/models/PCode_Application_Contracts_Dto_AnnotationSubmissionDto';
@@ -416,6 +418,8 @@ export interface HagiApi {
   listHagiTaskSchemas(): Promise<PCode_Web_Controllers_PresetTaskSchemaSummaryDto[]>;
   /** Reads the creation schema of one active HagiTask. Unknown and disabled ids reject with 404. */
   getHagiTaskSchema(presetTaskId: string): Promise<PCode_Web_Controllers_PresetTaskCreationSchemaDto>;
+  /** Lists every Hero the backend knows, through the `ListHeroes` RPC. Callers filter for the ones a chat can bind. */
+  listHeroes(): Promise<PCode_Application_Contracts_Dto_HeroDto[]>;
   updateSession(sessionId: string, requestBody: PCode_Web_Controllers_UpdateSessionRequest): Promise<unknown>;
   /**
    * Adds user metadata entries to an existing session through the `AddSessionUserMetadata` RPC. Stored entries never change:
@@ -538,6 +542,7 @@ const projects = () => createClient(ProjectService, getGrpcTransport());
 const vaults = () => createClient(VaultService, getGrpcTransport());
 const scheduledPlans = () => createClient(ScheduledPlansService, getGrpcTransport());
 const presetTasks = () => createClient(PresetTasksService, getGrpcTransport());
+const heroes = () => createClient(HeroService, getGrpcTransport());
 const skills = () => createClient(SkillGalleryService, getGrpcTransport());
 const statistics = () => createClient(StatisticsService, getGrpcTransport());
 const sessions = () => createClient(SessionsService, getGrpcTransport());
@@ -595,6 +600,7 @@ export function createGrpcHagiApi(): HagiApi {
     listHagiTaskSchemas: async () => result(ListPresetTaskSchemasResponseSchema, presetTasks().listPresetTaskSchemas({})),
     getHagiTaskSchema: async presetTaskId =>
       result(GetPresetTaskSchemaResponseSchema, presetTasks().getPresetTaskSchema({ presetTaskId })),
+    listHeroes: async () => result(ListHeroesResponseSchema, heroes().listHeroes({})),
     updateSession: async (sessionId, requestBody) =>
       result(
         SaveSessionResponseSchema,

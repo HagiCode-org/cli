@@ -663,6 +663,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     createHagiTaskSession: vi.fn().mockResolvedValue(createSession('hagitask-1', PCode_Models_SessionType.CHAT)),
     listHagiTaskSchemas: vi.fn().mockResolvedValue([createHagiTaskSummary('compose-commit')]),
     getHagiTaskSchema: vi.fn().mockResolvedValue(createHagiTaskSchema()),
+    listHeroes: vi.fn().mockResolvedValue([]),
     updateSession: vi.fn().mockResolvedValue(undefined),
     addSessionUserMetadata: vi.fn().mockResolvedValue(createSession('session-1', PCode_Models_SessionType.CHAT)),
     deleteSession: vi.fn().mockResolvedValue({ message: 'Deleted' }),

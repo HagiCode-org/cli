@@ -7,6 +7,7 @@ import { registerProjectCommands } from './commands/project';
 import { registerProposalCommands } from './commands/proposal';
 import { registerSagaCommands } from './commands/saga';
 import { registerSkillsCommands } from './commands/skills';
+import { registerHeroCommands } from './commands/hero';
 import { registerUsageCommands } from './commands/usage';
 import { registerVaultCommands } from './commands/vault';
 import {
@@ -56,6 +57,7 @@ export function createCliApp(
   registerSkillsCommands(program, dependencies);
   registerAgentCommands(program, dependencies);
   registerSagaCommands(program, dependencies);
+  registerHeroCommands(program, dependencies);
   registerUsageCommands(program, dependencies);
 
   return program;

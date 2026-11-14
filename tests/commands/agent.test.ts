@@ -51,7 +51,7 @@ describe('hagi agent group', () => {
     const { dependencies } = createDependencies();
     const names = createCliApp(dependencies).commands.map(command => command.name());
 
-    expect(names).toEqual(['project', 'proposal', 'vault', 'chat', 'hagitask', 'plan', 'skills', 'agent', 'saga', 'usage']);
+    expect(names).toEqual(['project', 'proposal', 'vault', 'chat', 'hagitask', 'plan', 'skills', 'agent', 'saga', 'hero', 'usage']);
     expect(names).not.toContain('lock');
   });
 
