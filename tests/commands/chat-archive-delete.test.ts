@@ -9,7 +9,7 @@ import { createDependencies } from './testHelpers';
 const chat = (...args: string[]) => ['node', 'hagi', 'chat', ...args];
 
 describe('registerChatCommands (src/commands/chat.ts)', () => {
-  it('adds a single chat group with all five subcommands', () => {
+  it('adds a single chat group with all seven subcommands', () => {
     const { dependencies } = createDependencies();
     const program = new Command('hagi');
 
@@ -18,7 +18,7 @@ describe('registerChatCommands (src/commands/chat.ts)', () => {
     const group = program.commands.find(command => command.name() === 'chat');
     expect(program.commands.map(command => command.name())).toEqual(['chat']);
     expect(group?.description()).toBe('Manage normal chat sessions.');
-    expect(group?.commands.map(command => command.name()).sort()).toEqual(['archive', 'create', 'delete', 'list', 'send']);
+    expect(group?.commands.map(command => command.name()).sort()).toEqual(['archive', 'create', 'delete', 'get', 'list', 'messages', 'send']);
   });
 
   it('makes no backend call while registering', () => {
