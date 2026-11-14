@@ -103,6 +103,7 @@ hagi
 |-- skills    local list | enable | disable | uninstall
 |             gallery search | detail | install
 |             trusted list | upsert | delete | reset
+|-- hero      list [--json]
 |-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
 `-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
@@ -374,6 +375,17 @@ hagi agent lock list --prefix eu-1/
 - `heartbeat` is long-running and quiet on success. Run it under a watcher; it exits `32` when the lock is lost and `0` when stopped, without releasing.
 - Timing: 10-minute feedback timeout, 24-hour maximum hold, 2-minute heartbeat interval, 30-second claim window, 60-second waiter TTL.
 - Never run `requisition` unless the user explicitly ordered a forced take.
+
+## Hero commands
+
+`hagi hero list` reads the Heroes the backend supports now and prints the ones a chat can run with: enabled, and neither built in nor read only. These are the Heroes `--hero <name-or-id>` accepts. It is read-only.
+
+```bash
+hagi hero list --json
+```
+
+- `--json` prints `{ heroes: [{ heroId, name, executorType }] }`. The human view prints one line per Hero: name, `heroId`, executor type.
+- An empty list means no Hero can run a chat right now. Do not pick a Hero for the user in that case.
 
 ## Usage commands
 
