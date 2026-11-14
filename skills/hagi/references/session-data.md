@@ -86,7 +86,30 @@ hagi vault files preview --id <vault-id> --path <relative-file> --json
 ```bash
 hagi chat list --json
 hagi chat list --project-id <project-id> --active-only --json
+hagi chat get --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --json
 ```
+
+`chat get` only reads, returning `{ session }` in JSON or the shared human summary. It does not wait or start work. There is no chat `--wait` or `chat answer` command.
+
+### Recovering context in a fresh provider thread
+
+Use the **explicit existing HagiCode session ID** from the continuation instructions, not either provider's thread ID or an assumed `HAGI_SESSION_ID` (user-set environment values are retained). Do not create a replacement session.
+
+```bash
+hagi chat get --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+hagi proposal get --session-id <session-id> --json
+hagi proposal messages --session-id <session-id> --json
+hagi proposal messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+```
+
+Use `chat` for chats and `proposal` for proposals, not both. Recover the task, decisions, latest user instructions, and remaining authorized work before acting. Reuse the existing connection configuration and the runner rules above (`hagi` on PATH, otherwise `npx @hagicode/cli` with Node.js 24+). If a required read fails or the runtime/configuration is absent, report the exact blocker. Never invent context, credentials, or a backend address or install tools as a workaround.
+
+All three message readers (`chat`, `proposal`, `hagitask`) default to page 1, descending, with page size omitted: backend default **50**, maximum **200**. `--page` and `--page-size` must be positive safe integers; `--order` accepts `asc` or `desc`. `--last <n>` requests one descending page subject to the 200-message cap, not complete history, and cannot mix with any explicit paging option. JSON preserves the returned messages and actual `page`, `pageSize`, `totalCount`, and `totalPages`, including clamping. Read further pages only as needed; the CLI does not merge them or promise a snapshot while history changes. `--pending-question` searches only the requested page.
+
+Continue only work already authorized for the current stage and repository scope. If no authorized work remains, report readiness. Do not send a message to this same session, answer a question, or invoke a lifecycle command merely to make yourself continue; recovery reads do not grant new authorization.
 
 ### HagiTasks
 

@@ -170,7 +170,7 @@ hagi
 |-- saga      init | new | list | status | items | mark | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive
 |-- vault     list | create | update | delete
 |   `-- files list | preview
-|-- chat      list | create | archive | delete | send
+|-- chat      list | get | messages | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
 |-- skills    local list | enable | disable | uninstall
@@ -430,6 +430,16 @@ hagi chat list --active-only
 hagi chat list --include-archived --json
 ```
 
+Read details and recover history without starting work:
+
+```bash
+hagi chat get --session-id "$CHAT_ID" --json
+hagi chat messages --session-id "$CHAT_ID" --json
+hagi chat messages --session-id "$CHAT_ID" --page 2 --page-size 50 --order desc --json
+```
+
+`chat get` is a plain read: JSON is `{ session }`, and human output uses the shared session summary. It has no `--wait`; there is no `chat answer` command.
+
 Send a message, archive, and delete:
 
 ```bash
@@ -440,6 +450,12 @@ hagi chat send --session-id "$CHAT_ID" --content "Summarize the current diff" --
 hagi chat archive --session-id "$CHAT_ID"
 hagi chat delete --session-id "$CHAT_ID"
 ```
+
+### Message Paging and Context Recovery
+
+`chat messages`, `proposal messages`, and `hagitask messages` share `--page`, `--page-size`, and `--order asc|desc`. Defaults remain page 1, descending, with page size omitted (backend default **50**, maximum **200**). Page and page size must be positive safe integers. `--last <n>` requests one descending page of the n newest messages, capped by the backend; it cannot be combined with any explicit paging option, even a default value. JSON preserves the returned messages and actual `page`, `pageSize`, `totalCount`, and `totalPages`, including clamping. Pages are not fetched or merged automatically.
+
+For a replacement hero, use the explicit existing **HagiCode session ID**, not a provider thread ID or an assumed `HAGI_SESSION_ID`. Read `get` and `messages` for that session's family (`chat` or `proposal`), then older pages until the task, decisions, latest instructions, and remaining authorized work are clear. Reuse the existing connection configuration. If `hagi` is unavailable, use `npx @hagicode/cli` only with Node.js 24+; if context cannot be retrieved, report the exact blocker without guessing context, credentials, or a backend address. Continue only the current authorized stage and repository scope; report readiness if no authorized work remains. Do not create another session, send to this session, answer questions, or invoke lifecycle commands merely to resume.
 
 ### Session Metadata
 
@@ -538,7 +554,7 @@ hagi hagitask get --session-id "$SUPER_COMMIT_ID" --wait --timeout 900 --json
 hagi hagitask messages --session-id "$SUPER_COMMIT_ID" --last 1 --json
 ```
 
-`hagitask get` reads one session. With `--wait` it polls every `--interval` seconds (default 5) until the status is no longer Optimizing, Openspecing, Executing or Archiving. `--timeout` (default 900) and `--grace` (default 10, `0` disables) are seconds, and `--timeout`, `--interval` and `--grace` need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31` and prints the last status. `hagitask messages --last <n>` reads the n newest messages; `--json` prints the list unchanged.
+`hagitask get` reads one session. With `--wait` it polls every `--interval` seconds (default 5) until the status is no longer Optimizing, Openspecing, Executing or Archiving. `--timeout` (default 900) and `--grace` (default 10, `0` disables) are seconds, and `--timeout`, `--interval` and `--grace` need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31` and prints the last status. `hagitask messages --last <n>` reads one page of the n newest messages subject to the backend limit; `--json` prints the list unchanged. See [message paging](#message-paging-and-context-recovery) for older pages and limits.
 
 **Answering a session question:** when an agent asks the user a question, the session stops at `WaitingForReply`. Four steps follow it, and the same steps work for `proposal` and `hagitask`:
 

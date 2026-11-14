@@ -97,7 +97,7 @@ hagi
 |-- saga      init | new | list | status | items | mark | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create | session list | log append
 |-- vault     list | create | update | delete
 |   `-- files list | preview
-|-- chat      list | create | archive | delete | send
+|-- chat      list | get | messages | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
 |-- skills    local list | enable | disable | uninstall
@@ -185,6 +185,25 @@ hagi proposal messages --session-id <session-id> --last 1 --json
 - `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
 - `proposal messages --pending-question` prints only the pending question of the session, from the same read; it exits `24` when none is pending. `proposal answer` answers that question. See [Answering a pending question](#answering-a-pending-question).
 - Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
+
+## Chat reads and message paging
+
+`chat get` is a plain read using the shared session summary: JSON is `{ session }`. It does not start or wait for work. There is no chat `--wait` or `chat answer` command; proposal/HagiTask wait and answer behavior is unchanged.
+
+```bash
+hagi chat get --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+hagi proposal get --session-id <session-id> --json
+hagi proposal messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+```
+
+- `chat messages`, `proposal messages`, and `hagitask messages` share paging. Without flags: page 1, descending, page size omitted (backend default **50**, maximum **200**).
+- `--page` and `--page-size` accept positive safe integers. `--order` accepts only `asc` or `desc`; ascending pages are not locally reversed. Partial paging options keep the other defaults.
+- `--last <n>` requests one descending page of n newest messages, subject to the backend's 200-message cap. It cannot mix with any explicit `--page`, `--page-size`, or `--order`, even their default values. Invalid/conflicting options fail before a backend call.
+- JSON retains every returned message and actual `page`, `pageSize`, `totalCount`, and `totalPages`, including clamping. No automatic page merging or complete-history guarantee. `--pending-question` still searches only the requested page with the same read.
+
+For fresh-thread recovery, pass the explicit existing HagiCode session ID, not a provider thread ID or an assumed `HAGI_SESSION_ID`. Use the session's `chat` or `proposal` get/messages commands and older pages to recover the task, decisions, latest instructions, and remaining authorized work. Reuse the existing connection; use `hagi` on PATH or `npx @hagicode/cli` only with Node.js 24+. Report exact retrieval blockers without guessing context, credentials, or a backend address. Do not create another session, self-send, answer, or trigger a lifecycle action just to continue. Stay within the current stage and repository authorization; report readiness when no authorized work remains. See [session-data.md](session-data.md#recovering-context-in-a-fresh-provider-thread).
 
 ## Session metadata
 
