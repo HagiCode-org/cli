@@ -208,8 +208,20 @@ export function ensureRuntimeIgnore(sagaRoot: string): void {
       return;
     }
     if (existing === undefined) {
-      writeFileExclusive(sagaRoot, ignorePath, `${RUNTIME_IGNORE_RULE}\n`);
-      return;
+      try {
+        writeFileExclusive(sagaRoot, ignorePath, `${RUNTIME_IGNORE_RULE}\n`);
+        return;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+          throw error;
+        }
+        // A concurrent claim created the file between our check and our write: read what it wrote and go on
+        // with the normal append path, so the race is not reported as a failure.
+        existing = readFileSync(ignorePath, 'utf8');
+        if (isRuntimeIgnoreRule(existing)) {
+          return;
+        }
+      }
     }
     const newline = existing.includes('\r\n') ? '\r\n' : '\n';
     const separator = existing.length > 0 && !existing.endsWith('\n') ? newline : '';
