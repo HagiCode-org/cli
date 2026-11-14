@@ -271,11 +271,11 @@ describe('answer command', () => {
   });
 });
 
-describe('messages --pending-question', () => {
+describe.each(['proposal', 'hagitask', 'chat'])('%s messages --pending-question', family => {
   it('prints only the pending question from the same read, in human form', async () => {
     const made = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(pendingList()) });
 
-    const exitCode = await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's-1', '--pending-question'], made.dependencies);
+    const exitCode = await runCli(['node', 'hagi', family, 'messages', '--session-id', 's-1', '--pending-question'], made.dependencies);
 
     expect(exitCode).toBe(0);
     expect(made.api.getSessionMessages).toHaveBeenCalledTimes(1);
@@ -289,16 +289,17 @@ describe('messages --pending-question', () => {
   it('prints the pending question as JSON with the message id', async () => {
     const made = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(pendingList()) });
 
-    await runCli(['node', 'hagi', 'hagitask', 'messages', '--session-id', 's-1', '--pending-question', '--json'], made.dependencies);
+    await runCli(['node', 'hagi', family, 'messages', '--session-id', 's-1', '--page', '2', '--order', 'asc', '--pending-question', '--json'], made.dependencies);
 
     const parsed = JSON.parse(made.stdout.join(''));
-    expect(parsed).toMatchObject({ sessionId: 's-1', messageId: 'm-2', userQuestion: { questionId: 'q-1', state: 'pending' } });
+    expect(parsed).toEqual({ sessionId: 's-1', messageId: 'm-2', userQuestion: pendingList().messages[0].userQuestion });
+    expect(made.api.getSessionMessages).toHaveBeenCalledExactlyOnceWith('s-1', { page: 2, order: 'asc' });
   });
 
   it('exits with the not-found code when no question is pending', async () => {
     const made = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(noQuestionList()) });
 
-    expect(await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's-1', '--pending-question'], made.dependencies)).toBe(EXIT_CODES.HTTP_NOT_FOUND);
+    expect(await runCli(['node', 'hagi', family, 'messages', '--session-id', 's-1', '--pending-question'], made.dependencies)).toBe(EXIT_CODES.HTTP_NOT_FOUND);
     expect(made.stderr.join('')).toContain('No pending question in session s-1.');
   });
 
@@ -316,12 +317,13 @@ describe('messages --pending-question', () => {
     });
     const made = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(list) });
 
-    await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's-1', '--json'], made.dependencies);
+    await runCli(['node', 'hagi', family, 'messages', '--session-id', 's-1', '--json'], made.dependencies);
     const json = made.stdout.join('');
+    expect(JSON.parse(json)).toEqual(list);
     expect(json).not.toContain(SECRET);
 
     made.stdout.length = 0;
-    await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's-1'], made.dependencies);
+    await runCli(['node', 'hagi', family, 'messages', '--session-id', 's-1'], made.dependencies);
     expect(made.stdout.join('')).toContain('answer hidden');
     expect(made.stdout.join('')).not.toContain(SECRET);
   });

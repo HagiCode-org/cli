@@ -10,7 +10,7 @@ import { EXIT_CODES } from '../../src/runtime/errors';
 import { DEFAULT_WAIT_GRACE_SECONDS, DEFAULT_WAIT_INTERVAL_SECONDS, DEFAULT_WAIT_TIMEOUT_SECONDS } from '../../src/runtime/sessionWait';
 import { runCli } from '../../src/main';
 import { CliUsageError } from '../../src/runtime/errors';
-import { createDependencies, createMessageList, fakeWaitClock, sessionWithStatus } from './testHelpers';
+import { createDependencies, createMessage, createMessageList, fakeWaitClock, sessionWithStatus } from './testHelpers';
 
 const base: SessionGetOptions = { sessionId: 's-1' };
 
@@ -130,26 +130,78 @@ describe('registerSessionMessagesCommand', () => {
     const messages = group.commands.find(command => command.name() === 'messages');
 
     expect(messages?.description()).toBe('Read messages.');
-    expect(messages?.options.map(option => option.long)).toEqual(expect.arrayContaining(['--session-id', '--last', '--json']));
+    expect(messages?.options.map(option => option.long)).toEqual(expect.arrayContaining(['--session-id', '--last', '--page', '--page-size', '--order', '--json']));
+  });
+});
+
+describe.each(['proposal', 'hagitask', 'chat'])('%s shared message paging', family => {
+  const messages = (...args: string[]) => ['node', 'hagi', family, 'messages', '--session-id', 's', ...args];
+
+  it.each([
+    [[], { page: 1, order: 'desc' }],
+    [['--last', '2'], { page: 1, pageSize: 2, order: 'desc' }],
+    [['--page', ' 3 ', '--page-size', '50', '--order', 'desc'], { page: 3, pageSize: 50, order: 'desc' }],
+    [['--page', '1', '--page-size', '100', '--order', 'asc'], { page: 1, pageSize: 100, order: 'asc' }],
+    [['--page', '2'], { page: 2, order: 'desc' }],
+    [['--page-size', '25'], { page: 1, pageSize: 25, order: 'desc' }],
+    [['--order', 'asc'], { page: 1, order: 'asc' }],
+    [['--page', String(Number.MAX_SAFE_INTEGER), '--page-size', String(Number.MAX_SAFE_INTEGER)], {
+      page: Number.MAX_SAFE_INTEGER, pageSize: Number.MAX_SAFE_INTEGER, order: 'desc',
+    }],
+  ])('forwards %j without changing defaults or fetching extra pages', async (flags, request) => {
+    const made = createDependencies();
+
+    expect(await runCli(messages(...flags), made.dependencies)).toBe(0);
+    expect(made.api.getSessionMessages).toHaveBeenCalledExactlyOnceWith('s', request);
   });
 
-  it('is shared by proposal and hagitask, so both read the newest messages first', async () => {
-    const proposal = createDependencies();
-    const hagitask = createDependencies();
-
-    await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's', '--last', '2'], proposal.dependencies);
-    await runCli(['node', 'hagi', 'hagitask', 'messages', '--session-id', 's', '--last', '2'], hagitask.dependencies);
-
-    expect(proposal.api.getSessionMessages).toHaveBeenCalledWith('s', { page: 1, pageSize: 2, order: 'desc' });
-    expect(hagitask.api.getSessionMessages).toHaveBeenCalledWith('s', { page: 1, pageSize: 2, order: 'desc' });
-  });
-
-  it('prints the backend list unchanged as JSON', async () => {
-    const list = createMessageList({ totalCount: 11 });
+  it.each([
+    [[], { page: 1, pageSize: 50, totalPages: 19 }],
+    [['--last', '500'], { page: 1, pageSize: 200, totalPages: 5 }],
+    [['--page', '2', '--page-size', '500'], { page: 2, pageSize: 200, totalPages: 5 }],
+    [['--page', '1', '--page-size', '100', '--order', 'asc'], { page: 1, pageSize: 100, totalPages: 10 }],
+  ])('prints returned message order, JSON and clamping metadata unchanged for %j', async (flags, metadata) => {
+    const list = {
+      ...createMessageList({
+        totalCount: 950,
+        messages: [
+          createMessage('m-1', [{ type: 'Text', text: 'First returned message' }]),
+          createMessage('m-2', [{ type: 'Text', text: 'Second returned message' }]),
+        ],
+      }),
+      ...metadata,
+    };
     const made = createDependencies({ getSessionMessages: vi.fn().mockResolvedValue(list) });
 
-    await runCli(['node', 'hagi', 'proposal', 'messages', '--session-id', 's', '--json'], made.dependencies);
+    expect(await runCli(messages(...flags, '--json'), made.dependencies)).toBe(0);
+    expect(JSON.parse(made.stdout.join(''))).toEqual(list);
+    expect(made.api.getSessionMessages).toHaveBeenCalledTimes(1);
+  });
 
-    expect(JSON.parse(made.stdout.join('')).totalCount).toBe(11);
+  describe.each(['--page', '--page-size'])('%s validation', flag => {
+    it.each(['0', '-1', '1.5', 'abc', '', '  ', '1e2', '+3', 'Infinity', '9007199254740992', '999999999999999999999999999999'])('rejects %j before I/O', async raw => {
+      const made = createDependencies();
+
+      expect(await runCli(messages(flag, raw), made.dependencies)).toBe(EXIT_CODES.USAGE);
+      expect(made.stderr.join('')).toContain(`${flag} must be a positive safe integer.`);
+      for (const method of Object.values(made.api)) expect(method).not.toHaveBeenCalled();
+    });
+  });
+
+  it.each(['ASC', 'Desc', 'newest', '', ' asc '])('rejects --order %j before I/O', async raw => {
+    const made = createDependencies();
+
+    expect(await runCli(messages('--order', raw), made.dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(made.stderr.join('')).toContain('--order must be asc or desc.');
+    for (const method of Object.values(made.api)) expect(method).not.toHaveBeenCalled();
+  });
+
+  it.each([['--page', '1'], ['--page-size', '50'], ['--order', 'desc']])('rejects --last with explicit default %s %s before I/O', async (flag, value) => {
+    const made = createDependencies();
+
+    expect(await runCli(messages('--last', '1', flag, value), made.dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(made.stderr.join('')).toContain('mutually exclusive');
+    expect(made.stderr.join('')).toContain(flag);
+    for (const method of Object.values(made.api)) expect(method).not.toHaveBeenCalled();
   });
 });
