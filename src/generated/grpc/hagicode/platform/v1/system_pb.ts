@@ -8,13 +8,15 @@ import type { Timestamp, Value } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_struct, file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { DeploymentInfoDto } from "./version_pb";
 import { file_hagicode_platform_v1_version } from "./version_pb";
+import type { MagpieModelCatalogEntryDto } from "../../config/v1/magpie_pb";
+import { file_hagicode_config_v1_magpie } from "../../config/v1/magpie_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file hagicode/platform/v1/system.proto.
  */
 export const file_hagicode_platform_v1_system: GenFile = /*@__PURE__*/
-  fileDesc("CiFoYWdpY29kZS9wbGF0Zm9ybS92MS9zeXN0ZW0ucHJvdG8SFGhhZ2ljb2RlLnBsYXRmb3JtLnYxIh0KG0dldENvbnRhaW5lclNldHRpbmdzUmVxdWVzdCJaChxHZXRDb250YWluZXJTZXR0aW5nc1Jlc3BvbnNlEjoKBnJlc3VsdBgBIAEoCzIqLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkNvbnRhaW5lclNldHRpbmdzRHRvIhoKGEdldERlcGxveW1lbnRJbmZvUmVxdWVzdCJUChlHZXREZXBsb3ltZW50SW5mb1Jlc3BvbnNlEjcKBnJlc3VsdBgBIAEoCzInLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkRlcGxveW1lbnRJbmZvRHRvIjAKDkdldFRpcHNSZXF1ZXN0EhMKBmxvY2FsZRgBIAEoCUgAiAEBQgkKB19sb2NhbGUiSAoPR2V0VGlwc1Jlc3BvbnNlEjUKBnJlc3VsdBgBIAEoCzIlLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLlRpcHNSZXNwb25zZUR0byI0ChJHZXRQcm9tb3Rlc1JlcXVlc3QSEwoGbG9jYWxlGAEgASgJSACIAQFCCQoHX2xvY2FsZSJQChNHZXRQcm9tb3Rlc1Jlc3BvbnNlEjkKBnJlc3VsdBgBIAEoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLlByb21vdGVzUmVzcG9uc2VEdG8iHgocR2V0SGVyb1N5c3RlbVNldHRpbmdzUmVxdWVzdCJcCh1HZXRIZXJvU3lzdGVtU2V0dGluZ3NSZXNwb25zZRI7CgZyZXN1bHQYASABKAsyKy5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvU3lzdGVtU2V0dGluZ3NEdG8iXQoUQ29udGFpbmVyU2V0dGluZ3NEdG8SEAoIZGF0YV9kaXIYASABKAkSEgoKbW91bnRfcGF0aBgCIAEoCRIfChdmaXJzdF9ydW5fY2hlY2tfZW5hYmxlZBgDIAEoCCI5CgtUaXBFbnRyeUR0bxIKCgJpZBgBIAEoCRIMCgR0ZXh0GAIgASgJEhAKCGNhdGVnb3J5GAMgASgJIn4KD1RpcHNSZXNwb25zZUR0bxIWCg5zY2hlbWFfdmVyc2lvbhgBIAEoCRIOCgZsb2NhbGUYAiABKAkSEgoKdXBkYXRlZF9hdBgDIAEoCRIvCgR0aXBzGAQgAygLMiEuaGFnaWNvZGUucGxhdGZvcm0udjEuVGlwRW50cnlEdG8iPQoPUHJvbW90ZUltYWdlRHRvEgsKA3VybBgBIAEoCRINCgV3aWR0aBgCIAEoBRIOCgZoZWlnaHQYAyABKAUiqgEKDlByb21vdGVJdGVtRHRvEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhYKCWN0YV9sYWJlbBgEIAEoCUgAiAEBEgwKBGxpbmsYBSABKAkSNAoFaW1hZ2UYBiABKAsyJS5oYWdpY29kZS5wbGF0Zm9ybS52MS5Qcm9tb3RlSW1hZ2VEdG9CDAoKX2N0YV9sYWJlbCJuChNQcm9tb3Rlc1Jlc3BvbnNlRHRvEg4KBmxvY2FsZRgBIAEoCRISCgp1cGRhdGVkX2F0GAIgASgJEjMKBWl0ZW1zGAMgAygLMiQuaGFnaWNvZGUucGxhdGZvcm0udjEuUHJvbW90ZUl0ZW1EdG8i7gEKD0FnZW50Q2xpSWNvbkR0bxIRCglhdmF0YXJfaWQYASABKAkSMgoOdXBkYXRlZF9hdF91dGMYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEloKFHByZXZpZXdfdXJsc19ieV9zaXplGAMgAygLMjwuaGFnaWNvZGUucGxhdGZvcm0udjEuQWdlbnRDbGlJY29uRHRvLlByZXZpZXdVcmxzQnlTaXplRW50cnkaOAoWUHJldmlld1VybHNCeVNpemVFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIpUGChZIZXJvQWdlbnRDbGlTZXR0aW5nRHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGZmFtaWx5GAMgASgJEhEKBGljb24YBCABKAlIAIgBARIUCgxzb3VyY2VfbGFiZWwYBSABKAkSFQoNcHJvdmlkZXJfdHlwZRgGIAEoCRISCgpzb3J0X29yZGVyGAcgASgFEhQKDGlzX3JlYWRfb25seRgIIAEoCBJfChJkZWZhdWx0X3BhcmFtZXRlcnMYCSADKAsyQy5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvQWdlbnRDbGlTZXR0aW5nRHRvLkRlZmF1bHRQYXJhbWV0ZXJzRW50cnkSEgoKaXNfZW5hYmxlZBgKIAEoCBIPCgdpc19iZXRhGAsgASgIEhgKEGlzX2NsaV9hdmFpbGFibGUYDCABKAgSGAoLY2xpX3ZlcnNpb24YDSABKAlIAYgBARI6CgtjdXN0b21faWNvbhgOIAEoCzIlLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkFnZW50Q2xpSWNvbkR0bxIaChJzdXBwb3J0ZWRfZmVhdHVyZXMYDyADKAkSKAobYnVpbHRfaW5fc2tpbGxzX3JlYXNvbl9jb2RlGBAgASgJSAKIAQESJAoXaW1hZ2VfaW5wdXRfcmVhc29uX2NvZGUYESABKAlIA4gBARIkChxtb2RlbF9pbWFnZV9pbnB1dHNfYXZhaWxhYmxlGBIgASgIElAKEm1vZGVsX2ltYWdlX2lucHV0cxgTIAMoCzI0LmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9BZ2VudENsaU1vZGVsSW1hZ2VJbnB1dER0bxo4ChZEZWZhdWx0UGFyYW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCBwoFX2ljb25CDgoMX2NsaV92ZXJzaW9uQh4KHF9idWlsdF9pbl9za2lsbHNfcmVhc29uX2NvZGVCGgoYX2ltYWdlX2lucHV0X3JlYXNvbl9jb2RlIn0KHkhlcm9BZ2VudENsaU1vZGVsSW1hZ2VJbnB1dER0bxIQCghwcm92aWRlchgBIAEoCRIQCghtb2RlbF9pZBgCIAEoCRINCgVpbnB1dBgDIAEoCRIYCgtyZWFzb25fY29kZRgEIAEoCUgAiAEBQg4KDF9yZWFzb25fY29kZSJ/ChtIZXJvTW9kZWxGaWVsZENvbnN0cmFpbnREdG8SCwoDa2V5GAEgASgJEhMKC2lzX3JlcXVpcmVkGAIgASgIEhQKDGlzX3JlYWRfb25seRgDIAEoCBIYCgtkZXNjcmlwdGlvbhgEIAEoCUgAiAEBQg4KDF9kZXNjcmlwdGlvbiLRBAoTSGVyb01vZGVsU2V0dGluZ0R0bxIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg4KBmZhbWlseRgDIAEoCRIUCgxhZ2VudF9jbGlfaWQYBCABKAkSGAoQYWdlbnRfY2xpX2ZhbWlseRgFIAEoCRIUCgdzdW1tYXJ5GAYgASgJSACIAQESEQoEaWNvbhgHIAEoCUgBiAEBEhQKDHNvdXJjZV9sYWJlbBgIIAEoCRISCgpzb3J0X29yZGVyGAkgASgFEhYKDnN1cHBvcnRzX2ltYWdlGAogASgIEhQKDGlzX3JlYWRfb25seRgLIAEoCBITCgtpc19lZGl0YWJsZRgMIAEoCBIOCgZzb3VyY2UYDSABKAkSGgoSc291cmNlX3RlbXBsYXRlX2lkGA4gASgJEiMKG2NvbXBhdGlibGVfcHJpbWFyeV9mYW1pbGllcxgPIAMoCRJcChJkZWZhdWx0X3BhcmFtZXRlcnMYECADKAsyQC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxTZXR0aW5nRHRvLkRlZmF1bHRQYXJhbWV0ZXJzRW50cnkSTAoRZmllbGRfY29uc3RyYWludHMYESADKAsyMS5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxGaWVsZENvbnN0cmFpbnREdG8aOAoWRGVmYXVsdFBhcmFtZXRlcnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQgoKCF9zdW1tYXJ5QgcKBV9pY29uIr0BCh9PbW5pUm91dGVCcmFuY2hDYXRhbG9nU3RhdHVzRHRvEg8KB2VuYWJsZWQYASABKAgSDgoGc291cmNlGAIgASgJEhAKCGlzX3N0YWxlGAMgASgIEhcKCmxhc3RfZXJyb3IYBCABKAlIAIgBARITCgtlbnRyeV9jb3VudBgFIAEoBRIZCgxhcGlfZW5kcG9pbnQYBiABKAlIAYgBAUINCgtfbGFzdF9lcnJvckIPCg1fYXBpX2VuZHBvaW50IoQDChJIZXJvTW9kZWxCcmFuY2hEdG8SFAoMYWdlbnRfY2xpX2lkGAEgASgJEhYKDmFnZW50X2NsaV9uYW1lGAIgASgJEhgKEGFnZW50X2NsaV9mYW1pbHkYAyABKAkSRwoUc3lzdGVtX2RlZmF1bHRfaXRlbXMYBCADKAsyKS5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxTZXR0aW5nRHRvEj8KDGN1c3RvbV9pdGVtcxgFIAMoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9Nb2RlbFNldHRpbmdEdG8SJAocdXNlX29tbmlfcm91dGVfbW9kZWxfY2F0YWxvZxgGIAEoCBIcChRtb2RlbF9jYXRhbG9nX3NvdXJjZRgHIAEoCRJYChlvbW5pX3JvdXRlX2NhdGFsb2dfc3RhdHVzGAggASgLMjUuaGFnaWNvZGUucGxhdGZvcm0udjEuT21uaVJvdXRlQnJhbmNoQ2F0YWxvZ1N0YXR1c0R0byKRAQoRSGVyb1NvdWxQcmVzZXREdG8SCgoCaWQYASABKAkSFgoJbGFiZWxfa2V5GAIgASgJSACIAQESGAoLc3VtbWFyeV9rZXkYAyABKAlIAYgBARIMCgRzb3VsGAQgASgJEhIKCnNvcnRfb3JkZXIYBSABKAVCDAoKX2xhYmVsX2tleUIOCgxfc3VtbWFyeV9rZXkidAoSSGVyb1RyYWl0UHJlc2V0RHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSFAoHc3VtbWFyeRgDIAEoCUgAiAEBEg4KBnByb21wdBgEIAEoCRISCgpzb3J0X29yZGVyGAUgASgFQgoKCF9zdW1tYXJ5ItMBChVNb2RlbENhdGFsb2dTdGF0dXNEdG8SDgoGc291cmNlGAEgASgJEg8KB3ZlcnNpb24YAiABKAkSMAoMcHVibGlzaGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBItCglsb2FkZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCGlzX3N0YWxlGAUgASgIEhcKCmxhc3RfZXJyb3IYBiABKAlIAIgBAUINCgtfbGFzdF9lcnJvciJ0Ch1PbW5pUm91dGVNb2RlbENhdGFsb2dFbnRyeUR0bxITCgtwcm92aWRlcl9pZBgBIAEoCRIQCghtb2RlbF9pZBgCIAEoCRIaChJxdWFsaWZpZWRfbW9kZWxfaWQYAyABKAkSEAoIb3duZWRfYnkYBCABKAkilQMKHk9tbmlSb3V0ZU1vZGVsQ2F0YWxvZ1N0YXR1c0R0bxJECgdlbnRyaWVzGAEgAygLMjMuaGFnaWNvZGUucGxhdGZvcm0udjEuT21uaVJvdXRlTW9kZWxDYXRhbG9nRW50cnlEdG8SOQoVbGFzdF9hdHRlbXB0ZWRfYXRfdXRjGAIgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBJCCh5sYXN0X3N1Y2Nlc3NmdWxfcmVmcmVzaF9hdF91dGMYAyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCGlzX3N0YWxlGAQgASgIEg4KBnNvdXJjZRgFIAEoCRIXCgpsYXN0X2Vycm9yGAYgASgJSACIAQESIAoTcmVmcmVzaF9kdXJhdGlvbl9tcxgHIAEoBUgBiAEBEhkKDGFwaV9lbmRwb2ludBgIIAEoCUgCiAEBQg0KC19sYXN0X2Vycm9yQhYKFF9yZWZyZXNoX2R1cmF0aW9uX21zQg8KDV9hcGlfZW5kcG9pbnQiogMKGU9tbmlSb3V0ZVJ1bnRpbWVTdGF0dXNEdG8SDgoGc3RhdHVzGAEgASgJEh8KEm1hbmFnZWRfcHJvY2Vzc19pZBgCIAEoBUgAiAEBEjkKFWxhc3RfYXR0ZW1wdGVkX2F0X3V0YxgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoTbGFzdF9zdGFydGVkX2F0X3V0YxgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoTbGFzdF9oZWFsdGh5X2F0X3V0YxgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASFwoKbGFzdF9lcnJvchgGIAEoCUgBiAEBEhUKCGJhc2VfdXJsGAcgASgJSAKIAQESFAoMb3duc19ydW50aW1lGAggASgIEhsKDnN0YXR1c19tZXNzYWdlGAkgASgJSAOIAQFCFQoTX21hbmFnZWRfcHJvY2Vzc19pZEINCgtfbGFzdF9lcnJvckILCglfYmFzZV91cmxCEQoPX3N0YXR1c19tZXNzYWdlIqUDChRPbW5pUm91dGVTZXR0aW5nc0R0bxIPCgdlbmFibGVkGAEgASgIEh8KF2VuYWJsZWRfbWFuYWdlZF9zdGFydHVwGAIgASgIEhkKDGFwaV9lbmRwb2ludBgDIAEoCUgAiAEBEhMKC2hhc19hcGlfa2V5GAQgASgIEhkKDG1hbmFnZWRfcG9ydBgFIAEoBUgBiAEBEnYKIXVzZV9tb2RlbF9jYXRhbG9nX2J5X2FnZW50X2NsaV9pZBgGIAMoCzJLLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9tbmlSb3V0ZVNldHRpbmdzRHRvLlVzZU1vZGVsQ2F0YWxvZ0J5QWdlbnRDbGlJZEVudHJ5EjIKDnVwZGF0ZWRfYXRfdXRjGAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBpCCiBVc2VNb2RlbENhdGFsb2dCeUFnZW50Q2xpSWRFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAg6AjgBQg8KDV9hcGlfZW5kcG9pbnRCDwoNX21hbmFnZWRfcG9ydCJhChxPcGVuQ29kZU1vZGVsQ2F0YWxvZ0VudHJ5RHRvEhMKC3Byb3ZpZGVyX2lkGAEgASgJEhAKCG1vZGVsX2lkGAIgASgJEhoKEnF1YWxpZmllZF9tb2RlbF9pZBgDIAEoCSLfAgodT3BlbkNvZGVNb2RlbENhdGFsb2dTdGF0dXNEdG8SQwoHZW50cmllcxgBIAMoCzIyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9wZW5Db2RlTW9kZWxDYXRhbG9nRW50cnlEdG8SNQoRbGFzdF9hdHRlbXB0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEj4KGmxhc3Rfc3VjY2Vzc2Z1bF9yZWZyZXNoX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIQCghpc19zdGFsZRgEIAEoCBIOCgZzb3VyY2UYBSABKAkSFwoKbGFzdF9lcnJvchgGIAEoCUgAiAEBEiAKE3JlZnJlc2hfZHVyYXRpb25fbXMYByABKAVIAYgBAUINCgtfbGFzdF9lcnJvckIWChRfcmVmcmVzaF9kdXJhdGlvbl9tcyKWBwoVSGVyb1N5c3RlbVNldHRpbmdzRHRvEkAKCmFnZW50X2NsaXMYASADKAsyLC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvQWdlbnRDbGlTZXR0aW5nRHRvEjkKBm1vZGVscxgCIAMoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9Nb2RlbFNldHRpbmdEdG8SQAoObW9kZWxfYnJhbmNoZXMYAyADKAsyKC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxCcmFuY2hEdG8SYgoUY29tcGF0aWJpbGl0eV9tYXRyaXgYBCADKAsyRC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvU3lzdGVtU2V0dGluZ3NEdG8uQ29tcGF0aWJpbGl0eU1hdHJpeEVudHJ5Ej8KDXRyYWl0X3ByZXNldHMYBSADKAsyKC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvVHJhaXRQcmVzZXREdG8SPQoMc291bF9wcmVzZXRzGAYgAygLMicuaGFnaWNvZGUucGxhdGZvcm0udjEuSGVyb1NvdWxQcmVzZXREdG8SQgoNbW9kZWxfY2F0YWxvZxgHIAEoCzIrLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk1vZGVsQ2F0YWxvZ1N0YXR1c0R0bxJUChdvcGVuX2NvZGVfbW9kZWxfY2F0YWxvZxgIIAEoCzIzLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9wZW5Db2RlTW9kZWxDYXRhbG9nU3RhdHVzRHRvEkcKE29tbmlfcm91dGVfc2V0dGluZ3MYCSABKAsyKi5oYWdpY29kZS5wbGF0Zm9ybS52MS5PbW5pUm91dGVTZXR0aW5nc0R0bxJLChJvbW5pX3JvdXRlX3J1bnRpbWUYCiABKAsyLy5oYWdpY29kZS5wbGF0Zm9ybS52MS5PbW5pUm91dGVSdW50aW1lU3RhdHVzRHRvElYKGG9tbmlfcm91dGVfbW9kZWxfY2F0YWxvZxgLIAEoCzI0LmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9tbmlSb3V0ZU1vZGVsQ2F0YWxvZ1N0YXR1c0R0bxpSChhDb21wYXRpYmlsaXR5TWF0cml4RW50cnkSCwoDa2V5GAEgASgJEiUKBXZhbHVlGAIgASgLMhYuZ29vZ2xlLnByb3RvYnVmLlZhbHVlOgI4ATLDBAoNU3lzdGVtU2VydmljZRJ9ChRHZXRDb250YWluZXJTZXR0aW5ncxIxLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldENvbnRhaW5lclNldHRpbmdzUmVxdWVzdBoyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldENvbnRhaW5lclNldHRpbmdzUmVzcG9uc2USdAoRR2V0RGVwbG95bWVudEluZm8SLi5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXREZXBsb3ltZW50SW5mb1JlcXVlc3QaLy5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXREZXBsb3ltZW50SW5mb1Jlc3BvbnNlElYKB0dldFRpcHMSJC5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXRUaXBzUmVxdWVzdBolLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFRpcHNSZXNwb25zZRJiCgtHZXRQcm9tb3RlcxIoLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFByb21vdGVzUmVxdWVzdBopLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFByb21vdGVzUmVzcG9uc2USgAEKFUdldEhlcm9TeXN0ZW1TZXR0aW5ncxIyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldEhlcm9TeXN0ZW1TZXR0aW5nc1JlcXVlc3QaMy5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXRIZXJvU3lzdGVtU2V0dGluZ3NSZXNwb25zZUIqqgInUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLlBsYXRmb3JtLlYxYgZwcm90bzM", [file_google_protobuf_struct, file_google_protobuf_timestamp, file_hagicode_platform_v1_version]);
+  fileDesc("CiFoYWdpY29kZS9wbGF0Zm9ybS92MS9zeXN0ZW0ucHJvdG8SFGhhZ2ljb2RlLnBsYXRmb3JtLnYxIh0KG0dldENvbnRhaW5lclNldHRpbmdzUmVxdWVzdCJaChxHZXRDb250YWluZXJTZXR0aW5nc1Jlc3BvbnNlEjoKBnJlc3VsdBgBIAEoCzIqLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkNvbnRhaW5lclNldHRpbmdzRHRvIhoKGEdldERlcGxveW1lbnRJbmZvUmVxdWVzdCJUChlHZXREZXBsb3ltZW50SW5mb1Jlc3BvbnNlEjcKBnJlc3VsdBgBIAEoCzInLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkRlcGxveW1lbnRJbmZvRHRvIjAKDkdldFRpcHNSZXF1ZXN0EhMKBmxvY2FsZRgBIAEoCUgAiAEBQgkKB19sb2NhbGUiSAoPR2V0VGlwc1Jlc3BvbnNlEjUKBnJlc3VsdBgBIAEoCzIlLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLlRpcHNSZXNwb25zZUR0byI0ChJHZXRQcm9tb3Rlc1JlcXVlc3QSEwoGbG9jYWxlGAEgASgJSACIAQFCCQoHX2xvY2FsZSJQChNHZXRQcm9tb3Rlc1Jlc3BvbnNlEjkKBnJlc3VsdBgBIAEoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLlByb21vdGVzUmVzcG9uc2VEdG8iHgocR2V0SGVyb1N5c3RlbVNldHRpbmdzUmVxdWVzdCJcCh1HZXRIZXJvU3lzdGVtU2V0dGluZ3NSZXNwb25zZRI7CgZyZXN1bHQYASABKAsyKy5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvU3lzdGVtU2V0dGluZ3NEdG8iXQoUQ29udGFpbmVyU2V0dGluZ3NEdG8SEAoIZGF0YV9kaXIYASABKAkSEgoKbW91bnRfcGF0aBgCIAEoCRIfChdmaXJzdF9ydW5fY2hlY2tfZW5hYmxlZBgDIAEoCCI5CgtUaXBFbnRyeUR0bxIKCgJpZBgBIAEoCRIMCgR0ZXh0GAIgASgJEhAKCGNhdGVnb3J5GAMgASgJIn4KD1RpcHNSZXNwb25zZUR0bxIWCg5zY2hlbWFfdmVyc2lvbhgBIAEoCRIOCgZsb2NhbGUYAiABKAkSEgoKdXBkYXRlZF9hdBgDIAEoCRIvCgR0aXBzGAQgAygLMiEuaGFnaWNvZGUucGxhdGZvcm0udjEuVGlwRW50cnlEdG8iPQoPUHJvbW90ZUltYWdlRHRvEgsKA3VybBgBIAEoCRINCgV3aWR0aBgCIAEoBRIOCgZoZWlnaHQYAyABKAUiqgEKDlByb21vdGVJdGVtRHRvEgoKAmlkGAEgASgJEg0KBXRpdGxlGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhYKCWN0YV9sYWJlbBgEIAEoCUgAiAEBEgwKBGxpbmsYBSABKAkSNAoFaW1hZ2UYBiABKAsyJS5oYWdpY29kZS5wbGF0Zm9ybS52MS5Qcm9tb3RlSW1hZ2VEdG9CDAoKX2N0YV9sYWJlbCJuChNQcm9tb3Rlc1Jlc3BvbnNlRHRvEg4KBmxvY2FsZRgBIAEoCRISCgp1cGRhdGVkX2F0GAIgASgJEjMKBWl0ZW1zGAMgAygLMiQuaGFnaWNvZGUucGxhdGZvcm0udjEuUHJvbW90ZUl0ZW1EdG8i7gEKD0FnZW50Q2xpSWNvbkR0bxIRCglhdmF0YXJfaWQYASABKAkSMgoOdXBkYXRlZF9hdF91dGMYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEloKFHByZXZpZXdfdXJsc19ieV9zaXplGAMgAygLMjwuaGFnaWNvZGUucGxhdGZvcm0udjEuQWdlbnRDbGlJY29uRHRvLlByZXZpZXdVcmxzQnlTaXplRW50cnkaOAoWUHJldmlld1VybHNCeVNpemVFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIpUGChZIZXJvQWdlbnRDbGlTZXR0aW5nRHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDgoGZmFtaWx5GAMgASgJEhEKBGljb24YBCABKAlIAIgBARIUCgxzb3VyY2VfbGFiZWwYBSABKAkSFQoNcHJvdmlkZXJfdHlwZRgGIAEoCRISCgpzb3J0X29yZGVyGAcgASgFEhQKDGlzX3JlYWRfb25seRgIIAEoCBJfChJkZWZhdWx0X3BhcmFtZXRlcnMYCSADKAsyQy5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvQWdlbnRDbGlTZXR0aW5nRHRvLkRlZmF1bHRQYXJhbWV0ZXJzRW50cnkSEgoKaXNfZW5hYmxlZBgKIAEoCBIPCgdpc19iZXRhGAsgASgIEhgKEGlzX2NsaV9hdmFpbGFibGUYDCABKAgSGAoLY2xpX3ZlcnNpb24YDSABKAlIAYgBARI6CgtjdXN0b21faWNvbhgOIAEoCzIlLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkFnZW50Q2xpSWNvbkR0bxIaChJzdXBwb3J0ZWRfZmVhdHVyZXMYDyADKAkSKAobYnVpbHRfaW5fc2tpbGxzX3JlYXNvbl9jb2RlGBAgASgJSAKIAQESJAoXaW1hZ2VfaW5wdXRfcmVhc29uX2NvZGUYESABKAlIA4gBARIkChxtb2RlbF9pbWFnZV9pbnB1dHNfYXZhaWxhYmxlGBIgASgIElAKEm1vZGVsX2ltYWdlX2lucHV0cxgTIAMoCzI0LmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9BZ2VudENsaU1vZGVsSW1hZ2VJbnB1dER0bxo4ChZEZWZhdWx0UGFyYW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCBwoFX2ljb25CDgoMX2NsaV92ZXJzaW9uQh4KHF9idWlsdF9pbl9za2lsbHNfcmVhc29uX2NvZGVCGgoYX2ltYWdlX2lucHV0X3JlYXNvbl9jb2RlIn0KHkhlcm9BZ2VudENsaU1vZGVsSW1hZ2VJbnB1dER0bxIQCghwcm92aWRlchgBIAEoCRIQCghtb2RlbF9pZBgCIAEoCRINCgVpbnB1dBgDIAEoCRIYCgtyZWFzb25fY29kZRgEIAEoCUgAiAEBQg4KDF9yZWFzb25fY29kZSJ/ChtIZXJvTW9kZWxGaWVsZENvbnN0cmFpbnREdG8SCwoDa2V5GAEgASgJEhMKC2lzX3JlcXVpcmVkGAIgASgIEhQKDGlzX3JlYWRfb25seRgDIAEoCBIYCgtkZXNjcmlwdGlvbhgEIAEoCUgAiAEBQg4KDF9kZXNjcmlwdGlvbiKeBQoTSGVyb01vZGVsU2V0dGluZ0R0bxIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg4KBmZhbWlseRgDIAEoCRIUCgxhZ2VudF9jbGlfaWQYBCABKAkSGAoQYWdlbnRfY2xpX2ZhbWlseRgFIAEoCRIUCgdzdW1tYXJ5GAYgASgJSACIAQESEQoEaWNvbhgHIAEoCUgBiAEBEhQKDHNvdXJjZV9sYWJlbBgIIAEoCRISCgpzb3J0X29yZGVyGAkgASgFEhYKDnN1cHBvcnRzX2ltYWdlGAogASgIEhQKDGlzX3JlYWRfb25seRgLIAEoCBITCgtpc19lZGl0YWJsZRgMIAEoCBIOCgZzb3VyY2UYDSABKAkSGgoSc291cmNlX3RlbXBsYXRlX2lkGA4gASgJEiMKG2NvbXBhdGlibGVfcHJpbWFyeV9mYW1pbGllcxgPIAMoCRJcChJkZWZhdWx0X3BhcmFtZXRlcnMYECADKAsyQC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxTZXR0aW5nRHRvLkRlZmF1bHRQYXJhbWV0ZXJzRW50cnkSTAoRZmllbGRfY29uc3RyYWludHMYESADKAsyMS5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxGaWVsZENvbnN0cmFpbnREdG8SSwoTbWFncGllX2NhcGFiaWxpdGllcxgSIAEoCzIuLmhhZ2ljb2RlLmNvbmZpZy52MS5NYWdwaWVNb2RlbENhdGFsb2dFbnRyeUR0bxo4ChZEZWZhdWx0UGFyYW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCCgoIX3N1bW1hcnlCBwoFX2ljb24iyQIKEkhlcm9Nb2RlbEJyYW5jaER0bxIUCgxhZ2VudF9jbGlfaWQYASABKAkSFgoOYWdlbnRfY2xpX25hbWUYAiABKAkSGAoQYWdlbnRfY2xpX2ZhbWlseRgDIAEoCRJHChRzeXN0ZW1fZGVmYXVsdF9pdGVtcxgEIAMoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9Nb2RlbFNldHRpbmdEdG8SPwoMY3VzdG9tX2l0ZW1zGAUgAygLMikuaGFnaWNvZGUucGxhdGZvcm0udjEuSGVyb01vZGVsU2V0dGluZ0R0bxIcChRtb2RlbF9jYXRhbG9nX3NvdXJjZRgHIAEoCUoECAYQB0oECAgQCVIcdXNlX29tbmlfcm91dGVfbW9kZWxfY2F0YWxvZ1IZb21uaV9yb3V0ZV9jYXRhbG9nX3N0YXR1cyKRAQoRSGVyb1NvdWxQcmVzZXREdG8SCgoCaWQYASABKAkSFgoJbGFiZWxfa2V5GAIgASgJSACIAQESGAoLc3VtbWFyeV9rZXkYAyABKAlIAYgBARIMCgRzb3VsGAQgASgJEhIKCnNvcnRfb3JkZXIYBSABKAVCDAoKX2xhYmVsX2tleUIOCgxfc3VtbWFyeV9rZXkidAoSSGVyb1RyYWl0UHJlc2V0RHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSFAoHc3VtbWFyeRgDIAEoCUgAiAEBEg4KBnByb21wdBgEIAEoCRISCgpzb3J0X29yZGVyGAUgASgFQgoKCF9zdW1tYXJ5ItMBChVNb2RlbENhdGFsb2dTdGF0dXNEdG8SDgoGc291cmNlGAEgASgJEg8KB3ZlcnNpb24YAiABKAkSMAoMcHVibGlzaGVkX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBItCglsb2FkZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhAKCGlzX3N0YWxlGAUgASgIEhcKCmxhc3RfZXJyb3IYBiABKAlIAIgBAUINCgtfbGFzdF9lcnJvciJhChxPcGVuQ29kZU1vZGVsQ2F0YWxvZ0VudHJ5RHRvEhMKC3Byb3ZpZGVyX2lkGAEgASgJEhAKCG1vZGVsX2lkGAIgASgJEhoKEnF1YWxpZmllZF9tb2RlbF9pZBgDIAEoCSLfAgodT3BlbkNvZGVNb2RlbENhdGFsb2dTdGF0dXNEdG8SQwoHZW50cmllcxgBIAMoCzIyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9wZW5Db2RlTW9kZWxDYXRhbG9nRW50cnlEdG8SNQoRbGFzdF9hdHRlbXB0ZWRfYXQYAiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEj4KGmxhc3Rfc3VjY2Vzc2Z1bF9yZWZyZXNoX2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIQCghpc19zdGFsZRgEIAEoCBIOCgZzb3VyY2UYBSABKAkSFwoKbGFzdF9lcnJvchgGIAEoCUgAiAEBEiAKE3JlZnJlc2hfZHVyYXRpb25fbXMYByABKAVIAYgBAUINCgtfbGFzdF9lcnJvckIWChRfcmVmcmVzaF9kdXJhdGlvbl9tcyL9BQoVSGVyb1N5c3RlbVNldHRpbmdzRHRvEkAKCmFnZW50X2NsaXMYASADKAsyLC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvQWdlbnRDbGlTZXR0aW5nRHRvEjkKBm1vZGVscxgCIAMoCzIpLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkhlcm9Nb2RlbFNldHRpbmdEdG8SQAoObW9kZWxfYnJhbmNoZXMYAyADKAsyKC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvTW9kZWxCcmFuY2hEdG8SYgoUY29tcGF0aWJpbGl0eV9tYXRyaXgYBCADKAsyRC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvU3lzdGVtU2V0dGluZ3NEdG8uQ29tcGF0aWJpbGl0eU1hdHJpeEVudHJ5Ej8KDXRyYWl0X3ByZXNldHMYBSADKAsyKC5oYWdpY29kZS5wbGF0Zm9ybS52MS5IZXJvVHJhaXRQcmVzZXREdG8SPQoMc291bF9wcmVzZXRzGAYgAygLMicuaGFnaWNvZGUucGxhdGZvcm0udjEuSGVyb1NvdWxQcmVzZXREdG8SQgoNbW9kZWxfY2F0YWxvZxgHIAEoCzIrLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk1vZGVsQ2F0YWxvZ1N0YXR1c0R0bxJUChdvcGVuX2NvZGVfbW9kZWxfY2F0YWxvZxgIIAEoCzIzLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLk9wZW5Db2RlTW9kZWxDYXRhbG9nU3RhdHVzRHRvGlIKGENvbXBhdGliaWxpdHlNYXRyaXhFbnRyeRILCgNrZXkYASABKAkSJQoFdmFsdWUYAiABKAsyFi5nb29nbGUucHJvdG9idWYuVmFsdWU6AjgBSgQICRAKSgQIChALSgQICxAMUhNvbW5pX3JvdXRlX3NldHRpbmdzUhJvbW5pX3JvdXRlX3J1bnRpbWVSGG9tbmlfcm91dGVfbW9kZWxfY2F0YWxvZzLDBAoNU3lzdGVtU2VydmljZRJ9ChRHZXRDb250YWluZXJTZXR0aW5ncxIxLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldENvbnRhaW5lclNldHRpbmdzUmVxdWVzdBoyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldENvbnRhaW5lclNldHRpbmdzUmVzcG9uc2USdAoRR2V0RGVwbG95bWVudEluZm8SLi5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXREZXBsb3ltZW50SW5mb1JlcXVlc3QaLy5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXREZXBsb3ltZW50SW5mb1Jlc3BvbnNlElYKB0dldFRpcHMSJC5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXRUaXBzUmVxdWVzdBolLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFRpcHNSZXNwb25zZRJiCgtHZXRQcm9tb3RlcxIoLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFByb21vdGVzUmVxdWVzdBopLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldFByb21vdGVzUmVzcG9uc2USgAEKFUdldEhlcm9TeXN0ZW1TZXR0aW5ncxIyLmhhZ2ljb2RlLnBsYXRmb3JtLnYxLkdldEhlcm9TeXN0ZW1TZXR0aW5nc1JlcXVlc3QaMy5oYWdpY29kZS5wbGF0Zm9ybS52MS5HZXRIZXJvU3lzdGVtU2V0dGluZ3NSZXNwb25zZUIqqgInUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLlBsYXRmb3JtLlYxYgZwcm90bzM", [file_google_protobuf_struct, file_google_protobuf_timestamp, file_hagicode_platform_v1_version, file_hagicode_config_v1_magpie]);
 
 /**
  * @generated from message hagicode.platform.v1.GetContainerSettingsRequest
@@ -644,6 +646,11 @@ export type HeroModelSettingDto = Message<"hagicode.platform.v1.HeroModelSetting
    * @generated from field: repeated hagicode.platform.v1.HeroModelFieldConstraintDto field_constraints = 17;
    */
   fieldConstraints: HeroModelFieldConstraintDto[];
+
+  /**
+   * @generated from field: hagicode.config.v1.MagpieModelCatalogEntryDto magpie_capabilities = 18;
+   */
+  magpieCapabilities?: MagpieModelCatalogEntryDto | undefined;
 };
 
 /**
@@ -652,48 +659,6 @@ export type HeroModelSettingDto = Message<"hagicode.platform.v1.HeroModelSetting
  */
 export const HeroModelSettingDtoSchema: GenMessage<HeroModelSettingDto> = /*@__PURE__*/
   messageDesc(file_hagicode_platform_v1_system, 20);
-
-/**
- * @generated from message hagicode.platform.v1.OmniRouteBranchCatalogStatusDto
- */
-export type OmniRouteBranchCatalogStatusDto = Message<"hagicode.platform.v1.OmniRouteBranchCatalogStatusDto"> & {
-  /**
-   * @generated from field: bool enabled = 1;
-   */
-  enabled: boolean;
-
-  /**
-   * @generated from field: string source = 2;
-   */
-  source: string;
-
-  /**
-   * @generated from field: bool is_stale = 3;
-   */
-  isStale: boolean;
-
-  /**
-   * @generated from field: optional string last_error = 4;
-   */
-  lastError?: string | undefined;
-
-  /**
-   * @generated from field: int32 entry_count = 5;
-   */
-  entryCount: number;
-
-  /**
-   * @generated from field: optional string api_endpoint = 6;
-   */
-  apiEndpoint?: string | undefined;
-};
-
-/**
- * Describes the message hagicode.platform.v1.OmniRouteBranchCatalogStatusDto.
- * Use `create(OmniRouteBranchCatalogStatusDtoSchema)` to create a new message.
- */
-export const OmniRouteBranchCatalogStatusDtoSchema: GenMessage<OmniRouteBranchCatalogStatusDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 21);
 
 /**
  * @generated from message hagicode.platform.v1.HeroModelBranchDto
@@ -725,19 +690,9 @@ export type HeroModelBranchDto = Message<"hagicode.platform.v1.HeroModelBranchDt
   customItems: HeroModelSettingDto[];
 
   /**
-   * @generated from field: bool use_omni_route_model_catalog = 6;
-   */
-  useOmniRouteModelCatalog: boolean;
-
-  /**
    * @generated from field: string model_catalog_source = 7;
    */
   modelCatalogSource: string;
-
-  /**
-   * @generated from field: hagicode.platform.v1.OmniRouteBranchCatalogStatusDto omni_route_catalog_status = 8;
-   */
-  omniRouteCatalogStatus?: OmniRouteBranchCatalogStatusDto | undefined;
 };
 
 /**
@@ -745,7 +700,7 @@ export type HeroModelBranchDto = Message<"hagicode.platform.v1.HeroModelBranchDt
  * Use `create(HeroModelBranchDtoSchema)` to create a new message.
  */
 export const HeroModelBranchDtoSchema: GenMessage<HeroModelBranchDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 22);
+  messageDesc(file_hagicode_platform_v1_system, 21);
 
 /**
  * @generated from message hagicode.platform.v1.HeroSoulPresetDto
@@ -782,7 +737,7 @@ export type HeroSoulPresetDto = Message<"hagicode.platform.v1.HeroSoulPresetDto"
  * Use `create(HeroSoulPresetDtoSchema)` to create a new message.
  */
 export const HeroSoulPresetDtoSchema: GenMessage<HeroSoulPresetDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 23);
+  messageDesc(file_hagicode_platform_v1_system, 22);
 
 /**
  * @generated from message hagicode.platform.v1.HeroTraitPresetDto
@@ -819,7 +774,7 @@ export type HeroTraitPresetDto = Message<"hagicode.platform.v1.HeroTraitPresetDt
  * Use `create(HeroTraitPresetDtoSchema)` to create a new message.
  */
 export const HeroTraitPresetDtoSchema: GenMessage<HeroTraitPresetDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 24);
+  messageDesc(file_hagicode_platform_v1_system, 23);
 
 /**
  * @generated from message hagicode.platform.v1.ModelCatalogStatusDto
@@ -861,195 +816,7 @@ export type ModelCatalogStatusDto = Message<"hagicode.platform.v1.ModelCatalogSt
  * Use `create(ModelCatalogStatusDtoSchema)` to create a new message.
  */
 export const ModelCatalogStatusDtoSchema: GenMessage<ModelCatalogStatusDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 25);
-
-/**
- * @generated from message hagicode.platform.v1.OmniRouteModelCatalogEntryDto
- */
-export type OmniRouteModelCatalogEntryDto = Message<"hagicode.platform.v1.OmniRouteModelCatalogEntryDto"> & {
-  /**
-   * @generated from field: string provider_id = 1;
-   */
-  providerId: string;
-
-  /**
-   * @generated from field: string model_id = 2;
-   */
-  modelId: string;
-
-  /**
-   * @generated from field: string qualified_model_id = 3;
-   */
-  qualifiedModelId: string;
-
-  /**
-   * @generated from field: string owned_by = 4;
-   */
-  ownedBy: string;
-};
-
-/**
- * Describes the message hagicode.platform.v1.OmniRouteModelCatalogEntryDto.
- * Use `create(OmniRouteModelCatalogEntryDtoSchema)` to create a new message.
- */
-export const OmniRouteModelCatalogEntryDtoSchema: GenMessage<OmniRouteModelCatalogEntryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 26);
-
-/**
- * @generated from message hagicode.platform.v1.OmniRouteModelCatalogStatusDto
- */
-export type OmniRouteModelCatalogStatusDto = Message<"hagicode.platform.v1.OmniRouteModelCatalogStatusDto"> & {
-  /**
-   * @generated from field: repeated hagicode.platform.v1.OmniRouteModelCatalogEntryDto entries = 1;
-   */
-  entries: OmniRouteModelCatalogEntryDto[];
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_attempted_at_utc = 2;
-   */
-  lastAttemptedAtUtc?: Timestamp | undefined;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_successful_refresh_at_utc = 3;
-   */
-  lastSuccessfulRefreshAtUtc?: Timestamp | undefined;
-
-  /**
-   * @generated from field: bool is_stale = 4;
-   */
-  isStale: boolean;
-
-  /**
-   * @generated from field: string source = 5;
-   */
-  source: string;
-
-  /**
-   * @generated from field: optional string last_error = 6;
-   */
-  lastError?: string | undefined;
-
-  /**
-   * @generated from field: optional int32 refresh_duration_ms = 7;
-   */
-  refreshDurationMs?: number | undefined;
-
-  /**
-   * @generated from field: optional string api_endpoint = 8;
-   */
-  apiEndpoint?: string | undefined;
-};
-
-/**
- * Describes the message hagicode.platform.v1.OmniRouteModelCatalogStatusDto.
- * Use `create(OmniRouteModelCatalogStatusDtoSchema)` to create a new message.
- */
-export const OmniRouteModelCatalogStatusDtoSchema: GenMessage<OmniRouteModelCatalogStatusDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 27);
-
-/**
- * @generated from message hagicode.platform.v1.OmniRouteRuntimeStatusDto
- */
-export type OmniRouteRuntimeStatusDto = Message<"hagicode.platform.v1.OmniRouteRuntimeStatusDto"> & {
-  /**
-   * @generated from field: string status = 1;
-   */
-  status: string;
-
-  /**
-   * @generated from field: optional int32 managed_process_id = 2;
-   */
-  managedProcessId?: number | undefined;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_attempted_at_utc = 3;
-   */
-  lastAttemptedAtUtc?: Timestamp | undefined;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_started_at_utc = 4;
-   */
-  lastStartedAtUtc?: Timestamp | undefined;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_healthy_at_utc = 5;
-   */
-  lastHealthyAtUtc?: Timestamp | undefined;
-
-  /**
-   * @generated from field: optional string last_error = 6;
-   */
-  lastError?: string | undefined;
-
-  /**
-   * @generated from field: optional string base_url = 7;
-   */
-  baseUrl?: string | undefined;
-
-  /**
-   * @generated from field: bool owns_runtime = 8;
-   */
-  ownsRuntime: boolean;
-
-  /**
-   * @generated from field: optional string status_message = 9;
-   */
-  statusMessage?: string | undefined;
-};
-
-/**
- * Describes the message hagicode.platform.v1.OmniRouteRuntimeStatusDto.
- * Use `create(OmniRouteRuntimeStatusDtoSchema)` to create a new message.
- */
-export const OmniRouteRuntimeStatusDtoSchema: GenMessage<OmniRouteRuntimeStatusDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 28);
-
-/**
- * @generated from message hagicode.platform.v1.OmniRouteSettingsDto
- */
-export type OmniRouteSettingsDto = Message<"hagicode.platform.v1.OmniRouteSettingsDto"> & {
-  /**
-   * @generated from field: bool enabled = 1;
-   */
-  enabled: boolean;
-
-  /**
-   * @generated from field: bool enabled_managed_startup = 2;
-   */
-  enabledManagedStartup: boolean;
-
-  /**
-   * @generated from field: optional string api_endpoint = 3;
-   */
-  apiEndpoint?: string | undefined;
-
-  /**
-   * @generated from field: bool has_api_key = 4;
-   */
-  hasApiKey: boolean;
-
-  /**
-   * @generated from field: optional int32 managed_port = 5;
-   */
-  managedPort?: number | undefined;
-
-  /**
-   * @generated from field: map<string, bool> use_model_catalog_by_agent_cli_id = 6;
-   */
-  useModelCatalogByAgentCliId: { [key: string]: boolean };
-
-  /**
-   * @generated from field: google.protobuf.Timestamp updated_at_utc = 7;
-   */
-  updatedAtUtc?: Timestamp | undefined;
-};
-
-/**
- * Describes the message hagicode.platform.v1.OmniRouteSettingsDto.
- * Use `create(OmniRouteSettingsDtoSchema)` to create a new message.
- */
-export const OmniRouteSettingsDtoSchema: GenMessage<OmniRouteSettingsDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 29);
+  messageDesc(file_hagicode_platform_v1_system, 24);
 
 /**
  * @generated from message hagicode.platform.v1.OpenCodeModelCatalogEntryDto
@@ -1076,7 +843,7 @@ export type OpenCodeModelCatalogEntryDto = Message<"hagicode.platform.v1.OpenCod
  * Use `create(OpenCodeModelCatalogEntryDtoSchema)` to create a new message.
  */
 export const OpenCodeModelCatalogEntryDtoSchema: GenMessage<OpenCodeModelCatalogEntryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 30);
+  messageDesc(file_hagicode_platform_v1_system, 25);
 
 /**
  * @generated from message hagicode.platform.v1.OpenCodeModelCatalogStatusDto
@@ -1123,7 +890,7 @@ export type OpenCodeModelCatalogStatusDto = Message<"hagicode.platform.v1.OpenCo
  * Use `create(OpenCodeModelCatalogStatusDtoSchema)` to create a new message.
  */
 export const OpenCodeModelCatalogStatusDtoSchema: GenMessage<OpenCodeModelCatalogStatusDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 31);
+  messageDesc(file_hagicode_platform_v1_system, 26);
 
 /**
  * @generated from message hagicode.platform.v1.HeroSystemSettingsDto
@@ -1168,21 +935,6 @@ export type HeroSystemSettingsDto = Message<"hagicode.platform.v1.HeroSystemSett
    * @generated from field: hagicode.platform.v1.OpenCodeModelCatalogStatusDto open_code_model_catalog = 8;
    */
   openCodeModelCatalog?: OpenCodeModelCatalogStatusDto | undefined;
-
-  /**
-   * @generated from field: hagicode.platform.v1.OmniRouteSettingsDto omni_route_settings = 9;
-   */
-  omniRouteSettings?: OmniRouteSettingsDto | undefined;
-
-  /**
-   * @generated from field: hagicode.platform.v1.OmniRouteRuntimeStatusDto omni_route_runtime = 10;
-   */
-  omniRouteRuntime?: OmniRouteRuntimeStatusDto | undefined;
-
-  /**
-   * @generated from field: hagicode.platform.v1.OmniRouteModelCatalogStatusDto omni_route_model_catalog = 11;
-   */
-  omniRouteModelCatalog?: OmniRouteModelCatalogStatusDto | undefined;
 };
 
 /**
@@ -1190,7 +942,7 @@ export type HeroSystemSettingsDto = Message<"hagicode.platform.v1.HeroSystemSett
  * Use `create(HeroSystemSettingsDtoSchema)` to create a new message.
  */
 export const HeroSystemSettingsDtoSchema: GenMessage<HeroSystemSettingsDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_platform_v1_system, 32);
+  messageDesc(file_hagicode_platform_v1_system, 27);
 
 /**
  * @generated from service hagicode.platform.v1.SystemService
