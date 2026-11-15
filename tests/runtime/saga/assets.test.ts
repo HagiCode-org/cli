@@ -91,6 +91,31 @@ describe('bundled Saga assets', () => {
     expect(runPrompt).toContain('latest quota reading (provider, remaining percent, reset time and seconds waited)');
   });
 
+  it('has the run prompt give each Worker the master session ID and the steer command, and wait for the answer', () => {
+    const runPrompt = readFileSync(path.join(bundleRoot, 'prompts/run.md'), 'utf8');
+
+    expect(runPrompt).toContain('your own session ID as its master session ID (`HAGI_SESSION_ID`)');
+    expect(runPrompt).toContain('hagi chat send --session-id <master-id> --content "<question>" --steer');
+    expect(runPrompt).toContain('wait for your answer before it continues any work that depends on that answer');
+  });
+
+  it('has the run prompt recognize and answer inbound Worker questions before dispatch, and document the Worker interrupt', () => {
+    const runPrompt = readFileSync(path.join(bundleRoot, 'prompts/run.md'), 'utf8');
+
+    expect(runPrompt).toContain('recognize each unanswered Worker question in your session and answer it before you continue dispatch');
+    expect(runPrompt).toContain('hagi chat send --session-id <worker-session-id> --content "<answer>" --steer');
+    expect(runPrompt).toContain('Steer a Worker to interrupt it');
+    expect(runPrompt).toContain('on a shared-file conflict with another Worker');
+  });
+
+  it('has the run prompt restate that Steer grants no write authority and only the orchestrator writes the record', () => {
+    const runPrompt = readFileSync(path.join(bundleRoot, 'prompts/run.md'), 'utf8');
+
+    expect(runPrompt).toContain('grants a Worker no write authority');
+    expect(runPrompt).toContain('only you tick, block or write the Saga record');
+    expect(runPrompt).toContain('never changes who ticks, blocks or writes the Saga record');
+  });
+
   it('has every --max-wait in the run prompt be a finite number and no unbounded wait', () => {
     const runPrompt = readFileSync(path.join(bundleRoot, 'prompts/run.md'), 'utf8');
     const maxWaits = [...runPrompt.matchAll(/--max-wait (\S+)/g)].map(match => match[1]);
