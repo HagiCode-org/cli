@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), local Sagas, vaults and their files, chat sessions, HagiTasks, scheduled plans, and skills (local list, enable, disable and uninstall, gallery search and install, and trusted providers). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), local Sagas, vaults and their files, chat sessions, HagiTasks, scheduled plans, and built-in skills (local list, enable and disable). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
@@ -173,9 +173,7 @@ hagi
 |-- chat      list | get | messages | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
-|-- skills    local list | enable | disable | uninstall
-|             gallery search | detail | install
-|             trusted list | upsert | delete | reset
+|-- skills    local list | enable | disable
 |-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 `-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
 ```
@@ -734,67 +732,6 @@ Turn a built-in skill on or off by name. The change applies to agent runs that s
 ```bash
 hagi skills local enable --skill-name hagi
 hagi skills local disable --skill-name hagi --json
-```
-
-Built-in skills cannot be uninstalled. Use `skills local disable` to stop one from loading. Remove a user skill by name:
-
-```bash
-SKILL_NAME=demo-skill
-hagi skills local uninstall --skill-name "$SKILL_NAME"
-```
-
-The uninstall result reports a status such as `Succeeded` or `PrerequisiteMissing`, with the backend message. Passing a built-in skill's name returns the backend's refusal unchanged.
-
-Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
-
-Search the gallery and read one skill:
-
-```bash
-hagi skills gallery search --query react
-hagi skills gallery search --query react --json
-hagi skills gallery detail --id vercel-react-best-practices --source vercel-labs/agent-skills
-```
-
-`gallery detail` also shows third-party audit ratings for the skill, supplied by skills.sh (providers such as `ath`, `socket` and `snyk`). In `--json` output every detail field is unchanged and an `audit` object is added. It lists one entry per provider that supplied data; `risk`, `alerts`, `score` and `analyzedAt` appear only when the backend has them:
-
-```json
-{
-  "id": "vercel-react-best-practices",
-  "source": "vercel-labs/agent-skills",
-  "...": "all other detail fields",
-  "audit": {
-    "providers": [
-      { "provider": "ath", "risk": "low", "alerts": 0, "score": 92, "analyzedAt": "2026-10-30T08:00:00Z" },
-      { "provider": "socket", "risk": "medium", "alerts": 2 }
-    ]
-  }
-}
-```
-
-In human output the detail table is followed by one line per provider, for example `skills.sh audit (socket): risk=medium, alerts=2, score=--, analyzedAt=--`, where `--` marks a value the backend did not supply.
-
-The audit is best-effort. If the audit call fails, times out or has no data, the detail still prints and the command exits `0`; in `--json` output `audit.providers` is then `[]`, never missing. The backend bounds the audit wait, and the CLI adds no timeout of its own. A failure of the detail call itself fails the command as before, and the audit never hides it. The audit does not change the install command preview or whether the skill is installable.
-
-Start a managed install of a gallery skill. This writes the skill into your local skill directories, so run it only when you intend to install it:
-
-```bash
-hagi skills gallery install \
-  --id vercel-react-best-practices \
-  --source vercel-labs/agent-skills \
-  --skill-slug vercel-react-best-practices
-```
-
-Manage the trusted provider directory. `upsert` reads a JSON document from `--input <file>` or `--input -`:
-
-```bash
-hagi skills trusted list
-cat > provider.json <<'EOF'
-{"providerId":"example-provider","displayName":"Example","isEnabled":true,"sortOrder":50,"matchRules":[{"matchType":"owner","value":"example"}]}
-EOF
-hagi skills trusted upsert --input provider.json
-cat provider.json | hagi skills trusted upsert --input - --json
-hagi skills trusted delete --provider-id example-provider
-hagi skills trusted reset
 ```
 
 ## Usage Commands

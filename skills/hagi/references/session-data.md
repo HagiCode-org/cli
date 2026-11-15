@@ -147,9 +147,6 @@ when the user explicitly asks for that change. Contract and lifecycle operations
 
 ```bash
 hagi skills local list --json
-hagi skills gallery search --query <keyword> --json
-hagi skills gallery detail --id <gallery-id> --source <source> --json
-hagi skills trusted list --json
 ```
 
 `hagi skills local list --json` returns one item per installed skill. Read these fields from each item:
@@ -157,7 +154,7 @@ hagi skills trusted list --json
 - `origin`: `user` for a skill the user installed, `built-in` for a skill the server ships. An item with no `origin` is a user skill.
 - `builtIn.enabled`: whether a built-in skill is on. It is present only for built-in skills. For user skills, availability does not apply.
 - `builtIn.version`: the version the release recorded for a built-in skill. It may be absent.
-- `managedInstallMetadata.version`: the version of a user skill installed through the gallery, when recorded.
+- `managedInstallMetadata.version`: the version of a user skill, when recorded.
 
 ## State-changing commands
 
@@ -174,7 +171,7 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `hagitask` | `create`, `send`, `answer` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
 | `saga` | `init`, `new`, `session create` |
-| `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
+| `skills` | `local enable`, `local disable` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
 
