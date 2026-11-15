@@ -47,23 +47,10 @@ import {
   PresetTasksService,
 } from '../generated/grpc/hagicode/community/v1/preset_tasks_pb';
 import {
-  DeleteTrustedSkillProviderRequestDtoSchema,
-  DeleteTrustedSkillProviderResponseSchema,
   GetLocalSkillsResponseSchema,
-  GetSkillGalleryAuditResponseSchema,
-  GetSkillGalleryDetailResponseSchema,
-  GetSkillGalleryResponseSchema,
-  GetTrustedSkillProvidersResponseSchema,
-  InstallSkillRequestDtoSchema,
-  InstallSkillResponseSchema,
-  ResetTrustedSkillProvidersResponseSchema,
   SetBuiltInSkillAvailabilityRequestDtoSchema,
   SetBuiltInSkillAvailabilityResponseSchema,
   SkillGalleryService,
-  UninstallLocalSkillRequestDtoSchema,
-  UninstallLocalSkillResponseSchema,
-  UpsertTrustedSkillProviderRequestDtoSchema,
-  UpsertTrustedSkillProviderResponseSchema,
 } from '../generated/grpc/hagicode/community/v1/skill_gallery_pb';
 import {
   GetAggregatedDataResponseSchema,
@@ -165,16 +152,7 @@ import type { PCode_Web_Controllers_ScheduledPlanResponse } from '../generated/a
 import type { PCode_Web_Controllers_ScheduledPlanRunAcceptedDto } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanRunAcceptedDto';
 import type { PCode_Web_Controllers_ScheduledPlanSaveRequest } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanSaveRequest';
 import type { PCode_Web_Controllers_UpdateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_UpdateSessionRequest';
-import type { PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto';
-import type { PCode_Application_Contracts_Dto_InstallSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_InstallSkillRequestDto';
-import type { PCode_Application_Contracts_Dto_InstallSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_InstallSkillResultDto';
 import type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
-import type { PCode_Application_Contracts_Dto_SkillGalleryDetailDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SkillGalleryDetailDto';
-import type { PCode_Application_Contracts_Dto_SkillGalleryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_SkillGalleryResponseDto';
-import type { PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto';
-import type { PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto';
-import type { PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto';
-import type { PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto } from '../generated/api/models/PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto';
 
 export type ListSessionsInput = {
   type?: PCode_Models_SessionType;
@@ -182,26 +160,6 @@ export type ListSessionsInput = {
   includeArchived?: boolean;
   projectId?: string;
   projectIds?: string[];
-};
-
-/**
- * One provider's audit rating for a gallery skill. There is no generated REST model for it, so it is written by hand from
- * `SkillGalleryAuditProviderDto`. A value the backend did not supply is absent (not null).
- */
-export type SkillGalleryAuditProviderDto = {
-  provider: string;
-  risk?: string;
-  alerts?: number;
-  score?: number;
-  analyzedAt?: string;
-};
-
-/** The audit of one gallery skill. `providers` is empty when no provider supplied data. */
-export type SkillGalleryAuditDto = {
-  id: string;
-  source: string;
-  skillSlug: string;
-  providers: SkillGalleryAuditProviderDto[];
 };
 
 /** One page of a session's messages. `order` `desc` (the backend default) returns the newest messages first. */
@@ -510,20 +468,10 @@ export interface HagiApi {
   previewVaultFile(id: string, path: string): Promise<PCode_Application_Contracts_Dto_VaultFilePreviewResponseDto>;
   archiveChat(sessionId: string): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
   listLocalSkills(): Promise<PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto>;
-  uninstallLocalSkill(requestBody: PCode_Application_Contracts_Dto_UninstallLocalSkillRequestDto): Promise<PCode_Application_Contracts_Dto_UninstallLocalSkillResultDto>;
   /** Turns one built-in skill on or off. A failed result (for example an unknown slug) is returned with `succeeded` false. */
   setBuiltInSkillAvailability(
     requestBody: PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto,
   ): Promise<PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto>;
-  searchSkillGallery(query?: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryResponseDto>;
-  getSkillGalleryDetail(id: string, source: string): Promise<PCode_Application_Contracts_Dto_SkillGalleryDetailDto>;
-  /** Third-party audit ratings for a gallery skill. Empty `providers` means no data; the backend never answers with an error for that. */
-  getSkillGalleryAudit(id: string, source: string): Promise<SkillGalleryAuditDto>;
-  installGallerySkill(requestBody: PCode_Application_Contracts_Dto_InstallSkillRequestDto): Promise<PCode_Application_Contracts_Dto_InstallSkillResultDto>;
-  listTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
-  upsertTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_UpsertTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
-  deleteTrustedSkillProvider(requestBody: PCode_Application_Contracts_Dto_DeleteTrustedSkillProviderRequestDto): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
-  resetTrustedSkillProviders(): Promise<PCode_Application_Contracts_Dto_TrustedSkillProviderListResponseDto>;
   /** Takes a free lock or joins the queue. A repeated acquire by the holder changes nothing. */
   acquireLock(input: AcquireLockInput): Promise<LockStatusDto>;
   /** Reads the owner's lock state; `waitSeconds` long-polls. `signal` cancels the call. */
@@ -734,37 +682,11 @@ export function createGrpcHagiApi(): HagiApi {
     previewVaultFile: async (id, path) => result(GetVaultFilePreviewResponseSchema, vaults().getVaultFilePreview({ id, path })),
     archiveChat: async sessionId => result(ArchiveChatSessionResponseSchema, sessions().archiveChatSession({ sessionId })),
     listLocalSkills: async () => result(GetLocalSkillsResponseSchema, skills().getLocalSkills({})),
-    uninstallLocalSkill: async requestBody =>
-      result(
-        UninstallLocalSkillResponseSchema,
-        skills().uninstallLocalSkill({ body: dtoToProto(UninstallLocalSkillRequestDtoSchema, requestBody) }),
-      ),
     setBuiltInSkillAvailability: async requestBody =>
       result(
         SetBuiltInSkillAvailabilityResponseSchema,
         skills().setBuiltInSkillAvailability({ body: dtoToProto(SetBuiltInSkillAvailabilityRequestDtoSchema, requestBody) }),
       ),
-    searchSkillGallery: async query => result(GetSkillGalleryResponseSchema, skills().getSkillGallery({ query })),
-    getSkillGalleryDetail: async (id, source) =>
-      result(GetSkillGalleryDetailResponseSchema, skills().getSkillGalleryDetail({ id, source })),
-    getSkillGalleryAudit: async (id, source) =>
-      result(GetSkillGalleryAuditResponseSchema, skills().getSkillGalleryAudit({ id, source })),
-    installGallerySkill: async requestBody =>
-      result(InstallSkillResponseSchema, skills().installSkill({ body: dtoToProto(InstallSkillRequestDtoSchema, requestBody) })),
-    listTrustedSkillProviders: async () =>
-      result(GetTrustedSkillProvidersResponseSchema, skills().getTrustedSkillProviders({})),
-    upsertTrustedSkillProvider: async requestBody =>
-      result(
-        UpsertTrustedSkillProviderResponseSchema,
-        skills().upsertTrustedSkillProvider({ body: dtoToProto(UpsertTrustedSkillProviderRequestDtoSchema, requestBody) }),
-      ),
-    deleteTrustedSkillProvider: async requestBody =>
-      result(
-        DeleteTrustedSkillProviderResponseSchema,
-        skills().deleteTrustedSkillProvider({ body: dtoToProto(DeleteTrustedSkillProviderRequestDtoSchema, requestBody) }),
-      ),
-    resetTrustedSkillProviders: async () =>
-      result(ResetTrustedSkillProvidersResponseSchema, skills().resetTrustedSkillProviders({})),
     acquireLock: async input => {
       const response = await resourceLocks().acquireLock({
         lockId: input.lockId,

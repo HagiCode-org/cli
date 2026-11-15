@@ -450,15 +450,6 @@ export function createHagiTaskSchema(id = 'compose-commit') {
   };
 }
 
-const SKILL_TRUST = {
-  providerId: 'vercel',
-  displayName: 'Vercel',
-  badgeLabel: 'Vercel',
-  matchedRuleType: 'source',
-  matchedRuleValue: 'vercel/skills',
-  isPreset: true,
-};
-
 export function createLocalSkillInventory() {
   return {
     generatedAtUtc: '2026-10-16T00:00:00Z',
@@ -503,16 +494,6 @@ export function createLocalSkillInventory() {
   };
 }
 
-export function createUninstallResult(skillName: string) {
-  return {
-    skillName,
-    status: 'Succeeded',
-    userMessage: 'Skill uninstalled.',
-    diagnosticMessage: null,
-    occurredAt: '2026-10-16T00:00:00Z',
-  };
-}
-
 export function createBuiltInAvailabilityResult(slug: string, enabled: boolean, succeeded = true) {
   return {
     slug,
@@ -520,101 +501,6 @@ export function createBuiltInAvailabilityResult(slug: string, enabled: boolean, 
     succeeded,
     userMessage: succeeded ? `Built-in skill ${slug} is now ${enabled ? 'enabled' : 'disabled'}.` : `Unknown built-in skill: ${slug}.`,
     diagnosticMessage: null,
-  };
-}
-
-export function createSkillGallery() {
-  return {
-    generatedAtUtc: '2026-10-16T00:00:00Z',
-    items: [
-      {
-        id: 'react-best-practices',
-        name: 'React Best Practices',
-        source: 'vercel/skills',
-        installs: 1280,
-        isTrustedSource: true,
-        trustedProvider: SKILL_TRUST,
-      },
-      {
-        id: 'react-testing',
-        name: 'React Testing',
-        source: 'community/skills',
-        installs: 14,
-        isTrustedSource: false,
-        trustedProvider: null,
-      },
-    ],
-    repositoryDiscovery: null,
-  };
-}
-
-export function createSkillGalleryDetail() {
-  return {
-    id: 'react-best-practices',
-    source: 'vercel/skills',
-    skillSlug: 'react-best-practices',
-    description: 'Guidance for React components.',
-    repositoryName: 'skills',
-    repositoryFullName: 'vercel/skills',
-    repositoryUrl: 'https://github.com/vercel/skills',
-    repositoryDefaultBranch: 'main',
-    repositoryPrivate: false,
-    isInstallable: true,
-    isTrustedSource: true,
-    trustedProvider: SKILL_TRUST,
-    installReference: 'vercel/skills@react-best-practices',
-    installCommandPreview: 'npx skills add vercel/skills --skill react-best-practices',
-    installVersion: null,
-    installHint: null,
-  };
-}
-
-/** Two providers: `ath` supplies every value, `socket` supplies only risk and alerts, so its score and time show as `--`. */
-export function createSkillGalleryAudit() {
-  return {
-    id: 'react-best-practices',
-    source: 'vercel/skills',
-    skillSlug: 'react-best-practices',
-    providers: [
-      { provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' },
-      { provider: 'socket', risk: 'medium', alerts: 2 },
-    ],
-  };
-}
-
-export function createSkillInstallResult() {
-  return {
-    skillId: 'react-best-practices',
-    source: 'vercel/skills',
-    skillSlug: 'react-best-practices',
-    normalizedSkillKey: 'vercel/skills/react-best-practices',
-    installReference: 'vercel/skills@react-best-practices',
-    commandPreview: 'npx skills add vercel/skills --skill react-best-practices',
-    version: '1.2.0',
-    status: 'Succeeded',
-    userMessage: 'Skill installed.',
-    diagnosticMessage: null,
-    occurredAt: '2026-10-16T00:00:00Z',
-  };
-}
-
-export function createTrustedProviderList() {
-  return {
-    generatedAtUtc: '2026-10-16T00:00:00Z',
-    version: 3,
-    items: [
-      {
-        providerId: 'vercel',
-        displayName: 'Vercel',
-        badgeLabel: 'Vercel',
-        isPreset: true,
-        isEnabled: true,
-        sortOrder: 1,
-        ruleCount: 2,
-        sourceExamples: ['vercel/skills'],
-        matchRules: [{ matchType: 'owner', value: 'vercel' }],
-      },
-    ],
   };
 }
 
@@ -701,16 +587,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     previewVaultFile: vi.fn().mockResolvedValue(createVaultFilePreview()),
     archiveChat: vi.fn().mockResolvedValue({ message: 'Archived' }),
     listLocalSkills: vi.fn().mockResolvedValue(createLocalSkillInventory()),
-    uninstallLocalSkill: vi.fn().mockResolvedValue(createUninstallResult('demo-skill')),
     setBuiltInSkillAvailability: vi.fn().mockResolvedValue(createBuiltInAvailabilityResult('hagi', true)),
-    searchSkillGallery: vi.fn().mockResolvedValue(createSkillGallery()),
-    getSkillGalleryDetail: vi.fn().mockResolvedValue(createSkillGalleryDetail()),
-    getSkillGalleryAudit: vi.fn().mockResolvedValue(createSkillGalleryAudit()),
-    installGallerySkill: vi.fn().mockResolvedValue(createSkillInstallResult()),
-    listTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
-    upsertTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
-    deleteTrustedSkillProvider: vi.fn().mockResolvedValue(createTrustedProviderList()),
-    resetTrustedSkillProviders: vi.fn().mockResolvedValue(createTrustedProviderList()),
     getMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
     saveMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
     initializeMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument({ repositories: [] })),

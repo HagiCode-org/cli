@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { createGrpcHagiApi } from '../../src/runtime/hagiApi';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createApiError, createDependencies, createSkillGalleryAudit, createSkillGalleryDetail } from './testHelpers';
+import { createDependencies } from './testHelpers';
 
 let tempDir: string;
 let restoreStdin: (() => void) | undefined;
@@ -74,55 +74,6 @@ describe('skills local commands', () => {
     });
   });
 
-  it('uninstalls one local skill and prints the returned status', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'local', 'uninstall', '--skill-name', 'demo-skill'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.uninstallLocalSkill).toHaveBeenCalledWith({ skillName: 'demo-skill' });
-    const output = stdout.join('');
-    expect(output).toContain('Succeeded');
-    expect(output).toContain('Skill uninstalled.');
-  });
-
-  it('says in uninstall help that built-in skills cannot be uninstalled and points to disable', async () => {
-    const { dependencies, stdout } = createDependencies();
-    const exitCode = await runCli(['node', 'hagi', 'skills', 'local', 'uninstall', '--help'], dependencies);
-
-    expect(exitCode).toBe(0);
-    // Help wraps at 100 columns, so the command name can break across lines.
-    const help = stdout.join('').replace(/\s+/g, ' ');
-    expect(help).toContain('Built-in skills cannot be uninstalled');
-    expect(help).toContain('skills local disable --skill-name <name>');
-  });
-
-  it('prints a backend refusal for a built-in uninstall unchanged and does not claim removal', async () => {
-    const refusal = {
-      skillName: 'hagi',
-      status: 'PrerequisiteMissing',
-      userMessage: 'Built-in skills cannot be uninstalled. Disable the skill instead.',
-      diagnosticMessage: null,
-      occurredAt: '2026-10-16T00:00:00Z',
-    };
-    const { dependencies, api, stdout } = createDependencies({
-      uninstallLocalSkill: vi.fn().mockResolvedValue(refusal),
-    });
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'local', 'uninstall', '--skill-name', 'hagi'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.uninstallLocalSkill).toHaveBeenCalledWith({ skillName: 'hagi' });
-    const output = stdout.join('');
-    expect(output).toMatch(/^status\s+PrerequisiteMissing$/m);
-    expect(output).toContain('Built-in skills cannot be uninstalled. Disable the skill instead.');
-    expect(output).not.toContain('Succeeded');
-  });
-
   it('documents enable and disable in help, including when the change takes effect', async () => {
     for (const action of ['enable', 'disable']) {
       const { dependencies, stdout } = createDependencies();
@@ -135,12 +86,12 @@ describe('skills local commands', () => {
     }
   });
 
-  it('lists list, enable, disable and uninstall under skills local', async () => {
+  it('lists list, enable and disable under skills local', async () => {
     const { dependencies, stdout } = createDependencies();
     await runCli(['node', 'hagi', 'skills', 'local', '--help'], dependencies);
 
     const help = stdout.join('');
-    for (const command of ['list', 'enable', 'disable', 'uninstall']) {
+    for (const command of ['list', 'enable', 'disable']) {
       expect(help).toMatch(new RegExp(`^\\s+${command}\\b`, 'm'));
     }
   });
@@ -213,166 +164,7 @@ describe('skills local commands', () => {
   });
 });
 
-describe('skills gallery commands', () => {
-  it('searches the gallery with the keyword and renders id, source, installs, and trust', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(['node', 'hagi', 'skills', 'gallery', 'search', '--query', 'react'], dependencies);
-
-    expect(exitCode).toBe(0);
-    expect(api.searchSkillGallery).toHaveBeenCalledWith('react');
-    const output = stdout.join('');
-    expect(output).toContain('Gallery skills (2)');
-    expect(output).toContain('react-best-practices');
-    expect(output).toContain('vercel/skills');
-    expect(output).toContain('1280');
-  });
-
-  it('omits the query when searching without a keyword', async () => {
-    const { dependencies, api } = createDependencies();
-    await runCli(['node', 'hagi', 'skills', 'gallery', 'search'], dependencies);
-
-    expect(api.searchSkillGallery).toHaveBeenCalledWith(undefined);
-  });
-
-  it('loads gallery detail with installability, trust summary, repository, and install preview', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.getSkillGalleryDetail).toHaveBeenCalledWith('react-best-practices', 'vercel/skills');
-    const output = stdout.join('');
-    expect(output).toContain('installable');
-    expect(output).toContain('Vercel');
-    expect(output).toContain('https://github.com/vercel/skills');
-    expect(output).toContain('npx skills add vercel/skills --skill react-best-practices');
-  });
-
-  it('adds an audit object to gallery detail JSON and keeps every detail field unchanged', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.getSkillGalleryAudit).toHaveBeenCalledWith('react-best-practices', 'vercel/skills');
-    expect(JSON.parse(stdout.join(''))).toEqual({
-      ...createSkillGalleryDetail(),
-      audit: { providers: createSkillGalleryAudit().providers },
-    });
-  });
-
-  it('appends one skills.sh audit line per provider after the detail fields, with -- for missing values', async () => {
-    const { dependencies, stdout } = createDependencies();
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    const output = stdout.join('');
-    expect(output).toContain('skills.sh audit (ath): risk=low, alerts=0, score=92, analyzedAt=2026-10-30T08:00:00Z');
-    expect(output).toContain('skills.sh audit (socket): risk=medium, alerts=2, score=--, analyzedAt=--');
-    expect(output.indexOf('installCommand')).toBeLessThan(output.indexOf('skills.sh audit (ath)'));
-  });
-
-  it('exits 0 with the detail output when the audit call is rejected, and keeps audit present and empty in JSON', async () => {
-    const audit = vi.fn().mockRejectedValue(createApiError(500, { error: 'Audit upstream unavailable' }));
-    const human = createDependencies({ getSkillGalleryAudit: audit });
-    const humanExit = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills'],
-      human.dependencies,
-    );
-
-    expect(humanExit).toBe(0);
-    expect(human.stdout.join('')).toContain('installable');
-    expect(human.stdout.join('')).not.toContain('skills.sh audit');
-
-    const json = createDependencies({ getSkillGalleryAudit: vi.fn().mockRejectedValue(createApiError(500, { error: 'down' })) });
-    const jsonExit = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
-      json.dependencies,
-    );
-
-    expect(jsonExit).toBe(0);
-    const payload = JSON.parse(json.stdout.join(''));
-    expect(payload.audit).toEqual({ providers: [] });
-    expect(payload.id).toBe('react-best-practices');
-  });
-
-  it('keeps audit present and empty in JSON when the audit reports no providers', async () => {
-    const { dependencies, stdout } = createDependencies({
-      getSkillGalleryAudit: vi.fn().mockResolvedValue({ ...createSkillGalleryAudit(), providers: [] }),
-    });
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(JSON.parse(stdout.join('')).audit).toEqual({ providers: [] });
-  });
-
-  it('fails with the detail error as before, and a successful audit does not mask it', async () => {
-    const detailError = createApiError(404, { error: 'Skill not found' });
-    const { dependencies, stdout, stderr } = createDependencies({
-      getSkillGalleryDetail: vi.fn().mockRejectedValue(detailError),
-    });
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'detail', '--id', 'missing', '--source', 'vercel/skills'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.HTTP_NOT_FOUND);
-    expect(stdout.join('')).toBe('');
-    expect(stderr.join('')).toContain('Skill not found');
-  });
-
-  it('starts a managed install and preserves the version token in the request and output', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(
-      [
-        'node', 'hagi', 'skills', 'gallery', 'install',
-        '--id', 'react-best-practices',
-        '--source', 'vercel/skills',
-        '--skill-slug', 'react-best-practices',
-        '--version', '1.2.0',
-        '--json',
-      ],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.installGallerySkill).toHaveBeenCalledWith({
-      id: 'react-best-practices',
-      source: 'vercel/skills',
-      skillSlug: 'react-best-practices',
-      version: '1.2.0',
-    });
-    const payload = JSON.parse(stdout.join(''));
-    expect(payload.installReference).toBe('vercel/skills@react-best-practices');
-    expect(payload.version).toBe('1.2.0');
-    expect(payload.status).toBe('Succeeded');
-  });
-
-  it('prints the normalized install reference, status, and diagnostic in human output', async () => {
-    const { dependencies, stdout } = createDependencies();
-    await runCli(
-      ['node', 'hagi', 'skills', 'gallery', 'install', '--id', 'x', '--source', 'vercel/skills', '--skill-slug', 'x'],
-      dependencies,
-    );
-
-    const output = stdout.join('');
-    expect(output).toContain('installReference');
-    expect(output).toContain('vercel/skills@react-best-practices');
-    expect(output).toContain('Succeeded');
-  });
-});
-
-describe('skills recommendation and install stream', () => {
+describe('skills recommend command', () => {
   it('rejects skills recommend as an unknown command and does not list it in skills help', async () => {
     const { dependencies } = createDependencies();
     const exitCode = await runCli(['node', 'hagi', 'skills', 'recommend'], dependencies);
@@ -382,116 +174,5 @@ describe('skills recommendation and install stream', () => {
     const help = createDependencies();
     await runCli(['node', 'hagi', 'skills', '--help'], help.dependencies);
     expect(help.stdout.join('')).not.toMatch(/^\s+recommend\b/m);
-  });
-
-  it('installs a gallery skill with the single install request and no stream method on the facade', async () => {
-    const { dependencies, api } = createDependencies();
-    const exitCode = await runCli(
-      [
-        'node', 'hagi', 'skills', 'gallery', 'install',
-        '--id', 'react-best-practices',
-        '--source', 'vercel/skills',
-        '--skill-slug', 'react-best-practices',
-      ],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.installGallerySkill).toHaveBeenCalledTimes(1);
-    const facadeMethods = Object.keys(createGrpcHagiApi());
-    expect(facadeMethods.filter(name => /stream|recommend/i.test(name))).toEqual([]);
-    expect(facadeMethods).toContain('installGallerySkill');
-  });
-});
-
-describe('skills trusted commands', () => {
-  it('lists trusted providers with id, name, enabled, preset, and rule count', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(['node', 'hagi', 'skills', 'trusted', 'list'], dependencies);
-
-    expect(exitCode).toBe(0);
-    expect(api.listTrustedSkillProviders).toHaveBeenCalledOnce();
-    const output = stdout.join('');
-    expect(output).toContain('Provider ID');
-    expect(output).toContain('vercel');
-    expect(output).toContain('Vercel');
-    expect(output).toContain('directory version 3');
-  });
-
-  it('upserts a provider from a JSON file and prints the updated snapshot', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const inputPath = join(tempDir, 'provider.json');
-    await writeFile(inputPath, JSON.stringify({
-      providerId: 'acme',
-      displayName: 'Acme',
-      isEnabled: true,
-      sortOrder: 2,
-      matchRules: [{ matchType: 'owner', value: 'acme' }],
-    }));
-
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'trusted', 'upsert', '--input', inputPath, '--json'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.upsertTrustedSkillProvider).toHaveBeenCalledWith({
-      providerId: 'acme',
-      displayName: 'Acme',
-      isEnabled: true,
-      sortOrder: 2,
-      matchRules: [{ matchType: 'owner', value: 'acme' }],
-    });
-    expect(JSON.parse(stdout.join('')).version).toBe(3);
-  });
-
-  it('sends the same upsert request whether the body comes from a file or stdin', async () => {
-    const body = { providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2, matchRules: [] };
-    const inputPath = join(tempDir, 'provider.json');
-    await writeFile(inputPath, JSON.stringify(body));
-
-    const fromFile = createDependencies();
-    await runCli(['node', 'hagi', 'skills', 'trusted', 'upsert', '--input', inputPath], fromFile.dependencies);
-
-    withStdin(JSON.stringify(body));
-    const fromStdin = createDependencies();
-    await runCli(['node', 'hagi', 'skills', 'trusted', 'upsert', '--input', '-'], fromStdin.dependencies);
-
-    expect(fromStdin.api.upsertTrustedSkillProvider).toHaveBeenCalledWith(
-      (fromFile.api.upsertTrustedSkillProvider as ReturnType<typeof vi.fn>).mock.calls[0][0],
-    );
-  });
-
-  it('rejects a non-object upsert document before sending any request', async () => {
-    const { dependencies, api, stderr } = createDependencies();
-    const inputPath = join(tempDir, 'provider.json');
-    await writeFile(inputPath, JSON.stringify(['not', 'an', 'object']));
-
-    const exitCode = await runCli(['node', 'hagi', 'skills', 'trusted', 'upsert', '--input', inputPath], dependencies);
-
-    expect(exitCode).toBe(EXIT_CODES.USAGE);
-    expect(api.upsertTrustedSkillProvider).not.toHaveBeenCalled();
-    expect(stderr.join('')).toContain('must be a JSON object');
-  });
-
-  it('deletes one provider by id and prints the refreshed snapshot', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(
-      ['node', 'hagi', 'skills', 'trusted', 'delete', '--provider-id', 'vercel'],
-      dependencies,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(api.deleteTrustedSkillProvider).toHaveBeenCalledWith({ providerId: 'vercel' });
-    expect(stdout.join('')).toContain('Trusted providers');
-  });
-
-  it('resets trusted providers to the backend defaults', async () => {
-    const { dependencies, api, stdout } = createDependencies();
-    const exitCode = await runCli(['node', 'hagi', 'skills', 'trusted', 'reset', '--json'], dependencies);
-
-    expect(exitCode).toBe(0);
-    expect(api.resetTrustedSkillProviders).toHaveBeenCalledOnce();
-    expect(JSON.parse(stdout.join('')).items[0].providerId).toBe('vercel');
   });
 });

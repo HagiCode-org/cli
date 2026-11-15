@@ -77,14 +77,6 @@ const RESPONSES: Record<string, unknown> = {
   ListVaults: { result: VAULT_LIST_FIXTURE },
   ListPresetTaskSchemas: { result: [] },
   GetSession: { result: SESSION_FIXTURE },
-  GetSkillGalleryAudit: {
-    result: {
-      id: 'react-best-practices',
-      source: 'vercel/skills',
-      skillSlug: 'react-best-practices',
-      providers: [{ provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' }],
-    },
-  },
 };
 
 const SERVICES: DescService[] = [
@@ -381,73 +373,7 @@ describe('request paths for skills commands', () => {
     expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetLocalSkills']);
   });
 
-  it('skills local uninstall posts the skill name', async () => {
-    await run(['skills', 'local', 'uninstall', '--skill-name', 'demo-skill']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/UninstallLocalSkill']);
-    expect(recorded[0].request.body).toMatchObject({ skillName: 'demo-skill' });
-  });
 
-  it('skills gallery search sends the keyword as a query parameter', async () => {
-    await run(['skills', 'gallery', 'search', '--query', 'react']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetSkillGallery']);
-    expect(recorded[0].request).toMatchObject({ query: 'react' });
-  });
-
-  it('skills gallery detail sends the id and source to the detail and audit RPCs', async () => {
-    const { stdout } = await run(['skills', 'gallery', 'detail', '--id', 'react-best-practices', '--source', 'vercel/skills', '--json']);
-    // The two calls start together, so their order on the wire is not fixed; compare them as a set.
-    expect(recorded.map(rpcName).sort()).toEqual([
-      'SkillGalleryService/GetSkillGalleryAudit',
-      'SkillGalleryService/GetSkillGalleryDetail',
-    ]);
-    const audit = recorded.find(call => rpcName(call) === 'SkillGalleryService/GetSkillGalleryAudit');
-    expect(audit?.request).toMatchObject({ id: 'react-best-practices', source: 'vercel/skills' });
-    expect(JSON.parse(stdout).audit).toEqual({
-      providers: [{ provider: 'ath', risk: 'low', alerts: 0, score: 92, analyzedAt: '2026-10-30T08:00:00Z' }],
-    });
-  });
-
-  it('skills gallery install posts the install body with the version token', async () => {
-    await run([
-      'skills', 'gallery', 'install',
-      '--id', 'react-best-practices',
-      '--source', 'vercel/skills',
-      '--skill-slug', 'react-best-practices',
-      '--version', '1.2.0',
-    ]);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/InstallSkill']);
-    expect(recorded[0].request.body).toMatchObject({
-      id: 'react-best-practices',
-      source: 'vercel/skills',
-      skillSlug: 'react-best-practices',
-      version: '1.2.0',
-    });
-  });
-
-  it('skills trusted list requests the provider directory', async () => {
-    await run(['skills', 'trusted', 'list']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetTrustedSkillProviders']);
-  });
-
-  it('skills trusted upsert posts the provider document', async () => {
-    const inputPath = join(tempDir, 'provider.json');
-    writeFileSync(inputPath, JSON.stringify({ providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2 }));
-
-    await run(['skills', 'trusted', 'upsert', '--input', inputPath]);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/UpsertTrustedSkillProvider']);
-    expect(recorded[0].request.body).toMatchObject({ providerId: 'acme', displayName: 'Acme', isEnabled: true, sortOrder: 2 });
-  });
-
-  it('skills trusted delete sends the provider id in the request body', async () => {
-    await run(['skills', 'trusted', 'delete', '--provider-id', 'vercel']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/DeleteTrustedSkillProvider']);
-    expect(recorded[0].request.body).toMatchObject({ providerId: 'vercel' });
-  });
-
-  it('skills trusted reset posts to the reset endpoint', async () => {
-    await run(['skills', 'trusted', 'reset']);
-    expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/ResetTrustedSkillProviders']);
-  });
 });
 
 // Scheduled plan facade methods (1.2): the plan commands are not wired yet, so each method is called directly.
