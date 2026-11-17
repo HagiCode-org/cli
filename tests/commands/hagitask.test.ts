@@ -89,6 +89,22 @@ describe('hagitask commands', () => {
       expect(request.presetTaskInput).toBeUndefined();
     });
 
+    it('sends a Super Commit with no message, Git profile or runtime context, so the server applies the saved default profile', async () => {
+      const { dependencies, api } = createDependencies();
+
+      expect(await runCli(
+        ['node', 'hagi', 'hagitask', 'create', '--title', 'Chat', '--project-id', 'project-1', '--prompt-id', 'auto-compose-commit.en-US', '--json'],
+        dependencies,
+      )).toBe(0);
+
+      const request = api.createHagiTaskSession.mock.calls[0][0];
+      expect(request.message).toBeUndefined();
+      expect(request.gitProfile).toBeUndefined();
+      expect(request.signedOffBy).toBeUndefined();
+      expect(request.coAuthoredBy).toBeUndefined();
+      expect(request.pullRebaseBeforePush).toBeUndefined();
+    });
+
     it('forwards the vault, target and branch routing fields', async () => {
       const { dependencies, api } = createDependencies();
 
