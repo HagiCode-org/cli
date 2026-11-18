@@ -1,0 +1,5 @@
+#!/bin/sh
+# After a commit that touches skills/hagi, sync it into built-in-skills.
+# Runs after the commit exists, because the lock entry must name a committed ref.
+git diff-tree --no-commit-id --name-only -r --root HEAD -- skills/hagi | grep -q . || exit 0
+exec "$(dirname "$0")/sync-built-in-skills"

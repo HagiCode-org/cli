@@ -1,0 +1,10 @@
+#!/bin/sh
+# After a rebase that rewrote a commit touching skills/hagi, sync it into built-in-skills.
+# $1 is "amend" or "rebase"; an amend already ran post-commit. stdin lists "<old> <new>" pairs.
+[ "$1" = "rebase" ] || exit 0
+while read -r old new _; do
+  if git diff-tree --no-commit-id --name-only -r --root "$new" -- skills/hagi | grep -q .; then
+    exec "$(dirname "$0")/sync-built-in-skills"
+  fi
+done
+exit 0

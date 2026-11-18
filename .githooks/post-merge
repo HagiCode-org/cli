@@ -1,0 +1,6 @@
+#!/bin/sh
+# After a merge or pull that brought in changes to skills/hagi, sync it into built-in-skills.
+# ORIG_HEAD is where HEAD was before the merge.
+git rev-parse -q --verify ORIG_HEAD >/dev/null || exit 0
+git diff --name-only ORIG_HEAD HEAD -- skills/hagi | grep -q . || exit 0
+exec "$(dirname "$0")/sync-built-in-skills"

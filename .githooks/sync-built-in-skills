@@ -1,0 +1,21 @@
+#!/bin/sh
+# Shared by the hooks in this folder: copy skills/hagi at HEAD into the built-in-skills repository.
+# Never fails the caller: a problem is printed and git carries on.
+# Skip with HAGI_SKIP_BUILT_IN_SYNC=1. Point at another checkout with HAGI_BUILT_IN_SKILLS_DIR.
+
+[ "${HAGI_SKIP_BUILT_IN_SYNC:-}" = "1" ] && exit 0
+
+top=$(git rev-parse --show-toplevel) || exit 0
+target=${HAGI_BUILT_IN_SKILLS_DIR:-$top/../built-in-skills}
+tool=$target/scripts/built_in_skills.py
+if [ ! -f "$tool" ]; then
+  echo "built-in-skills sync skipped: $tool not found (set HAGI_BUILT_IN_SKILLS_DIR)" >&2
+  exit 0
+fi
+
+if python3 "$tool" sync-hagi --cli "$top" --ref HEAD; then
+  echo "built-in-skills: content/hagi updated in $target (not committed there; review and commit it)" >&2
+else
+  echo "built-in-skills sync FAILED; run it by hand: python3 $tool sync-hagi --cli $top" >&2
+fi
+exit 0
