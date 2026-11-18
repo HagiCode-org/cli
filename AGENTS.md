@@ -42,7 +42,7 @@ Requires Node.js 24+.
 - `src/generated/grpc/`: generated gRPC stubs (`buf generate`), committed; regenerate instead of hand-editing
 - `src/generated/api/models/`: DTO types only, committed and now maintained by hand. They were once generated from the backend's OpenAPI document; that generator was removed because the document now lists only the retained REST routes, so regenerating would delete the types of every removed route. There is no REST client or runtime. Edit or add a type by hand when a proto DTO changes
 - `tests/`: Vitest suites (commands, formatters, runtime, release)
-- `skills/`: canonical embedded Hagi skill for AI-oriented guidance
+- `skills/`: canonical embedded Hagi skill for AI-oriented guidance. A commit, merge/pull or rebase that changes `skills/hagi/` triggers the `.githooks/` hooks (`post-commit`, `post-merge`, `post-rewrite`), which sync it into `../built-in-skills` (see `skills/README.md`); run `pnpm run hooks:install` once per clone
 - `dist/`: published build output
 
 ## Agent Guidelines

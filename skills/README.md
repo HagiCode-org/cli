@@ -39,7 +39,9 @@ Update `repos/cli/skills/**` when the Hagi CLI skill contract changes.
 
 ## Built-in copy
 
-The server also ships this folder as its built-in skill `hagi`. The copy lives in `repos/built-in-skills/content/hagi/` and is an exact byte copy of `repos/cli/skills/hagi/`. Edit this folder, then recopy and rehash the built-in copy.
+The server also ships this folder as its built-in skill `hagi`. The copy lives in `repos/built-in-skills/content/hagi/` and is an exact byte copy of `repos/cli/skills/hagi/`. Edit this folder only; the built-in copy follows by itself.
+
+Hooks in `.githooks/` run after a commit (`post-commit`, which also covers amend and cherry-pick), a merge or pull (`post-merge`) and a rebase (`post-rewrite`) that touches `skills/hagi/`. They call `python3 ../built-in-skills/scripts/built_in_skills.py sync-hagi`, which copies the committed `skills/hagi/` into `content/hagi/`, sets the `hagi` lock entry's `ref` to the new commit and its `contentHash`, and runs `verify`. It changes the working tree of `repos/built-in-skills` but does not commit there. Enable it once per clone with `pnpm run hooks:install` (sets `core.hooksPath` to `.githooks`). Skip it with `HAGI_SKIP_BUILT_IN_SYNC=1`; point it at another checkout with `HAGI_BUILT_IN_SKILLS_DIR`. A sync may run twice during one rebase; it is idempotent. The hooks do not run on a fresh clone until `pnpm run hooks:install`; run `sync-hagi` by hand until then. A pull that fast-forwards onto a skill change made by someone else syncs your local `repos/built-in-skills` copy, but only the changes you commit there are shared.
 
 ## Skill installation and discovery
 
