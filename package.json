@@ -30,6 +30,7 @@
     "dev": "tsx ./src/cli.ts",
     "generate:grpc": "node ./buildTools/generate-grpc.mjs",
     "generate:grpc:check": "node ./buildTools/generate-grpc.mjs --check",
+    "hooks:install": "git config core.hooksPath .githooks",
     "pack:check": "node ./scripts/verify-package.mjs",
     "publish:resolve-dev-version": "node ./scripts/resolve-dev-version.mjs",
     "publish:verify-release": "node ./scripts/verify-release-version.mjs",
