@@ -9,13 +9,21 @@ import {
   addJsonOption,
   createCommandContext,
   normalizeOptionalString,
-  normalizeOptionalStringArray,
   requireOptionValue,
   type AppDependencies,
 } from '../../runtime/commandContext';
 import { CliUsageError } from '../../runtime/errors';
 import { parseHeroReference } from '../../runtime/heroReference';
 import { loadStructuredJson } from '../../runtime/inputLoader';
+import type { HagiApi } from '../../runtime/hagiApi';
+import {
+  buildHagiTaskScope,
+  type HagiTaskScopeRequest,
+  parseScopeFlags,
+  repositorySelectionIdsOf,
+  scopeFlagNames,
+  scopeNeedsSelectionIds,
+} from '../../runtime/hagitaskScope';
 
 type HagiTaskCreateOptions = {
   title: string;
@@ -28,6 +36,9 @@ type HagiTaskCreateOptions = {
   repositoryPath?: string;
   targetType?: string;
   vaultId?: string;
+  repository?: string[];
+  allRepositories?: string[];
+  project?: string[];
   outputVaultId?: string;
   referenceVaultId?: string[];
   editableVaultId?: string[];
@@ -43,6 +54,42 @@ type HagiTaskCreateOptions = {
 };
 
 const HERO_SELECTION_MODES = ['first', 'random'];
+
+/** Collects a repeatable option into an array. */
+function collectOption(value: string, previous: string[] = []): string[] {
+  return [...previous, value];
+}
+
+/**
+ * Takes a top-level `scope` key out of the --input object. The key becomes the request scope, and the rest of the object
+ * stays the preset task input unchanged. A scope flag in the same run is a usage error: the two sources are never merged.
+ */
+export function liftScopeFromInput(
+  input: Record<string, unknown> | undefined,
+  flagNames: readonly string[],
+): { presetTaskInput: Record<string, unknown> | undefined; scope?: HagiTaskScopeRequest } {
+  if (!input || !Object.prototype.hasOwnProperty.call(input, 'scope')) {
+    return { presetTaskInput: input };
+  }
+
+  if (flagNames.length > 0) {
+    throw new CliUsageError(
+      `--input scope and ${flagNames[0]} both give the scope. Use one: remove the "scope" key from --input, or remove ${flagNames.join(', ')}.`,
+    );
+  }
+
+  const { scope, ...rest } = input;
+  if (!scope || typeof scope !== 'object' || Array.isArray(scope)) {
+    throw new CliUsageError('--input scope must be a JSON object.');
+  }
+
+  return { presetTaskInput: rest, scope: scope as HagiTaskScopeRequest };
+}
+
+/** Reads the repository selection ids of a task. Called only when a repository flag has no selection id. */
+async function readRepositorySelectionIds(api: HagiApi, taskId: string): Promise<string[]> {
+  return repositorySelectionIdsOf(await api.getHagiTaskSchema(taskId));
+}
 
 /**
  * Loads the structured task input from `--input <file>` or `--input -`. Missing, unreadable and non-object input
@@ -112,9 +159,12 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
     .option('--repository-path <path>', 'Optional MonoSpecs sub-repository path, for example repos/cli.')
     .option('--target-type <type>', 'Explicit target type: repository or vault.')
     .option('--vault-id <id>', 'Registered vault id for vault-targeted execution.')
-    .option('--output-vault-id <id>', 'Output vault id for research-investigation tasks.')
-    .option('--reference-vault-id <ids...>', 'Reference vault ids the session may read.')
-    .option('--editable-vault-id <ids...>', 'Vault ids the session may edit.')
+    .option('--repository <[selection=]path:access>', 'Repository the session may use, for example repos/web:write. Repeat for more. Without a selection id the task must have one repository selection; with several, prefix the id: targetRepositories=repos/web:write.', collectOption, [])
+    .option('--all-repositories <[selection=]access>', 'Every repository of the project for a repository selection, for example --all-repositories read. Cannot be combined with --repository on the same selection.', collectOption, [])
+    .option('--project <project-id:access>', 'Another project the session may use, for example <project-id>:read. Repeat for more.', collectOption, [])
+    .option('--output-vault-id <id>', 'Output vault id for research-investigation tasks (scope.vaults.output).')
+    .option('--reference-vault-id <ids...>', 'Reference vault ids the session may read (scope.vaults.reference).')
+    .option('--editable-vault-id <ids...>', 'Vault ids the session may edit (scope.vaults.editable).')
     .option('--hero-id <id>', 'Preferred hero id. Takes precedence over --hero-selection-mode.')
     .option('--hero <name-or-id>', 'Preferred hero by name or ID. A GUID is an ID, any other value is a name; cannot be combined with --hero-id.')
     .option('--hero-selection-mode <mode>', 'Hero choice when no --hero or --hero-id is given: first (default) or random.')
@@ -129,25 +179,42 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
       validateCreateOptions(options, taskId, promptId);
       const hero = options.hero !== undefined ? parseHeroReference(options.hero) : undefined;
 
-      const presetTaskInput = options.input !== undefined
+      const scopeFlags = parseScopeFlags({
+        repository: options.repository,
+        allRepositories: options.allRepositories,
+        project: options.project,
+        outputVaultId: options.outputVaultId,
+        referenceVaultId: options.referenceVaultId,
+        editableVaultId: options.editableVaultId,
+      });
+      const loadedInput = options.input !== undefined
         ? await loadHagiTaskInput(requireOptionValue(options.input, '--input'))
         : undefined;
+      const lifted = liftScopeFromInput(loadedInput, scopeFlagNames(scopeFlags));
+
+      // Every usage rule above runs before the one schema read below, and before any create request.
+      if (scopeNeedsSelectionIds(scopeFlags) && !taskId) {
+        throw new CliUsageError('A repository flag without a selection id needs --task-id, so the task\'s repository selection can be read. Pass <selection id>=<value> to skip the read.');
+      }
 
       const context = createCommandContext(this, dependencies);
+      const repositorySelectionIds = scopeNeedsSelectionIds(scopeFlags) && taskId
+        ? await readRepositorySelectionIds(context.api, taskId)
+        : undefined;
+      const flagScope = buildHagiTaskScope(scopeFlags, repositorySelectionIds);
+
       const request: PCode_Web_Controllers_CreateHagiTaskSessionRequest = {
         title: requireOptionValue(options.title, '--title'),
         projectId: requireOptionValue(options.projectId, '--project-id'),
         promptId,
         presetTaskId: taskId,
         presetTaskLocale: normalizeOptionalString(options.locale),
-        presetTaskInput,
+        presetTaskInput: lifted.presetTaskInput,
+        scope: flagScope ?? lifted.scope,
         message: normalizeOptionalString(options.message),
         repositoryPath: normalizeOptionalString(options.repositoryPath),
         targetType: normalizeOptionalString(options.targetType),
         vaultId: normalizeOptionalString(options.vaultId),
-        outputVaultId: normalizeOptionalString(options.outputVaultId),
-        referenceVaultIds: normalizeOptionalStringArray(options.referenceVaultId),
-        editableVaultIds: normalizeOptionalStringArray(options.editableVaultId),
         heroId: hero && 'heroId' in hero ? hero.heroId : normalizeOptionalString(options.heroId),
         heroName: hero && 'heroName' in hero ? hero.heroName : undefined,
         heroSelectionMode: normalizeOptionalString(options.heroSelectionMode),
@@ -167,6 +234,7 @@ export function registerHagiTaskCreateCommand(parent: Command, dependencies: App
           session: view,
           presetTaskId: request.presetTaskId ?? null,
           promptId: request.promptId ?? null,
+          scope: request.scope ?? null,
           requested: request,
         }));
         return;

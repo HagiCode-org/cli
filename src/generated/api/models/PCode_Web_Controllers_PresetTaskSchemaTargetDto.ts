@@ -10,12 +10,9 @@ export type PCode_Web_Controllers_PresetTaskSchemaTargetDto = {
   allowedAccessTypes?: Array<string> | null;
   scopeSource?: string | null;
   /**
-   * Key of the target list under `presetTaskInput.targets`.
+   * JSON path of this selection in the request `scope`, for example `scope.repositories.<id>`, `scope.vaults.reference`
+   * or `scope.projects`.
    */
   requestKey?: string | null;
-  /**
-   * Key of the select-all scope under `presetTaskInput.targetScopes`. Null when the selection is not a repository list.
-   */
-  scopeRequestKey?: string | null;
 };
 

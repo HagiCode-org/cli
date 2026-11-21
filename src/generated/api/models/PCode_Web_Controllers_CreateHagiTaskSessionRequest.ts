@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Application_Contracts_Sessions_HagiTaskScopeDto } from './PCode_Application_Contracts_Sessions_HagiTaskScopeDto';
 import type { PCode_Application_DTOs_SessionMessageImageRefDto } from './PCode_Application_DTOs_SessionMessageImageRefDto';
-import type { PCode_Models_TargetProjectReferenceDto } from './PCode_Models_TargetProjectReferenceDto';
 /**
  * Request DTO for creating a HagiTask session with initial prompt.
  */
@@ -53,27 +53,10 @@ export type PCode_Web_Controllers_CreateHagiTaskSessionRequest = {
    */
   vaultId?: string | null;
   /**
-   * Explicit output CodeRef Vault ID for research-investigation scenarios.
-   * When omitted, the backend may temporarily fall back to VaultId for compatibility.
+   * Repositories, vaults and projects of the session, submitted as one object. Replaces the removed
+   * outputVaultId, referenceVaultIds, editableVaultIds and targetProjects. Absent scope keeps the preset defaults.
    */
-  outputVaultId?: string | null;
-  /**
-   * Optional reference Vault IDs for research-investigation scenarios.
-   * The backend trims whitespace, removes duplicates, and validates each referenced Vault.
-   */
-  referenceVaultIds?: Array<string> | null;
-  /**
-   * Optional Vault IDs the session may edit, in addition to reading them.
-   * An editable Vault is also attached as a reference Vault; it does not change the working directory.
-   * The backend trims whitespace, removes duplicates, and validates each Vault.
-   */
-  editableVaultIds?: Array<string> | null;
-  /**
-   * Optional target project references for HagiTask scenarios.
-   * Each item is normalized against canonical project records before session creation.
-   * The owner project may be included in this collection.
-   */
-  targetProjects?: Array<PCode_Models_TargetProjectReferenceDto> | null;
+  scope?: PCode_Application_Contracts_Sessions_HagiTaskScopeDto | null;
   /**
    * Structured research direction for research-investigation scenarios.
    * Required when using the bundled research-investigation preset task.

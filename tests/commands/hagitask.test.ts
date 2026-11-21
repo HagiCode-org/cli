@@ -121,9 +121,9 @@ describe('hagitask commands', () => {
       expect(api.createHagiTaskSession).toHaveBeenCalledWith(expect.objectContaining({
         targetType: 'vault',
         vaultId: 'vault-1',
-        outputVaultId: 'vault-2',
-        referenceVaultIds: ['vault-3', 'vault-4'],
-        editableVaultIds: ['vault-5'],
+        scope: expect.objectContaining({
+          vaults: { output: 'vault-2', reference: ['vault-3', 'vault-4'], editable: ['vault-5'] },
+        }),
         message: 'hello',
         heroId: 'hero-9',
       }));
@@ -341,7 +341,8 @@ describe('hagitask commands', () => {
 
       const output = stdout.join('');
       expect(output).toContain('Target scope (default repository)');
-      expect(output).toContain('targets.repositories');
+      expect(output).toContain('Scope path');
+      expect(output).toContain('scope.repositories.repositories');
       expect(output).toMatch(/commitScope\s+yes\s+input\s+string/);
       expect(output).toMatch(/language\s+no\s+input/);
       expect(output).toContain('alias lang (deprecated)');

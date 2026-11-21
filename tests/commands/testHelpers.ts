@@ -391,13 +391,12 @@ export function createHagiTaskSchema(id = 'compose-commit') {
       targets: [
         {
           id: 'repositories',
-          kind: 'repository',
+          kind: 'repositories',
           selectionMode: 'multi',
           required: true,
           allowedAccessTypes: ['write', 'read'],
           scopeSource: 'project',
-          requestKey: 'targets.repositories',
-          scopeRequestKey: 'targetScopes.repositories',
+          requestKey: 'scope.repositories.repositories',
         },
       ],
     },

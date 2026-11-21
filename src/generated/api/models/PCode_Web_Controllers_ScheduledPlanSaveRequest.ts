@@ -18,7 +18,8 @@ export type PCode_Web_Controllers_ScheduledPlanSaveRequest = {
   schedule?: PCode_Web_Controllers_ScheduledPlanScheduleDto;
   agentPool?: PCode_Web_Controllers_ScheduledPlanAgentPoolDto;
   /**
-   * The inputs of the matching creation request, as a JSON object.
+   * The inputs of the matching creation request, as a JSON object. A HagiTask payload carries its repositories, vaults
+   * and projects in one `scope` object, the same shape as the creation request.
    */
   payload?: any;
 };

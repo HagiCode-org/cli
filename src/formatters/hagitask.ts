@@ -111,8 +111,7 @@ export function formatHagiTaskSchemaHuman(schema: PCode_Web_Controllers_PresetTa
       { header: 'Selection', value: target => target.selectionMode ?? NONE },
       { header: 'Required', value: target => yesNo(target.required) },
       { header: 'Access', value: target => listOrNone(target.allowedAccessTypes) },
-      { header: 'Input key', value: target => target.requestKey ?? NONE },
-      { header: 'Scope key', value: target => target.scopeRequestKey ?? NONE },
+      { header: 'Scope path', value: target => target.requestKey ?? NONE },
     ],
     targets,
   )}\n`}`);
