@@ -489,7 +489,7 @@ hagi hagitask schema --task-id <task-id>
 hagi hagitask schema --task-id <task-id> --json
 ```
 
-Write the input file. Its keys are the parameter keys the schema lists under `inputs`, plus the `targets` and `targetScopes` keys when the schema's scope lists targets. For example, `input.json` for a task with one required input:
+Write the input file. Its keys are the parameter keys the schema lists under `inputs`. Repositories, vaults and projects are not input keys; they go in the request `scope` (see below). For example, `input.json` for a task with one required input:
 
 ```json
 {
@@ -498,6 +498,19 @@ Write the input file. Its keys are the parameter keys the schema lists under `in
   }
 }
 ```
+
+Scope is the set of repositories, vaults and projects the session may use. Set it with flags, or with a top-level `scope` key in the input file:
+
+- `--repository [<selection id>=]<path>:<read|write>` adds an explicit repository. Repeat it for more.
+- `--all-repositories [<selection id>=]<read|write>` selects every repository of the project for a repository selection.
+- `--project <project id>:<read|write>` adds another project. Repeat it for more.
+- `--output-vault-id`, `--reference-vault-id` and `--editable-vault-id` set the vault roles (`scope.vaults`).
+
+A flag without a selection id uses the task's only repository selection. A task with several repository selections needs the id, for example `--repository targetRepositories=repos/web:write`. `hagi hagitask schema` lists the ids. Without any scope flag and without a `scope` key, the preset defaults apply.
+
+Validation happens before any request: an access other than `read` or `write`, an empty path or project id, a path repeated in one selection, `--repository` and `--all-repositories` on the same selection, or an ambiguous selection id each exit `2` and send nothing. A top-level `scope` key in `--input` is the scope object itself, for example `{"repositories": {"targetRepositories": {"mode": "explicit", "items": [{"path": "repos/web", "accessType": "write"}]}}}`. It cannot be combined with a scope flag (exit `2`), and the two sources are never merged.
+
+The keys `targets`, `targetScopes` and `derived.targetScopeMarkdown` are removed. The backend rejects them in `--input` with a message that points to `scope`. There are no aliases.
 
 Create the session from that task and input. The new id is read from `session.sessionId`:
 
