@@ -14,7 +14,468 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file hagicode/hero/v1/scenarios.proto.
  */
 export const file_hagicode_hero_v1_scenarios: GenFile = /*@__PURE__*/
-  fileDesc("CiBoYWdpY29kZS9oZXJvL3YxL3NjZW5hcmlvcy5wcm90bxIQaGFnaWNvZGUuaGVyby52MSIaChhMaXN0SGVyb1NjZW5hcmlvc1JlcXVlc3QiVAoZTGlzdEhlcm9TY2VuYXJpb3NSZXNwb25zZRI3CgZyZXN1bHQYASADKAsyJy5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb1Jvc3RlckR0byIlCiNMaXN0U2NlbmFyaW9TZWxlY3RhYmxlSGVyb2VzUmVxdWVzdCJnCiRMaXN0U2NlbmFyaW9TZWxlY3RhYmxlSGVyb2VzUmVzcG9uc2USPwoGcmVzdWx0GAEgAygLMi8uaGFnaWNvZGUuaGVyby52MS5IZXJvU2NlbmFyaW9TZWxlY3RhYmxlSGVyb0R0byJuCh1TYXZlSGVyb1NjZW5hcmlvUm9zdGVyUmVxdWVzdBISCgpzY3JpcHRfa2V5GAEgASgJEjkKBGJvZHkYAiABKAsyKy5oYWdpY29kZS5oZXJvLnYxLlNhdmVIZXJvU2NlbmFyaW9Sb3N0ZXJEdG8iWQoeU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlclJlc3BvbnNlEjcKBnJlc3VsdBgBIAEoCzInLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvUm9zdGVyRHRvIu0DChVQcm9tcHRJbWFnZVN1bW1hcnlEdG8SDgoGc3RhdHVzGAEgASgJEhAKA3VybBgCIAEoCUgAiAEBEhAKA2FsdBgDIAEoCUgBiAEBEhYKCXNpZ25hdHVyZRgEIAEoCUgCiAEBEi4KCnVwZGF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhwKD3N0YWdlX3N0eWxlX2tleRgGIAEoCUgDiAEBEh4KEXN0YWdlX3N0eWxlX2xhYmVsGAcgASgJSASIAQESFgoJYXJ0X3N0eWxlGAggASgJSAWIAQESGQoMZGlzcGxheV9tb2RlGAkgASgJSAaIAQESHQoQcHJvbXB0X2RpcmVjdGlvbhgKIAEoCUgHiAEBEhMKBnNvdXJjZRgLIAEoCUgIiAEBEhoKDWVycm9yX21lc3NhZ2UYDCABKAlICYgBAUIGCgRfdXJsQgYKBF9hbHRCDAoKX3NpZ25hdHVyZUISChBfc3RhZ2Vfc3R5bGVfa2V5QhQKEl9zdGFnZV9zdHlsZV9sYWJlbEIMCgpfYXJ0X3N0eWxlQg8KDV9kaXNwbGF5X21vZGVCEwoRX3Byb21wdF9kaXJlY3Rpb25CCQoHX3NvdXJjZUIQCg5fZXJyb3JfbWVzc2FnZSK6CAoVSGVyb1NjZW5hcmlvUm9zdGVyRHRvEhIKCnNjcmlwdF9rZXkYASABKAkSFAoMZGlzcGxheV9uYW1lGAIgASgJEhgKC2Rlc2NyaXB0aW9uGAMgASgJSACIAQESEQoJZ3JvdXBfa2V5GAQgASgJEhIKCnNvcnRfb3JkZXIYBSABKAUSHQoQZGlzcGxheV9uYW1lX2tleRgGIAEoCUgBiAEBEhwKD2Rlc2NyaXB0aW9uX2tleRgHIAEoCUgCiAEBEhEKBGljb24YCCABKAlIA4gBARIjChZwcm9tcHRfc3RhZ2Vfc3R5bGVfa2V5GAkgASgJSASIAQESJQoYcHJvbXB0X3N0YWdlX3N0eWxlX2xhYmVsGAogASgJSAWIAQESHQoQcHJvbXB0X2FydF9zdHlsZRgLIAEoCUgGiAEBEiAKE3Byb21wdF9kaXNwbGF5X21vZGUYDCABKAlIB4gBARJFChRwcm9tcHRfaW1hZ2Vfc3VtbWFyeRgNIAEoCzInLmhhZ2ljb2RlLmhlcm8udjEuUHJvbXB0SW1hZ2VTdW1tYXJ5RHRvEigKG3NjZW5lX2JhY2tncm91bmRfaW1hZ2Vfc2xvdBgOIAEoBUgIiAEBElAKDWRpc3BsYXlfbmFtZXMYDyADKAsyOS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb1Jvc3RlckR0by5EaXNwbGF5TmFtZXNFbnRyeRJPCgxkZXNjcmlwdGlvbnMYECADKAsyOS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb1Jvc3RlckR0by5EZXNjcmlwdGlvbnNFbnRyeRIPCgd2ZXJzaW9uGBEgASgFEjgKB21lbWJlcnMYEiADKAsyJy5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb01lbWJlckR0bxIMCgRraW5kGBMgASgJEhEKCWlzX2xvY2tlZBgUIAEoCBIYCgtsb2NrX3JlYXNvbhgVIAEoCUgJiAEBGjMKEURpc3BsYXlOYW1lc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEaMwoRRGVzY3JpcHRpb25zRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4AUIOCgxfZGVzY3JpcHRpb25CEwoRX2Rpc3BsYXlfbmFtZV9rZXlCEgoQX2Rlc2NyaXB0aW9uX2tleUIHCgVfaWNvbkIZChdfcHJvbXB0X3N0YWdlX3N0eWxlX2tleUIbChlfcHJvbXB0X3N0YWdlX3N0eWxlX2xhYmVsQhMKEV9wcm9tcHRfYXJ0X3N0eWxlQhYKFF9wcm9tcHRfZGlzcGxheV9tb2RlQh4KHF9zY2VuZV9iYWNrZ3JvdW5kX2ltYWdlX3Nsb3RCDgoMX2xvY2tfcmVhc29uIukBCh1IZXJvU2NlbmFyaW9TZWxlY3RhYmxlSGVyb0R0bxIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEhEKBGljb24YAyABKAlIAIgBARIYCgtkZXNjcmlwdGlvbhgEIAEoCUgBiAEBEhUKDWV4ZWN1dG9yX3R5cGUYBSABKAkSEgoKaXNfZW5hYmxlZBgGIAEoCBITCgtpc19idWlsdF9pbhgHIAEoCBIUCgxpc19yZWFkX29ubHkYCCABKAgSEgoKc29ydF9vcmRlchgJIAEoBUIHCgVfaWNvbkIOCgxfZGVzY3JpcHRpb24iYQoZU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlckR0bxIQCghoZXJvX2lkcxgBIAMoCRIdChBleHBlY3RlZF92ZXJzaW9uGAIgASgFSACIAQFCEwoRX2V4cGVjdGVkX3ZlcnNpb24ykQMKFEhlcm9TY2VuYXJpb3NTZXJ2aWNlEmwKEUxpc3RIZXJvU2NlbmFyaW9zEiouaGFnaWNvZGUuaGVyby52MS5MaXN0SGVyb1NjZW5hcmlvc1JlcXVlc3QaKy5oYWdpY29kZS5oZXJvLnYxLkxpc3RIZXJvU2NlbmFyaW9zUmVzcG9uc2USjQEKHExpc3RTY2VuYXJpb1NlbGVjdGFibGVIZXJvZXMSNS5oYWdpY29kZS5oZXJvLnYxLkxpc3RTY2VuYXJpb1NlbGVjdGFibGVIZXJvZXNSZXF1ZXN0GjYuaGFnaWNvZGUuaGVyby52MS5MaXN0U2NlbmFyaW9TZWxlY3RhYmxlSGVyb2VzUmVzcG9uc2USewoWU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlchIvLmhhZ2ljb2RlLmhlcm8udjEuU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlclJlcXVlc3QaMC5oYWdpY29kZS5oZXJvLnYxLlNhdmVIZXJvU2NlbmFyaW9Sb3N0ZXJSZXNwb25zZUImqgIjUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLkhlcm8uVjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_hagicode_hero_v1_hero_settings]);
+  fileDesc("CiBoYWdpY29kZS9oZXJvL3YxL3NjZW5hcmlvcy5wcm90bxIQaGFnaWNvZGUuaGVyby52MSKyAgofSGVyb1NjZW5hcmlvRmF2b3JpdGVTbmFwc2hvdER0bxIWCg5zY2hlbWFfdmVyc2lvbhgBIAEoBRJtChhzY2VuYXJpb19oZXJvX2lkc19ieV9rZXkYAiADKAsySy5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlU25hcHNob3REdG8uU2NlbmFyaW9IZXJvSWRzQnlLZXlFbnRyeRIZChFmYWxsYmFja19oZXJvX2lkcxgDIAMoCRptChlTY2VuYXJpb0hlcm9JZHNCeUtleUVudHJ5EgsKA2tleRgBIAEoCRI/CgV2YWx1ZRgCIAEoCzIwLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvRmF2b3JpdGVIZXJvSWRzRHRvOgI4ASIyCh5IZXJvU2NlbmFyaW9GYXZvcml0ZUhlcm9JZHNEdG8SEAoIaGVyb19pZHMYASADKAki6QEKF0hlcm9TY2VuYXJpb0Zhdm9yaXRlRHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDwoHdmVyc2lvbhgDIAEoBRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBJDCghzbmFwc2hvdBgGIAEoCzIxLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvRmF2b3JpdGVTbmFwc2hvdER0byLfAQoeSGVyb1NjZW5hcmlvRmF2b3JpdGVTdW1tYXJ5RHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDwoHdmVyc2lvbhgDIAEoBRIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgp1cGRhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIVCg1zY2VuYXJpb19rZXlzGAYgAygJEhsKE2ZhbGxiYWNrX2hlcm9fY291bnQYByABKAUivgEKI0hlcm9TY2VuYXJpb0Zhdm9yaXRlTGl2ZVZlcnNpb25zRHRvEmEKD3ZlcnNpb25zX2J5X2tleRgBIAMoCzJILmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvRmF2b3JpdGVMaXZlVmVyc2lvbnNEdG8uVmVyc2lvbnNCeUtleUVudHJ5GjQKElZlcnNpb25zQnlLZXlFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAU6AjgBIiIKIExpc3RIZXJvU2NlbmFyaW9GYXZvcml0ZXNSZXF1ZXN0ImUKIUxpc3RIZXJvU2NlbmFyaW9GYXZvcml0ZXNSZXNwb25zZRJACgZyZXN1bHQYASADKAsyMC5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlU3VtbWFyeUR0byIsCh5HZXRIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QSCgoCaWQYASABKAkiXAofR2V0SGVyb1NjZW5hcmlvRmF2b3JpdGVSZXNwb25zZRI5CgZyZXN1bHQYASABKAsyKS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlRHRvIn8KIUNyZWF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVxdWVzdBIMCgRuYW1lGAEgASgJEkwKDWV4cGVjdGVkX2xpdmUYAiABKAsyNS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlTGl2ZVZlcnNpb25zRHRvIl8KIkNyZWF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2USOQoGcmVzdWx0GAEgASgLMikuaGFnaWNvZGUuaGVyby52MS5IZXJvU2NlbmFyaW9GYXZvcml0ZUR0byJXCiFSZW5hbWVIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAMgASgFIl8KIlJlbmFtZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2USOQoGcmVzdWx0GAEgASgLMikuaGFnaWNvZGUuaGVyby52MS5IZXJvU2NlbmFyaW9GYXZvcml0ZUR0byKXAQohVXBkYXRlSGVyb1NjZW5hcmlvRmF2b3JpdGVSZXF1ZXN0EgoKAmlkGAEgASgJEhgKEGV4cGVjdGVkX3ZlcnNpb24YAiABKAUSTAoNZXhwZWN0ZWRfbGl2ZRgDIAEoCzI1LmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvRmF2b3JpdGVMaXZlVmVyc2lvbnNEdG8iXwoiVXBkYXRlSGVyb1NjZW5hcmlvRmF2b3JpdGVSZXNwb25zZRI5CgZyZXN1bHQYASABKAsyKS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlRHRvIkkKIURlbGV0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVxdWVzdBIKCgJpZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgFIjQKIkRlbGV0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2USDgoGcmVzdWx0GAEgASgIIpYBCiBBcHBseUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVxdWVzdBIKCgJpZBgBIAEoCRIYChBleHBlY3RlZF92ZXJzaW9uGAIgASgFEkwKDWV4cGVjdGVkX2xpdmUYAyABKAsyNS5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlTGl2ZVZlcnNpb25zRHRvImkKIUFwcGx5SGVyb1NjZW5hcmlvRmF2b3JpdGVSZXNwb25zZRJECgZyZXN1bHQYASABKAsyNC5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb0Zhdm9yaXRlQXBwbHlSZXN1bHREdG8i6wEKIkhlcm9TY2VuYXJpb0Zhdm9yaXRlQXBwbHlSZXN1bHREdG8SEwoLZmF2b3JpdGVfaWQYASABKAkSGAoQZmF2b3JpdGVfdmVyc2lvbhgCIAEoBRI6CglzY2VuYXJpb3MYAyADKAsyJy5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb1Jvc3RlckR0bxIfChdwcmVzZXJ2ZWRfc2NlbmFyaW9fa2V5cxgEIAMoCRI5CghmYWxsYmFjaxgFIAEoCzInLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvUm9zdGVyRHRvIhoKGExpc3RIZXJvU2NlbmFyaW9zUmVxdWVzdCJUChlMaXN0SGVyb1NjZW5hcmlvc1Jlc3BvbnNlEjcKBnJlc3VsdBgBIAMoCzInLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvUm9zdGVyRHRvIiUKI0xpc3RTY2VuYXJpb1NlbGVjdGFibGVIZXJvZXNSZXF1ZXN0ImcKJExpc3RTY2VuYXJpb1NlbGVjdGFibGVIZXJvZXNSZXNwb25zZRI/CgZyZXN1bHQYASADKAsyLy5oYWdpY29kZS5oZXJvLnYxLkhlcm9TY2VuYXJpb1NlbGVjdGFibGVIZXJvRHRvIm4KHVNhdmVIZXJvU2NlbmFyaW9Sb3N0ZXJSZXF1ZXN0EhIKCnNjcmlwdF9rZXkYASABKAkSOQoEYm9keRgCIAEoCzIrLmhhZ2ljb2RlLmhlcm8udjEuU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlckR0byJZCh5TYXZlSGVyb1NjZW5hcmlvUm9zdGVyUmVzcG9uc2USNwoGcmVzdWx0GAEgASgLMicuaGFnaWNvZGUuaGVyby52MS5IZXJvU2NlbmFyaW9Sb3N0ZXJEdG8i7QMKFVByb21wdEltYWdlU3VtbWFyeUR0bxIOCgZzdGF0dXMYASABKAkSEAoDdXJsGAIgASgJSACIAQESEAoDYWx0GAMgASgJSAGIAQESFgoJc2lnbmF0dXJlGAQgASgJSAKIAQESLgoKdXBkYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASHAoPc3RhZ2Vfc3R5bGVfa2V5GAYgASgJSAOIAQESHgoRc3RhZ2Vfc3R5bGVfbGFiZWwYByABKAlIBIgBARIWCglhcnRfc3R5bGUYCCABKAlIBYgBARIZCgxkaXNwbGF5X21vZGUYCSABKAlIBogBARIdChBwcm9tcHRfZGlyZWN0aW9uGAogASgJSAeIAQESEwoGc291cmNlGAsgASgJSAiIAQESGgoNZXJyb3JfbWVzc2FnZRgMIAEoCUgJiAEBQgYKBF91cmxCBgoEX2FsdEIMCgpfc2lnbmF0dXJlQhIKEF9zdGFnZV9zdHlsZV9rZXlCFAoSX3N0YWdlX3N0eWxlX2xhYmVsQgwKCl9hcnRfc3R5bGVCDwoNX2Rpc3BsYXlfbW9kZUITChFfcHJvbXB0X2RpcmVjdGlvbkIJCgdfc291cmNlQhAKDl9lcnJvcl9tZXNzYWdlIroIChVIZXJvU2NlbmFyaW9Sb3N0ZXJEdG8SEgoKc2NyaXB0X2tleRgBIAEoCRIUCgxkaXNwbGF5X25hbWUYAiABKAkSGAoLZGVzY3JpcHRpb24YAyABKAlIAIgBARIRCglncm91cF9rZXkYBCABKAkSEgoKc29ydF9vcmRlchgFIAEoBRIdChBkaXNwbGF5X25hbWVfa2V5GAYgASgJSAGIAQESHAoPZGVzY3JpcHRpb25fa2V5GAcgASgJSAKIAQESEQoEaWNvbhgIIAEoCUgDiAEBEiMKFnByb21wdF9zdGFnZV9zdHlsZV9rZXkYCSABKAlIBIgBARIlChhwcm9tcHRfc3RhZ2Vfc3R5bGVfbGFiZWwYCiABKAlIBYgBARIdChBwcm9tcHRfYXJ0X3N0eWxlGAsgASgJSAaIAQESIAoTcHJvbXB0X2Rpc3BsYXlfbW9kZRgMIAEoCUgHiAEBEkUKFHByb21wdF9pbWFnZV9zdW1tYXJ5GA0gASgLMicuaGFnaWNvZGUuaGVyby52MS5Qcm9tcHRJbWFnZVN1bW1hcnlEdG8SKAobc2NlbmVfYmFja2dyb3VuZF9pbWFnZV9zbG90GA4gASgFSAiIAQESUAoNZGlzcGxheV9uYW1lcxgPIAMoCzI5LmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvUm9zdGVyRHRvLkRpc3BsYXlOYW1lc0VudHJ5Ek8KDGRlc2NyaXB0aW9ucxgQIAMoCzI5LmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvUm9zdGVyRHRvLkRlc2NyaXB0aW9uc0VudHJ5Eg8KB3ZlcnNpb24YESABKAUSOAoHbWVtYmVycxgSIAMoCzInLmhhZ2ljb2RlLmhlcm8udjEuSGVyb1NjZW5hcmlvTWVtYmVyRHRvEgwKBGtpbmQYEyABKAkSEQoJaXNfbG9ja2VkGBQgASgIEhgKC2xvY2tfcmVhc29uGBUgASgJSAmIAQEaMwoRRGlzcGxheU5hbWVzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ARozChFEZXNjcmlwdGlvbnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQg4KDF9kZXNjcmlwdGlvbkITChFfZGlzcGxheV9uYW1lX2tleUISChBfZGVzY3JpcHRpb25fa2V5QgcKBV9pY29uQhkKF19wcm9tcHRfc3RhZ2Vfc3R5bGVfa2V5QhsKGV9wcm9tcHRfc3RhZ2Vfc3R5bGVfbGFiZWxCEwoRX3Byb21wdF9hcnRfc3R5bGVCFgoUX3Byb21wdF9kaXNwbGF5X21vZGVCHgocX3NjZW5lX2JhY2tncm91bmRfaW1hZ2Vfc2xvdEIOCgxfbG9ja19yZWFzb24i6QEKHUhlcm9TY2VuYXJpb1NlbGVjdGFibGVIZXJvRHRvEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEQoEaWNvbhgDIAEoCUgAiAEBEhgKC2Rlc2NyaXB0aW9uGAQgASgJSAGIAQESFQoNZXhlY3V0b3JfdHlwZRgFIAEoCRISCgppc19lbmFibGVkGAYgASgIEhMKC2lzX2J1aWx0X2luGAcgASgIEhQKDGlzX3JlYWRfb25seRgIIAEoCBISCgpzb3J0X29yZGVyGAkgASgFQgcKBV9pY29uQg4KDF9kZXNjcmlwdGlvbiJhChlTYXZlSGVyb1NjZW5hcmlvUm9zdGVyRHRvEhAKCGhlcm9faWRzGAEgAygJEh0KEGV4cGVjdGVkX3ZlcnNpb24YAiABKAVIAIgBAUITChFfZXhwZWN0ZWRfdmVyc2lvbjLHCgoUSGVyb1NjZW5hcmlvc1NlcnZpY2USbAoRTGlzdEhlcm9TY2VuYXJpb3MSKi5oYWdpY29kZS5oZXJvLnYxLkxpc3RIZXJvU2NlbmFyaW9zUmVxdWVzdBorLmhhZ2ljb2RlLmhlcm8udjEuTGlzdEhlcm9TY2VuYXJpb3NSZXNwb25zZRKNAQocTGlzdFNjZW5hcmlvU2VsZWN0YWJsZUhlcm9lcxI1LmhhZ2ljb2RlLmhlcm8udjEuTGlzdFNjZW5hcmlvU2VsZWN0YWJsZUhlcm9lc1JlcXVlc3QaNi5oYWdpY29kZS5oZXJvLnYxLkxpc3RTY2VuYXJpb1NlbGVjdGFibGVIZXJvZXNSZXNwb25zZRJ7ChZTYXZlSGVyb1NjZW5hcmlvUm9zdGVyEi8uaGFnaWNvZGUuaGVyby52MS5TYXZlSGVyb1NjZW5hcmlvUm9zdGVyUmVxdWVzdBowLmhhZ2ljb2RlLmhlcm8udjEuU2F2ZUhlcm9TY2VuYXJpb1Jvc3RlclJlc3BvbnNlEoQBChlMaXN0SGVyb1NjZW5hcmlvRmF2b3JpdGVzEjIuaGFnaWNvZGUuaGVyby52MS5MaXN0SGVyb1NjZW5hcmlvRmF2b3JpdGVzUmVxdWVzdBozLmhhZ2ljb2RlLmhlcm8udjEuTGlzdEhlcm9TY2VuYXJpb0Zhdm9yaXRlc1Jlc3BvbnNlEn4KF0dldEhlcm9TY2VuYXJpb0Zhdm9yaXRlEjAuaGFnaWNvZGUuaGVyby52MS5HZXRIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QaMS5oYWdpY29kZS5oZXJvLnYxLkdldEhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2UShwEKGkNyZWF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlEjMuaGFnaWNvZGUuaGVyby52MS5DcmVhdGVIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QaNC5oYWdpY29kZS5oZXJvLnYxLkNyZWF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2UShwEKGlJlbmFtZUhlcm9TY2VuYXJpb0Zhdm9yaXRlEjMuaGFnaWNvZGUuaGVyby52MS5SZW5hbWVIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QaNC5oYWdpY29kZS5oZXJvLnYxLlJlbmFtZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2UShwEKGlVwZGF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlEjMuaGFnaWNvZGUuaGVyby52MS5VcGRhdGVIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QaNC5oYWdpY29kZS5oZXJvLnYxLlVwZGF0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2UShwEKGkRlbGV0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlEjMuaGFnaWNvZGUuaGVyby52MS5EZWxldGVIZXJvU2NlbmFyaW9GYXZvcml0ZVJlcXVlc3QaNC5oYWdpY29kZS5oZXJvLnYxLkRlbGV0ZUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2UShAEKGUFwcGx5SGVyb1NjZW5hcmlvRmF2b3JpdGUSMi5oYWdpY29kZS5oZXJvLnYxLkFwcGx5SGVyb1NjZW5hcmlvRmF2b3JpdGVSZXF1ZXN0GjMuaGFnaWNvZGUuaGVyby52MS5BcHBseUhlcm9TY2VuYXJpb0Zhdm9yaXRlUmVzcG9uc2VCJqoCI1BDb2RlLkh0dHBBcGkuR3JwY0NvbnRyYWN0cy5IZXJvLlYxYgZwcm90bzM", [file_google_protobuf_timestamp, file_hagicode_hero_v1_hero_settings]);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteSnapshotDto
+ */
+export type HeroScenarioFavoriteSnapshotDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteSnapshotDto"> & {
+  /**
+   * @generated from field: int32 schema_version = 1;
+   */
+  schemaVersion: number;
+
+  /**
+   * @generated from field: map<string, hagicode.hero.v1.HeroScenarioFavoriteHeroIdsDto> scenario_hero_ids_by_key = 2;
+   */
+  scenarioHeroIdsByKey: { [key: string]: HeroScenarioFavoriteHeroIdsDto };
+
+  /**
+   * @generated from field: repeated string fallback_hero_ids = 3;
+   */
+  fallbackHeroIds: string[];
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteSnapshotDto.
+ * Use `create(HeroScenarioFavoriteSnapshotDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteSnapshotDtoSchema: GenMessage<HeroScenarioFavoriteSnapshotDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 0);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteHeroIdsDto
+ */
+export type HeroScenarioFavoriteHeroIdsDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteHeroIdsDto"> & {
+  /**
+   * @generated from field: repeated string hero_ids = 1;
+   */
+  heroIds: string[];
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteHeroIdsDto.
+ * Use `create(HeroScenarioFavoriteHeroIdsDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteHeroIdsDtoSchema: GenMessage<HeroScenarioFavoriteHeroIdsDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 1);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteDto
+ */
+export type HeroScenarioFavoriteDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteDto"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: int32 version = 3;
+   */
+  version: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
+   */
+  createdAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 5;
+   */
+  updatedAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteSnapshotDto snapshot = 6;
+   */
+  snapshot?: HeroScenarioFavoriteSnapshotDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteDto.
+ * Use `create(HeroScenarioFavoriteDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteDtoSchema: GenMessage<HeroScenarioFavoriteDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 2);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteSummaryDto
+ */
+export type HeroScenarioFavoriteSummaryDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteSummaryDto"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: int32 version = 3;
+   */
+  version: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 4;
+   */
+  createdAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 5;
+   */
+  updatedAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: repeated string scenario_keys = 6;
+   */
+  scenarioKeys: string[];
+
+  /**
+   * @generated from field: int32 fallback_hero_count = 7;
+   */
+  fallbackHeroCount: number;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteSummaryDto.
+ * Use `create(HeroScenarioFavoriteSummaryDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteSummaryDtoSchema: GenMessage<HeroScenarioFavoriteSummaryDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 3);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto
+ */
+export type HeroScenarioFavoriteLiveVersionsDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto"> & {
+  /**
+   * @generated from field: map<string, int32> versions_by_key = 1;
+   */
+  versionsByKey: { [key: string]: number };
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto.
+ * Use `create(HeroScenarioFavoriteLiveVersionsDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteLiveVersionsDtoSchema: GenMessage<HeroScenarioFavoriteLiveVersionsDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 4);
+
+/**
+ * @generated from message hagicode.hero.v1.ListHeroScenarioFavoritesRequest
+ */
+export type ListHeroScenarioFavoritesRequest = Message<"hagicode.hero.v1.ListHeroScenarioFavoritesRequest"> & {
+};
+
+/**
+ * Describes the message hagicode.hero.v1.ListHeroScenarioFavoritesRequest.
+ * Use `create(ListHeroScenarioFavoritesRequestSchema)` to create a new message.
+ */
+export const ListHeroScenarioFavoritesRequestSchema: GenMessage<ListHeroScenarioFavoritesRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 5);
+
+/**
+ * @generated from message hagicode.hero.v1.ListHeroScenarioFavoritesResponse
+ */
+export type ListHeroScenarioFavoritesResponse = Message<"hagicode.hero.v1.ListHeroScenarioFavoritesResponse"> & {
+  /**
+   * @generated from field: repeated hagicode.hero.v1.HeroScenarioFavoriteSummaryDto result = 1;
+   */
+  result: HeroScenarioFavoriteSummaryDto[];
+};
+
+/**
+ * Describes the message hagicode.hero.v1.ListHeroScenarioFavoritesResponse.
+ * Use `create(ListHeroScenarioFavoritesResponseSchema)` to create a new message.
+ */
+export const ListHeroScenarioFavoritesResponseSchema: GenMessage<ListHeroScenarioFavoritesResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 6);
+
+/**
+ * @generated from message hagicode.hero.v1.GetHeroScenarioFavoriteRequest
+ */
+export type GetHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.GetHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.GetHeroScenarioFavoriteRequest.
+ * Use `create(GetHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const GetHeroScenarioFavoriteRequestSchema: GenMessage<GetHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 7);
+
+/**
+ * @generated from message hagicode.hero.v1.GetHeroScenarioFavoriteResponse
+ */
+export type GetHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.GetHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteDto result = 1;
+   */
+  result?: HeroScenarioFavoriteDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.GetHeroScenarioFavoriteResponse.
+ * Use `create(GetHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const GetHeroScenarioFavoriteResponseSchema: GenMessage<GetHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 8);
+
+/**
+ * @generated from message hagicode.hero.v1.CreateHeroScenarioFavoriteRequest
+ */
+export type CreateHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.CreateHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto expected_live = 2;
+   */
+  expectedLive?: HeroScenarioFavoriteLiveVersionsDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.CreateHeroScenarioFavoriteRequest.
+ * Use `create(CreateHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const CreateHeroScenarioFavoriteRequestSchema: GenMessage<CreateHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 9);
+
+/**
+ * @generated from message hagicode.hero.v1.CreateHeroScenarioFavoriteResponse
+ */
+export type CreateHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.CreateHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteDto result = 1;
+   */
+  result?: HeroScenarioFavoriteDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.CreateHeroScenarioFavoriteResponse.
+ * Use `create(CreateHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const CreateHeroScenarioFavoriteResponseSchema: GenMessage<CreateHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 10);
+
+/**
+ * @generated from message hagicode.hero.v1.RenameHeroScenarioFavoriteRequest
+ */
+export type RenameHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.RenameHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: int32 expected_version = 3;
+   */
+  expectedVersion: number;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.RenameHeroScenarioFavoriteRequest.
+ * Use `create(RenameHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const RenameHeroScenarioFavoriteRequestSchema: GenMessage<RenameHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 11);
+
+/**
+ * @generated from message hagicode.hero.v1.RenameHeroScenarioFavoriteResponse
+ */
+export type RenameHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.RenameHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteDto result = 1;
+   */
+  result?: HeroScenarioFavoriteDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.RenameHeroScenarioFavoriteResponse.
+ * Use `create(RenameHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const RenameHeroScenarioFavoriteResponseSchema: GenMessage<RenameHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 12);
+
+/**
+ * @generated from message hagicode.hero.v1.UpdateHeroScenarioFavoriteRequest
+ */
+export type UpdateHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.UpdateHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: int32 expected_version = 2;
+   */
+  expectedVersion: number;
+
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto expected_live = 3;
+   */
+  expectedLive?: HeroScenarioFavoriteLiveVersionsDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.UpdateHeroScenarioFavoriteRequest.
+ * Use `create(UpdateHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const UpdateHeroScenarioFavoriteRequestSchema: GenMessage<UpdateHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 13);
+
+/**
+ * @generated from message hagicode.hero.v1.UpdateHeroScenarioFavoriteResponse
+ */
+export type UpdateHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.UpdateHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteDto result = 1;
+   */
+  result?: HeroScenarioFavoriteDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.UpdateHeroScenarioFavoriteResponse.
+ * Use `create(UpdateHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const UpdateHeroScenarioFavoriteResponseSchema: GenMessage<UpdateHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 14);
+
+/**
+ * @generated from message hagicode.hero.v1.DeleteHeroScenarioFavoriteRequest
+ */
+export type DeleteHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.DeleteHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: int32 expected_version = 2;
+   */
+  expectedVersion: number;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.DeleteHeroScenarioFavoriteRequest.
+ * Use `create(DeleteHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const DeleteHeroScenarioFavoriteRequestSchema: GenMessage<DeleteHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 15);
+
+/**
+ * @generated from message hagicode.hero.v1.DeleteHeroScenarioFavoriteResponse
+ */
+export type DeleteHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.DeleteHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: bool result = 1;
+   */
+  result: boolean;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.DeleteHeroScenarioFavoriteResponse.
+ * Use `create(DeleteHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const DeleteHeroScenarioFavoriteResponseSchema: GenMessage<DeleteHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 16);
+
+/**
+ * @generated from message hagicode.hero.v1.ApplyHeroScenarioFavoriteRequest
+ */
+export type ApplyHeroScenarioFavoriteRequest = Message<"hagicode.hero.v1.ApplyHeroScenarioFavoriteRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: int32 expected_version = 2;
+   */
+  expectedVersion: number;
+
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteLiveVersionsDto expected_live = 3;
+   */
+  expectedLive?: HeroScenarioFavoriteLiveVersionsDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.ApplyHeroScenarioFavoriteRequest.
+ * Use `create(ApplyHeroScenarioFavoriteRequestSchema)` to create a new message.
+ */
+export const ApplyHeroScenarioFavoriteRequestSchema: GenMessage<ApplyHeroScenarioFavoriteRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 17);
+
+/**
+ * @generated from message hagicode.hero.v1.ApplyHeroScenarioFavoriteResponse
+ */
+export type ApplyHeroScenarioFavoriteResponse = Message<"hagicode.hero.v1.ApplyHeroScenarioFavoriteResponse"> & {
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioFavoriteApplyResultDto result = 1;
+   */
+  result?: HeroScenarioFavoriteApplyResultDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.ApplyHeroScenarioFavoriteResponse.
+ * Use `create(ApplyHeroScenarioFavoriteResponseSchema)` to create a new message.
+ */
+export const ApplyHeroScenarioFavoriteResponseSchema: GenMessage<ApplyHeroScenarioFavoriteResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 18);
+
+/**
+ * @generated from message hagicode.hero.v1.HeroScenarioFavoriteApplyResultDto
+ */
+export type HeroScenarioFavoriteApplyResultDto = Message<"hagicode.hero.v1.HeroScenarioFavoriteApplyResultDto"> & {
+  /**
+   * @generated from field: string favorite_id = 1;
+   */
+  favoriteId: string;
+
+  /**
+   * @generated from field: int32 favorite_version = 2;
+   */
+  favoriteVersion: number;
+
+  /**
+   * @generated from field: repeated hagicode.hero.v1.HeroScenarioRosterDto scenarios = 3;
+   */
+  scenarios: HeroScenarioRosterDto[];
+
+  /**
+   * @generated from field: repeated string preserved_scenario_keys = 4;
+   */
+  preservedScenarioKeys: string[];
+
+  /**
+   * @generated from field: hagicode.hero.v1.HeroScenarioRosterDto fallback = 5;
+   */
+  fallback?: HeroScenarioRosterDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.hero.v1.HeroScenarioFavoriteApplyResultDto.
+ * Use `create(HeroScenarioFavoriteApplyResultDtoSchema)` to create a new message.
+ */
+export const HeroScenarioFavoriteApplyResultDtoSchema: GenMessage<HeroScenarioFavoriteApplyResultDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_hero_v1_scenarios, 19);
 
 /**
  * @generated from message hagicode.hero.v1.ListHeroScenariosRequest
@@ -27,7 +488,7 @@ export type ListHeroScenariosRequest = Message<"hagicode.hero.v1.ListHeroScenari
  * Use `create(ListHeroScenariosRequestSchema)` to create a new message.
  */
 export const ListHeroScenariosRequestSchema: GenMessage<ListHeroScenariosRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 0);
+  messageDesc(file_hagicode_hero_v1_scenarios, 20);
 
 /**
  * @generated from message hagicode.hero.v1.ListHeroScenariosResponse
@@ -44,7 +505,7 @@ export type ListHeroScenariosResponse = Message<"hagicode.hero.v1.ListHeroScenar
  * Use `create(ListHeroScenariosResponseSchema)` to create a new message.
  */
 export const ListHeroScenariosResponseSchema: GenMessage<ListHeroScenariosResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 1);
+  messageDesc(file_hagicode_hero_v1_scenarios, 21);
 
 /**
  * @generated from message hagicode.hero.v1.ListScenarioSelectableHeroesRequest
@@ -57,7 +518,7 @@ export type ListScenarioSelectableHeroesRequest = Message<"hagicode.hero.v1.List
  * Use `create(ListScenarioSelectableHeroesRequestSchema)` to create a new message.
  */
 export const ListScenarioSelectableHeroesRequestSchema: GenMessage<ListScenarioSelectableHeroesRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 2);
+  messageDesc(file_hagicode_hero_v1_scenarios, 22);
 
 /**
  * @generated from message hagicode.hero.v1.ListScenarioSelectableHeroesResponse
@@ -74,7 +535,7 @@ export type ListScenarioSelectableHeroesResponse = Message<"hagicode.hero.v1.Lis
  * Use `create(ListScenarioSelectableHeroesResponseSchema)` to create a new message.
  */
 export const ListScenarioSelectableHeroesResponseSchema: GenMessage<ListScenarioSelectableHeroesResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 3);
+  messageDesc(file_hagicode_hero_v1_scenarios, 23);
 
 /**
  * @generated from message hagicode.hero.v1.SaveHeroScenarioRosterRequest
@@ -96,7 +557,7 @@ export type SaveHeroScenarioRosterRequest = Message<"hagicode.hero.v1.SaveHeroSc
  * Use `create(SaveHeroScenarioRosterRequestSchema)` to create a new message.
  */
 export const SaveHeroScenarioRosterRequestSchema: GenMessage<SaveHeroScenarioRosterRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 4);
+  messageDesc(file_hagicode_hero_v1_scenarios, 24);
 
 /**
  * @generated from message hagicode.hero.v1.SaveHeroScenarioRosterResponse
@@ -113,7 +574,7 @@ export type SaveHeroScenarioRosterResponse = Message<"hagicode.hero.v1.SaveHeroS
  * Use `create(SaveHeroScenarioRosterResponseSchema)` to create a new message.
  */
 export const SaveHeroScenarioRosterResponseSchema: GenMessage<SaveHeroScenarioRosterResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 5);
+  messageDesc(file_hagicode_hero_v1_scenarios, 25);
 
 /**
  * @generated from message hagicode.hero.v1.PromptImageSummaryDto
@@ -185,7 +646,7 @@ export type PromptImageSummaryDto = Message<"hagicode.hero.v1.PromptImageSummary
  * Use `create(PromptImageSummaryDtoSchema)` to create a new message.
  */
 export const PromptImageSummaryDtoSchema: GenMessage<PromptImageSummaryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 6);
+  messageDesc(file_hagicode_hero_v1_scenarios, 26);
 
 /**
  * @generated from message hagicode.hero.v1.HeroScenarioRosterDto
@@ -302,7 +763,7 @@ export type HeroScenarioRosterDto = Message<"hagicode.hero.v1.HeroScenarioRoster
  * Use `create(HeroScenarioRosterDtoSchema)` to create a new message.
  */
 export const HeroScenarioRosterDtoSchema: GenMessage<HeroScenarioRosterDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 7);
+  messageDesc(file_hagicode_hero_v1_scenarios, 27);
 
 /**
  * @generated from message hagicode.hero.v1.HeroScenarioSelectableHeroDto
@@ -359,7 +820,7 @@ export type HeroScenarioSelectableHeroDto = Message<"hagicode.hero.v1.HeroScenar
  * Use `create(HeroScenarioSelectableHeroDtoSchema)` to create a new message.
  */
 export const HeroScenarioSelectableHeroDtoSchema: GenMessage<HeroScenarioSelectableHeroDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 8);
+  messageDesc(file_hagicode_hero_v1_scenarios, 28);
 
 /**
  * @generated from message hagicode.hero.v1.SaveHeroScenarioRosterDto
@@ -381,7 +842,7 @@ export type SaveHeroScenarioRosterDto = Message<"hagicode.hero.v1.SaveHeroScenar
  * Use `create(SaveHeroScenarioRosterDtoSchema)` to create a new message.
  */
 export const SaveHeroScenarioRosterDtoSchema: GenMessage<SaveHeroScenarioRosterDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_hero_v1_scenarios, 9);
+  messageDesc(file_hagicode_hero_v1_scenarios, 29);
 
 /**
  * @generated from service hagicode.hero.v1.HeroScenariosService
@@ -410,6 +871,62 @@ export const HeroScenariosService: GenService<{
     methodKind: "unary";
     input: typeof SaveHeroScenarioRosterRequestSchema;
     output: typeof SaveHeroScenarioRosterResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.ListHeroScenarioFavorites
+   */
+  listHeroScenarioFavorites: {
+    methodKind: "unary";
+    input: typeof ListHeroScenarioFavoritesRequestSchema;
+    output: typeof ListHeroScenarioFavoritesResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.GetHeroScenarioFavorite
+   */
+  getHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof GetHeroScenarioFavoriteRequestSchema;
+    output: typeof GetHeroScenarioFavoriteResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.CreateHeroScenarioFavorite
+   */
+  createHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof CreateHeroScenarioFavoriteRequestSchema;
+    output: typeof CreateHeroScenarioFavoriteResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.RenameHeroScenarioFavorite
+   */
+  renameHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof RenameHeroScenarioFavoriteRequestSchema;
+    output: typeof RenameHeroScenarioFavoriteResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.UpdateHeroScenarioFavorite
+   */
+  updateHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof UpdateHeroScenarioFavoriteRequestSchema;
+    output: typeof UpdateHeroScenarioFavoriteResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.DeleteHeroScenarioFavorite
+   */
+  deleteHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof DeleteHeroScenarioFavoriteRequestSchema;
+    output: typeof DeleteHeroScenarioFavoriteResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.hero.v1.HeroScenariosService.ApplyHeroScenarioFavorite
+   */
+  applyHeroScenarioFavorite: {
+    methodKind: "unary";
+    input: typeof ApplyHeroScenarioFavoriteRequestSchema;
+    output: typeof ApplyHeroScenarioFavoriteResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_hagicode_hero_v1_scenarios, 0);
