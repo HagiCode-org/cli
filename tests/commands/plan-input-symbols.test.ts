@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { describe, expect, it } from 'vitest';
-import { addPlanScheduleOptions, hasPlanScheduleFlags } from '../../src/commands/plan/input';
+import { addPlanScheduleOptions, hasPlanScheduleFlags, mergePlan, stripServerFields } from '../../src/commands/plan/input';
 
 describe('hasPlanScheduleFlags (src/commands/plan/input.ts)', () => {
   it('is false for an empty flag set', () => {
@@ -87,5 +87,65 @@ describe('addPlanScheduleOptions (src/commands/plan/input.ts)', () => {
 
     expect(command.options.map(option => option.long)).toContain('--name');
     expect(command.options).toHaveLength(6);
+  });
+});
+
+describe('mergePlan preflight (src/commands/plan/input.ts)', () => {
+  const current = {
+    id: 'plan-1',
+    type: 'hagitask',
+    name: 'Nightly review',
+    enabled: true,
+    state: 'scheduled',
+    nextRunAt: '2026-05-01T18:00:00Z',
+    payload: { title: 'Nightly review' },
+    preflight: { runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 },
+  };
+
+  it('keeps the current preflight when the changes do not mention it', () => {
+    expect(mergePlan(current, { enabled: false })).toMatchObject({
+      enabled: false,
+      preflight: { runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 },
+    });
+  });
+
+  it('replaces the preflight as a whole value when the changes set one', () => {
+    const merged = mergePlan(current, { preflight: { runtime: 'bash', file: 'scripts/other.sh' } });
+
+    expect(merged.preflight).toEqual({ runtime: 'bash', file: 'scripts/other.sh' });
+    expect(merged.preflight).not.toHaveProperty('timeoutSeconds');
+  });
+
+  it('omits the preflight from the replacement when the changes clear it with null', () => {
+    const merged = mergePlan(current, { preflight: null });
+
+    expect(merged).not.toHaveProperty('preflight');
+    expect(merged).toMatchObject({ name: 'Nightly review', enabled: true });
+  });
+
+  it('adds no preflight when the current plan has none', () => {
+    const { preflight: _omitted, ...withoutPreflight } = current;
+
+    expect(mergePlan(withoutPreflight, { enabled: false })).not.toHaveProperty('preflight');
+  });
+});
+
+describe('backend-owned trigger fields (src/commands/plan/input.ts)', () => {
+  const triggerFields = {
+    lastTriggeredResetAt: '2026-11-13T08:00:00Z',
+    pendingQuotaTrigger: { raisedAt: '2026-11-14T08:00:00Z', windowResetAt: '2026-11-14T13:00:00Z' },
+  };
+
+  it('stripServerFields removes lastTriggeredResetAt and pendingQuotaTrigger and keeps quotaReset', () => {
+    const quotaSchedule = { mode: 'quotaReset', quotaReset: { window: 'claudeFiveHour', minRemainingPercent: 20 } };
+    const stripped = stripServerFields({ id: 'plan-1', name: 'Nightly', schedule: quotaSchedule, ...triggerFields });
+
+    expect(stripped).toEqual({ name: 'Nightly', schedule: quotaSchedule });
+  });
+
+  it('mergePlan never carries the trigger fields of the current plan into the request', () => {
+    const merged = mergePlan({ id: 'plan-1', name: 'Nightly', enabled: true, ...triggerFields }, { enabled: false });
+
+    expect(merged).toEqual({ name: 'Nightly', enabled: false });
   });
 });

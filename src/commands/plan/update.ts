@@ -38,7 +38,7 @@ export function registerPlanUpdateCommand(parent: Command, dependencies: AppDepe
       .description('Update a scheduled plan. The current plan is read first and only the given fields change. Schedule flags change the schedule; partial interval flags keep the plan\'s interval fields.'),
   )
     .requiredOption('--id <id>', 'Plan id to update.')
-    .option('--input <file|->', 'JSON document whose top-level fields replace the same fields of the plan.')
+    .option('--input <file|->', 'JSON document whose top-level fields replace the same fields of the plan. A preflight object replaces the plan preflight; null clears it.')
     .option('--name <name>', 'Updated plan name.')
     .option('--hero-id <id>', 'Hero for a single-agent pool. Replaces the agent pool.')
     .option('--enabled', 'Enable the plan.')

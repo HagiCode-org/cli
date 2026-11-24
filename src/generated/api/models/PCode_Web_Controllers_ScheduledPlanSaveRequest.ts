@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { PCode_Web_Controllers_ScheduledPlanAgentPoolDto } from './PCode_Web_Controllers_ScheduledPlanAgentPoolDto';
+import type { PCode_Web_Controllers_ScheduledPlanPreflightDto } from './PCode_Web_Controllers_ScheduledPlanPreflightDto';
 import type { PCode_Web_Controllers_ScheduledPlanScheduleDto } from './PCode_Web_Controllers_ScheduledPlanScheduleDto';
 /**
  * Create and update body. PCode.Web.Controllers.ScheduledPlanSaveRequest.Payload carries the inputs of the matching creation request
@@ -22,4 +23,8 @@ export type PCode_Web_Controllers_ScheduledPlanSaveRequest = {
    * and projects in one `scope` object, the same shape as the creation request.
    */
   payload?: any;
+  /**
+   * Preflight check. On update, `null` or an omitted value clears it, so the CLI sends the stored value back unless the user changes it.
+   */
+  preflight?: PCode_Web_Controllers_ScheduledPlanPreflightDto | null;
 };

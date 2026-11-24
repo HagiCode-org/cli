@@ -9,7 +9,7 @@ export type PlanSaveRequest = PCode_Web_Controllers_ScheduledPlanSaveRequest;
 export type PlanSchedule = PCode_Web_Controllers_ScheduledPlanScheduleDto;
 
 /** Fields the backend owns. They are never sent back, so `get --json` output can be edited and reused. */
-const SERVER_OWNED_FIELDS = ['id', 'createdAt', 'updatedAt', 'state', 'nextRunAt'] as const;
+const SERVER_OWNED_FIELDS = ['id', 'createdAt', 'updatedAt', 'state', 'nextRunAt', 'lastTriggeredResetAt', 'pendingQuotaTrigger'] as const;
 
 /** Scalar flag values that override fields of a plan document. Undefined means the flag was not passed. */
 export type PlanFlagChanges = {
@@ -72,12 +72,22 @@ export function buildFlagChanges(flags: PlanFlagChanges): PlanSaveRequest {
 /**
  * Shallow merge on top-level save-request keys. A key present in `changes` replaces the current value as a
  * whole, so a partial `schedule` never merges into the old one and a field can be cleared with `null`.
+ *
+ * `preflight` is an ordinary top-level key here. The replacement keeps the current plan's preflight because the
+ * spread copies it, and Core clears a preflight that a replacement omits, so this carry is required. A document
+ * that sets `preflight` replaces it whole; `preflight: null` removes the key, so the replacement omits the preflight
+ * and the backend clears it.
  */
 export function mergePlan(current: object, changes: object): PlanSaveRequest {
-  return {
+  const merged: PlanSaveRequest = {
     ...stripServerFields(current),
     ...stripServerFields(changes),
   };
+  if (merged.preflight === null) {
+    delete merged.preflight;
+  }
+
+  return merged;
 }
 
 /** Schedule flag values as the command received them. Undefined means the flag was not passed. */

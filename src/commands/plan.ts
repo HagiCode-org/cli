@@ -1,4 +1,6 @@
 import type { Command } from 'commander';
+import { registerPlanCancelTriggerCommand } from './plan/cancelTrigger';
+import { registerPlanConfirmCommand } from './plan/confirm';
 import { registerPlanCreateCommand } from './plan/create';
 import { registerPlanDeleteCommand } from './plan/delete';
 import { registerPlanDisableCommand } from './plan/disable';
@@ -22,4 +24,6 @@ export function registerPlanCommands(program: Command, dependencies: AppDependen
   registerPlanDisableCommand(plan, dependencies);
   registerPlanDeleteCommand(plan, dependencies);
   registerPlanRunCommand(plan, dependencies);
+  registerPlanConfirmCommand(plan, dependencies);
+  registerPlanCancelTriggerCommand(plan, dependencies);
 }

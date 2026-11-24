@@ -191,3 +191,202 @@ describe('hagi plan update (registerPlanUpdateCommand)', () => {
     expect(stdout.join('')).toBe('');
   });
 });
+
+describe('stored preflight survives plan replacements (round trip)', () => {
+  const preflight = { runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 };
+  const withPreflight = (overrides: Partial<Parameters<typeof createPlan>[1]> = {}) => ({ ...createPlan('plan-1', overrides), preflight });
+
+  it('plan update --name sends a replacement carrying the stored preflight', async () => {
+    const { dependencies, api } = createDependencies({ getPlan: vi.fn().mockResolvedValue(withPreflight()) });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--name', 'Renamed'), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body).toMatchObject({ name: 'Renamed', preflight });
+    expect(body).not.toHaveProperty('id');
+  });
+
+  it('plan enable sends a replacement carrying the stored preflight', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(withPreflight({ enabled: false })),
+    });
+
+    expect(await runCli(plan('enable', '--id', 'plan-1'), dependencies)).toBe(0);
+    expect(api.updatePlan).toHaveBeenCalledWith('plan-1', expect.objectContaining({ enabled: true, preflight }));
+  });
+
+  it('plan disable sends a replacement carrying the stored preflight', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(withPreflight({ enabled: true })),
+    });
+
+    expect(await runCli(plan('disable', '--id', 'plan-1'), dependencies)).toBe(0);
+    expect(api.updatePlan).toHaveBeenCalledWith('plan-1', expect.objectContaining({ enabled: false, preflight }));
+  });
+
+  it.each([
+    ['update --name', ['update', '--id', 'plan-1', '--name', 'Renamed']],
+    ['enable', ['enable', '--id', 'plan-1']],
+    ['disable', ['disable', '--id', 'plan-1']],
+  ])('%s on a plan without a preflight sends no preflight', async (_label, args) => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(createPlan('plan-1', { enabled: args[0] === 'enable' ? false : true })),
+    });
+
+    expect(await runCli(plan(...args), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body).not.toHaveProperty('preflight');
+  });
+
+  it('plan update --name keeps the preflight without a timeout exactly as stored', async () => {
+    const stored = { runtime: 'bash', file: 'scripts/check.sh' };
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue({ ...createPlan('plan-1'), preflight: stored }),
+    });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--name', 'Renamed'), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body.preflight).toEqual(stored);
+    expect(body.preflight).not.toHaveProperty('timeoutSeconds');
+  });
+});
+
+describe('plan update --input and preflight', () => {
+  const preflight = { runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 };
+  const storedPlan = () => ({ ...createPlan('plan-1'), preflight });
+
+  it('replaces the stored preflight as a whole value from the document', async () => {
+    const { dependencies, api } = createDependencies({ getPlan: vi.fn().mockResolvedValue(storedPlan()) });
+    const path = writeDocument('preflight-set.json', { preflight: { runtime: 'bash', file: 'scripts/other.sh' } });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--input', path), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body.preflight).toEqual({ runtime: 'bash', file: 'scripts/other.sh' });
+    expect(body.preflight).not.toHaveProperty('timeoutSeconds');
+  });
+
+  it('omits the preflight from the replacement when the document sets null', async () => {
+    const { dependencies, api } = createDependencies({ getPlan: vi.fn().mockResolvedValue(storedPlan()) });
+    const path = writeDocument('preflight-null.json', { preflight: null });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--input', path), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body).not.toHaveProperty('preflight');
+  });
+
+  it('keeps the stored preflight when the document does not mention it', async () => {
+    const { dependencies, api } = createDependencies({ getPlan: vi.fn().mockResolvedValue(storedPlan()) });
+    const path = writeDocument('no-preflight.json', { name: 'From document' });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--input', path), dependencies)).toBe(0);
+    const [, body] = api.updatePlan.mock.calls[0];
+    expect(body).toMatchObject({ name: 'From document', preflight });
+  });
+});
+
+describe('quota-reset schedule through plan create and update', () => {
+  const quotaSchedule = {
+    mode: 'quotaReset',
+    timeZone: 'America/Los_Angeles',
+    quotaReset: {
+      window: 'claudeFiveHour',
+      minRemainingPercent: 20,
+      maxMinutesBeforeReset: 60,
+      requireManualConfirmation: true,
+      skipConfirmationDuringUnattendedHours: false,
+    },
+  };
+  const triggered = {
+    lastTriggeredResetAt: '2026-11-13T08:00:00Z',
+    pendingQuotaTrigger: { raisedAt: '2026-11-14T08:00:00Z', windowResetAt: '2026-11-14T13:00:00Z' },
+  };
+  const currentQuotaPlan = () => createPlan('plan-1', { schedule: quotaSchedule, ...triggered });
+
+  it('keeps quotaReset unchanged on a plain update, with the values the backend returned', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--name', 'Renamed'), dependencies)).toBe(0);
+    const [, body] = vi.mocked(api.updatePlan).mock.calls[0];
+    expect(body.schedule).toEqual(quotaSchedule);
+  });
+
+  it('keeps quotaReset when only the time zone changes', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--time-zone', 'Asia/Tokyo'), dependencies)).toBe(0);
+    const [, body] = vi.mocked(api.updatePlan).mock.calls[0];
+    expect(body.schedule).toEqual({ ...quotaSchedule, timeZone: 'Asia/Tokyo' });
+  });
+
+  it('replaces the whole schedule, and so drops quotaReset, when all interval flags are passed', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+
+    expect(await runCli(plan(
+      'update', '--id', 'plan-1',
+      '--window-start', '2026-11-14T00:00-08:00',
+      '--window-end', '2026-11-15T00:00-08:00',
+      '--first-at', '2026-11-14T01:00-08:00',
+      '--every', '3h',
+    ), dependencies)).toBe(0);
+    const [, body] = vi.mocked(api.updatePlan).mock.calls[0];
+    expect(body.schedule).not.toHaveProperty('quotaReset');
+    expect(body.schedule.repeat).toMatchObject({ rule: 'interval', intervalMinutes: 180 });
+  });
+
+  it('refuses partial interval flags on a quota-reset schedule before any update', async () => {
+    const { dependencies, api, stderr } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--every', '3h'), dependencies)).toBe(EXIT_CODES.USAGE);
+    expect(stderr.join('')).toContain('Missing: --window-start, --window-end, --first-at');
+    expect(api.updatePlan).not.toHaveBeenCalled();
+  });
+
+  it('forwards quotaReset from a create document unchanged', async () => {
+    const { dependencies, api } = createDependencies();
+    const path = writeDocument('quota-create.json', {
+      type: 'hagitask',
+      name: 'Quota plan',
+      schedule: quotaSchedule,
+      payload: { title: 'Quota', message: 'Run on reset', projectId: 'project-1' },
+    });
+
+    expect(await runCli(plan('create', '--input', path), dependencies)).toBe(0);
+    const [body] = vi.mocked(api.createPlan).mock.calls[0];
+    expect(body.schedule).toEqual(quotaSchedule);
+  });
+
+  it('does not send the trigger fields when plan get --json output is reused as --input for update', async () => {
+    const { dependencies: getDeps, stdout } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+    expect(await runCli(plan('get', '--id', 'plan-1', '--json'), getDeps)).toBe(0);
+    const path = writeDocument('reused.json', JSON.parse(stdout.join('')).plan);
+
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+    expect(await runCli(plan('update', '--id', 'plan-1', '--input', path), dependencies)).toBe(0);
+    const [, body] = vi.mocked(api.updatePlan).mock.calls[0];
+    expect(body).not.toHaveProperty('lastTriggeredResetAt');
+    expect(body).not.toHaveProperty('pendingQuotaTrigger');
+    expect(body.schedule).toEqual(quotaSchedule);
+  });
+
+  it('does not send the trigger fields to update when they come from the current plan', async () => {
+    const { dependencies, api } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(currentQuotaPlan()),
+    });
+
+    expect(await runCli(plan('update', '--id', 'plan-1', '--enabled'), dependencies)).toBe(0);
+    const [, body] = vi.mocked(api.updatePlan).mock.calls[0];
+    expect(body).not.toHaveProperty('lastTriggeredResetAt');
+    expect(body).not.toHaveProperty('pendingQuotaTrigger');
+  });
+});

@@ -282,6 +282,8 @@ describe('plan formatters', () => {
       schedule: dailyPlan.schedule,
       agentPool: dailyPlan.agentPool,
       payload: dailyPlan.payload,
+      lastTriggeredResetAt: null,
+      pendingQuotaTrigger: null,
     });
   });
 

@@ -977,6 +977,20 @@ describe('plan schedule flags on create and update', () => {
       expect(help).toContain('<n>m, <n>h or <n>d');
       expect(help).toContain('minimum is 5 minutes');
     });
+
+    it('plan get --help mentions the preflight check', async () => {
+      const { dependencies, stdout } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', 'get', '--help'], dependencies)).toBe(0);
+      expect(stdout.join('').replace(/\s+/g, ' ')).toContain('preflight check');
+    });
+
+    it.each([['create'], ['update']])('plan %s --help mentions preflight in the --input description', async action => {
+      const { dependencies, stdout } = createDependencies();
+
+      expect(await runCli(['node', 'hagi', 'plan', action, '--help'], dependencies)).toBe(0);
+      expect(stdout.join('').replace(/\s+/g, ' ')).toContain('preflight');
+    });
   });
 });
 
@@ -1065,12 +1079,91 @@ describe('plan README examples', () => {
     const section = readme.slice(readme.indexOf('## Plan Commands'), readme.indexOf('## Skills Commands'));
     const examples = [...section.matchAll(/```json\n([\s\S]*?)```/g)].map(match => match[1]);
 
-    expect(examples).toHaveLength(2);
+    expect(examples).toHaveLength(3);
     for (const example of examples) {
       const document = await loadPlanDocument(writePlanFile(example));
       expect(document).toHaveProperty('type');
       expect(document).toHaveProperty('schedule');
       expect(document).toHaveProperty('payload');
     }
+  });
+});
+
+describe('plan preflight in get and list output', () => {
+  const withPreflight = (preflight: Record<string, unknown>) => ({ ...createPlan('plan-1'), preflight });
+
+  it('shows the preflight row in human mode for plan get', async () => {
+    const { dependencies, stdout } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(withPreflight({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-1'], dependencies)).toBe(0);
+    expect(stdout.join('')).toMatch(/^preflight\s+node scripts\/check\.mjs timeout 120s$/m);
+  });
+
+  it('shows a preflight without a timeout in human mode without a timeout value', async () => {
+    const { dependencies, stdout } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(withPreflight({ runtime: 'bash', file: 'scripts/check.sh' })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-1'], dependencies)).toBe(0);
+    expect(stdout.join('')).toMatch(/^preflight\s+bash scripts\/check\.sh$/m);
+    expect(stdout.join('')).not.toContain('timeout');
+  });
+
+  it('shows no preflight row in human mode when the plan has none', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-1'], dependencies)).toBe(0);
+    expect(stdout.join('')).not.toMatch(/^preflight/m);
+  });
+
+  it('prints the preflight under plan.preflight in plan get --json', async () => {
+    const { dependencies, stdout } = createDependencies({
+      getPlan: vi.fn().mockResolvedValue(withPreflight({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 })),
+    });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-1', '--json'], dependencies)).toBe(0);
+    expect(JSON.parse(stdout.join('')).plan.preflight).toEqual({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 });
+  });
+
+  it('omits the preflight key from plan get --json when the plan has none', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'plan', 'get', '--id', 'plan-1', '--json'], dependencies)).toBe(0);
+    expect(JSON.parse(stdout.join('')).plan).not.toHaveProperty('preflight');
+  });
+
+  it('carries the preflight on each plan entry of plan list --json', async () => {
+    const { dependencies, stdout } = createDependencies({
+      listPlans: vi.fn().mockResolvedValue([
+        withPreflight({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 }),
+        createPlan('plan-2'),
+      ]),
+    });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'list', '--json'], dependencies)).toBe(0);
+    const [withCheck, withoutCheck] = JSON.parse(stdout.join('')).plans;
+    expect(withCheck.preflight).toEqual({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 });
+    expect(withoutCheck).not.toHaveProperty('preflight');
+  });
+});
+
+describe('plan create --input and preflight', () => {
+  it('sends a document preflight as a whole value on create', async () => {
+    const { dependencies, api } = createDependencies();
+    const path = writePlanFile({ ...recurringDocument, preflight: { runtime: 'bash', file: 'scripts/check.sh', timeoutSeconds: 30 } });
+
+    expect(await runCli(['node', 'hagi', 'plan', 'create', '--input', path], dependencies)).toBe(0);
+    expect(api.createPlan).toHaveBeenCalledWith(expect.objectContaining({
+      preflight: { runtime: 'bash', file: 'scripts/check.sh', timeoutSeconds: 30 },
+    }));
+  });
+
+  it('creates a plan without a preflight when the document has none', async () => {
+    const { dependencies, api } = createDependencies();
+
+    expect(await runCli(['node', 'hagi', 'plan', 'create', '--input', writePlanFile(recurringDocument)], dependencies)).toBe(0);
+    expect(api.createPlan.mock.calls[0][0]).not.toHaveProperty('preflight');
   });
 });

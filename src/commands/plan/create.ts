@@ -31,7 +31,7 @@ export function registerPlanCreateCommand(parent: Command, dependencies: AppDepe
       .command('create')
       .description('Create a scheduled plan from a JSON document. Plans are enabled unless --disabled or the document says otherwise. Schedule flags build an interval schedule and override the document schedule.'),
   )
-    .requiredOption('--input <file|->', 'Plan JSON file path, or - to read from stdin.')
+    .requiredOption('--input <file|->', 'Plan JSON file path, or - to read from stdin. May include a preflight object: { runtime, file, timeoutSeconds? }.')
     .option('--name <name>', 'Plan name. Overrides the document name.')
     .option('--hero-id <id>', 'Hero for a single-agent pool. Replaces the document agent pool.')
     .option('--disabled', 'Create the plan disabled. Overrides the document enabled value.');

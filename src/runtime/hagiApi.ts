@@ -31,6 +31,8 @@ import {
   VaultService,
 } from '../generated/grpc/hagicode/project/v1/vault_pb';
 import {
+  CancelScheduledPlanQuotaTriggerResponseSchema,
+  ConfirmScheduledPlanQuotaTriggerResponseSchema,
   CreateScheduledPlanResponseSchema,
   DeleteScheduledPlanResponseSchema,
   GetScheduledPlanResponseSchema,
@@ -460,6 +462,10 @@ export interface HagiApi {
   runPlan(id: string): Promise<PCode_Models_SessionResponseDto>;
   /** Starts the same run in the background; resolves once the backend accepts it, before the session exists. */
   startPlan(id: string): Promise<PCode_Web_Controllers_ScheduledPlanRunAcceptedDto>;
+  /** Confirms the plan's pending quota-reset trigger. The backend answers 409 when no trigger is waiting. */
+  confirmPlanQuotaTrigger(id: string): Promise<PCode_Web_Controllers_ScheduledPlanRunAcceptedDto>;
+  /** Cancels the plan's pending quota-reset trigger and returns the plan. Succeeds with no effect when nothing is pending. */
+  cancelPlanQuotaTrigger(id: string): Promise<PCode_Web_Controllers_ScheduledPlanResponse>;
   listVaults(): Promise<PCode_Application_Contracts_Dto_VaultListResponseDto>;
   createVault(requestBody: PCode_Application_Contracts_Dto_CreateVaultRequestDto): Promise<PCode_Application_Contracts_Dto_VaultItemDto>;
   updateVault(id: string, requestBody: PCode_Application_Contracts_Dto_UpdateVaultRequestDto): Promise<PCode_Application_Contracts_Dto_VaultItemDto>;
@@ -671,6 +677,10 @@ export function createGrpcHagiApi(): HagiApi {
     },
     runPlan: async id => result(RunScheduledPlanResponseSchema, scheduledPlans().runScheduledPlan({ id })),
     startPlan: async id => result(StartScheduledPlanResponseSchema, scheduledPlans().startScheduledPlan({ id })),
+    confirmPlanQuotaTrigger: async id =>
+      result(ConfirmScheduledPlanQuotaTriggerResponseSchema, scheduledPlans().confirmScheduledPlanQuotaTrigger({ id })),
+    cancelPlanQuotaTrigger: async id =>
+      result(CancelScheduledPlanQuotaTriggerResponseSchema, scheduledPlans().cancelScheduledPlanQuotaTrigger({ id })),
     listVaults: async () => result(ListVaultsResponseSchema, vaults().listVaults({})),
     createVault: async requestBody =>
       result(CreateVaultResponseSchema, vaults().createVault({ body: dtoToProto(CreateVaultRequestDtoSchema, requestBody) })),

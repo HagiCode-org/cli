@@ -338,6 +338,8 @@ export function createPlan(
     schedule: unknown;
     agentPool: unknown;
     payload: unknown;
+    lastTriggeredResetAt: string | null;
+    pendingQuotaTrigger: unknown;
   }> = {},
 ) {
   return {
@@ -360,6 +362,9 @@ export function createPlan(
     payload: overrides.payload ?? { title: 'Nightly review', message: 'Review the day', projectId: 'project-1' },
     state: overrides.state === undefined ? 'scheduled' : overrides.state,
     nextRunAt: overrides.nextRunAt === undefined ? '2026-05-01T18:00:00Z' : overrides.nextRunAt,
+    // Quota-reset trigger state is sent only when a test sets it, so plans without it keep their shape.
+    ...(overrides.lastTriggeredResetAt !== undefined ? { lastTriggeredResetAt: overrides.lastTriggeredResetAt } : {}),
+    ...(overrides.pendingQuotaTrigger !== undefined ? { pendingQuotaTrigger: overrides.pendingQuotaTrigger } : {}),
   };
 }
 
@@ -572,6 +577,8 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     deletePlan: vi.fn().mockResolvedValue(undefined),
     runPlan: vi.fn().mockResolvedValue(createSession('session-3', PCode_Models_SessionType.CHAT)),
     startPlan: vi.fn().mockResolvedValue({ planId: 'plan-1' }),
+    confirmPlanQuotaTrigger: vi.fn().mockResolvedValue({ planId: 'plan-1' }),
+    cancelPlanQuotaTrigger: vi.fn().mockResolvedValue(createPlan('plan-1')),
     listVaults: vi.fn().mockResolvedValue({ generatedAtUtc: '2026-04-05T00:00:00Z', items: [createVault('vault-1')] }),
     createVault: vi.fn().mockResolvedValue(createVault('vault-2')),
     updateVault: vi.fn().mockResolvedValue({ ...createVault('vault-1'), name: 'Updated Vault' }),

@@ -406,6 +406,9 @@ export type { PCode_Web_Controllers_PresetTaskSchemaTargetDto } from './models/P
 export type { PCode_Web_Controllers_PresetTaskUnavailableResponseDto } from './models/PCode_Web_Controllers_PresetTaskUnavailableResponseDto';
 export type { PCode_Web_Controllers_ScheduledPlanAgentDto } from './models/PCode_Web_Controllers_ScheduledPlanAgentDto';
 export type { PCode_Web_Controllers_ScheduledPlanAgentPoolDto } from './models/PCode_Web_Controllers_ScheduledPlanAgentPoolDto';
+export type { PCode_Web_Controllers_ScheduledPlanPendingQuotaTriggerDto } from './models/PCode_Web_Controllers_ScheduledPlanPendingQuotaTriggerDto';
+export type { PCode_Web_Controllers_ScheduledPlanQuotaResetDto } from './models/PCode_Web_Controllers_ScheduledPlanQuotaResetDto';
+export type { PCode_Web_Controllers_ScheduledPlanPreflightDto } from './models/PCode_Web_Controllers_ScheduledPlanPreflightDto';
 export type { PCode_Web_Controllers_ScheduledPlanRepeatDto } from './models/PCode_Web_Controllers_ScheduledPlanRepeatDto';
 export type { PCode_Web_Controllers_ScheduledPlanResponse } from './models/PCode_Web_Controllers_ScheduledPlanResponse';
 export type { PCode_Web_Controllers_ScheduledPlanRunAcceptedDto } from './models/PCode_Web_Controllers_ScheduledPlanRunAcceptedDto';

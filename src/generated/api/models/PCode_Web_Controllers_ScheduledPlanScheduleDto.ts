@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { PCode_Web_Controllers_ScheduledPlanQuotaResetDto } from './PCode_Web_Controllers_ScheduledPlanQuotaResetDto';
 import type { PCode_Web_Controllers_ScheduledPlanRepeatDto } from './PCode_Web_Controllers_ScheduledPlanRepeatDto';
 /**
  * Schedule of a plan. `once` uses PCode.Web.Controllers.ScheduledPlanScheduleDto.RunAt; `recurring` uses the range, time of day and repeat.
@@ -32,4 +33,8 @@ export type PCode_Web_Controllers_ScheduledPlanScheduleDto = {
    */
   timeOfDay?: string | null;
   repeat?: PCode_Web_Controllers_ScheduledPlanRepeatDto;
+  /**
+   * Quota-reset condition; set for `quotaReset` mode only. Core rejects it in any other mode.
+   */
+  quotaReset?: PCode_Web_Controllers_ScheduledPlanQuotaResetDto | null;
 };

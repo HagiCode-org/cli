@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { formatJson } from '../../formatters/json';
-import { formatPlanSummaryHuman, toPlanView } from '../../formatters/plan';
+import { formatPlanDetailHuman, toPlanView } from '../../formatters/plan';
 import {
   addJsonOption,
   createCommandContext,
@@ -17,7 +17,7 @@ export function registerPlanGetCommand(parent: Command, dependencies: AppDepende
   addJsonOption(
     parent
       .command('get')
-      .description('Show one scheduled plan, including its schedule, agent pool and payload in --json mode.'),
+      .description('Show one scheduled plan, including its schedule, preflight check, agent pool and payload in --json mode.'),
   )
     .requiredOption('--id <id>', 'Plan id to read.')
     .action(async function planGetAction(this: Command, options: PlanGetOptions) {
@@ -29,6 +29,6 @@ export function registerPlanGetCommand(parent: Command, dependencies: AppDepende
         return;
       }
 
-      context.io.stdout(formatPlanSummaryHuman(view));
+      context.io.stdout(formatPlanDetailHuman(view));
     });
 }

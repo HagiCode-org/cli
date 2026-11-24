@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatPlanDetailHuman,
   formatPlanListHuman,
+  formatPlanListPayload,
   formatPlanSummaryHuman,
+  summarizePlanPreflight,
   summarizePlanSchedule,
   toPlanView,
 } from '../../src/formatters/plan';
@@ -122,5 +125,155 @@ describe('plan views with an interval schedule', () => {
       firstRunAt: '2026-11-14T08:00:00Z',
       intervalMinutes: 180,
     });
+  });
+});
+
+describe('plan preflight view', () => {
+  it('keeps the full preflight in the view and shows one row with the timeout', () => {
+    const plan = { ...createPlan('plan-4'), preflight: { runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 } };
+    const view = toPlanView(plan as never);
+
+    expect(view.preflight).toEqual({ runtime: 'node', file: 'scripts/check.mjs', timeoutSeconds: 120 });
+    expect(formatPlanSummaryHuman(view)).toMatch(/^preflight\s+node scripts\/check\.mjs timeout 120s$/m);
+  });
+
+  it('shows the preflight without a timeout and adds no timeout text', () => {
+    const plan = { ...createPlan('plan-5'), preflight: { runtime: 'bash', file: 'scripts/check.sh' } };
+    const view = toPlanView(plan as never);
+
+    expect(view.preflight).toEqual({ runtime: 'bash', file: 'scripts/check.sh' });
+    const output = formatPlanSummaryHuman(view);
+    expect(output).toMatch(/^preflight\s+bash scripts\/check\.sh$/m);
+    expect(output).not.toContain('timeout');
+  });
+
+  it('omits the preflight key and row when the plan has none', () => {
+    const view = toPlanView(createPlan('plan-6') as never);
+
+    expect(view).not.toHaveProperty('preflight');
+    expect(JSON.parse(JSON.stringify(view))).not.toHaveProperty('preflight');
+    expect(formatPlanSummaryHuman(view)).not.toMatch(/^preflight/m);
+  });
+
+  it('keeps a zero timeout visible because it is a set value', () => {
+    const plan = { ...createPlan('plan-7'), preflight: { runtime: 'node', file: 'a.mjs', timeoutSeconds: 0 } };
+
+    expect(summarizePlanPreflight(toPlanView(plan as never).preflight)).toBe('node a.mjs timeout 0s');
+  });
+});
+
+describe('quota-reset schedule summary', () => {
+  const quotaSchedule = (
+    quotaReset: NonNullable<PCode_Web_Controllers_ScheduledPlanScheduleDto['quotaReset']>,
+  ): PCode_Web_Controllers_ScheduledPlanScheduleDto => ({ mode: 'quotaReset', quotaReset });
+
+  it.each([
+    [{ requireManualConfirmation: true, skipConfirmationDuringUnattendedHours: true }, 'manual skip-unattended'],
+    [{ requireManualConfirmation: true, skipConfirmationDuringUnattendedHours: false }, 'manual'],
+    [{ requireManualConfirmation: false, skipConfirmationDuringUnattendedHours: true }, 'skip-unattended'],
+    [{ requireManualConfirmation: false, skipConfirmationDuringUnattendedHours: false }, ''],
+    [{}, ''],
+  ])('names the window, minimum percent and maximum minutes, and only the flags that are set (%j)', (flags, suffix) => {
+    const summary = summarizePlanSchedule(quotaSchedule({
+      window: 'claudeFiveHour',
+      minRemainingPercent: 20,
+      maxMinutesBeforeReset: 60,
+      ...flags,
+    }));
+
+    expect(summary).toBe(`quotaReset claudeFiveHour >=20% <=60m${suffix ? ` ${suffix}` : ''}`);
+  });
+
+  it('prints the example from the spec with both flags', () => {
+    expect(summarizePlanSchedule(quotaSchedule({
+      window: 'claudeFiveHour',
+      minRemainingPercent: 20,
+      maxMinutesBeforeReset: 60,
+      requireManualConfirmation: true,
+      skipConfirmationDuringUnattendedHours: false,
+    }))).toBe('quotaReset claudeFiveHour >=20% <=60m manual');
+  });
+
+  it('still prints the once, daily and weekly summaries unchanged next to it', () => {
+    expect(summarizePlanSchedule({ mode: 'once', runAt: '2026-04-20T00:00:00Z' })).toBe('once 2026-04-20T00:00:00Z');
+    expect(summarizePlanSchedule({
+      mode: 'recurring',
+      timeZone: 'Asia/Shanghai',
+      timeOfDay: '09:30',
+      repeat: { rule: 'daily' },
+    })).toBe('daily 09:30 Asia/Shanghai');
+  });
+});
+
+describe('quota-reset trigger view', () => {
+  const pending = createPlan('plan-q', {
+    schedule: { mode: 'quotaReset', timeZone: 'America/Los_Angeles', quotaReset: { window: 'claudeFiveHour', minRemainingPercent: 20, maxMinutesBeforeReset: 60, requireManualConfirmation: true } },
+    state: 'scheduled',
+    lastTriggeredResetAt: '2026-11-13T08:00:00Z',
+    pendingQuotaTrigger: { raisedAt: '2026-11-14T08:00:00Z', windowResetAt: '2026-11-14T13:00:00Z' },
+  });
+
+  it('carries lastTriggeredResetAt and pendingQuotaTrigger as null when the backend sends neither', () => {
+    const view = toPlanView(createPlan('plan-plain'));
+
+    expect(view.lastTriggeredResetAt).toBeNull();
+    expect(view.pendingQuotaTrigger).toBeNull();
+    expect(JSON.parse(JSON.stringify(formatPlanListPayload([createPlan('plan-plain')])))).toMatchObject({
+      plans: [{ lastTriggeredResetAt: null, pendingQuotaTrigger: null }],
+    });
+  });
+
+  it('carries the trigger fields into the list --json payload', () => {
+    const payload = JSON.parse(JSON.stringify(formatPlanListPayload([pending])));
+
+    expect(payload.plans[0]).toMatchObject({
+      lastTriggeredResetAt: '2026-11-13T08:00:00Z',
+      pendingQuotaTrigger: { raisedAt: '2026-11-14T08:00:00Z', windowResetAt: '2026-11-14T13:00:00Z' },
+    });
+  });
+
+  it('marks a pending trigger in the list State cell', () => {
+    expect(formatPlanListHuman([toPlanView(pending)])).toMatch(/scheduled \(trigger pending\)/);
+  });
+
+  it('leaves the list State cell alone when no trigger is pending', () => {
+    const output = formatPlanListHuman([toPlanView(createPlan('plan-plain'))]);
+
+    expect(output).not.toContain('trigger pending');
+    expect(output).toMatch(/scheduled\s/);
+  });
+
+  it('shows the last reset and the pending trigger in plan get, with the resolving commands', () => {
+    const output = formatPlanDetailHuman(toPlanView(pending));
+
+    expect(output).toMatch(/^lastTriggeredReset\s+2026-11-13 00:00$/m);
+    expect(output).toMatch(/^pendingTrigger\s+pending since 2026-11-14 00:00, window resets 2026-11-14 05:00$/m);
+    expect(output).toContain('hagi plan confirm --id plan-q');
+    expect(output).toContain('hagi plan cancel-trigger --id plan-q');
+  });
+
+  it('shows only the last reset in plan get when nothing is pending', () => {
+    const view = toPlanView(createPlan('plan-done', { lastTriggeredResetAt: '2026-11-13T08:00:00Z' }));
+    const output = formatPlanDetailHuman(view);
+
+    // The default fixture schedule is Asia/Shanghai, so 08:00Z is shown as 16:00 in that zone.
+    expect(output).toMatch(/^lastTriggeredReset\s+2026-11-13 16:00$/m);
+    expect(output).not.toMatch(/^pendingTrigger/m);
+    expect(output).not.toContain('hagi plan confirm');
+  });
+
+  it('adds no trigger rows to plan get for a plan that never triggered on a reset', () => {
+    const view = toPlanView(createPlan('plan-new'));
+
+    expect(formatPlanDetailHuman(view)).toBe(formatPlanSummaryHuman(view));
+  });
+
+  it('keeps raw instants when the schedule has no valid zone', () => {
+    const output = formatPlanDetailHuman(toPlanView(createPlan('plan-raw', {
+      schedule: { mode: 'quotaReset', timeZone: 'Not/AZone', quotaReset: { window: 'claudeFiveHour' } },
+      pendingQuotaTrigger: { raisedAt: '2026-11-14T08:00:00Z', windowResetAt: null },
+    })));
+
+    expect(output).toMatch(/^pendingTrigger\s+pending since 2026-11-14T08:00:00Z$/m);
   });
 });
