@@ -172,7 +172,7 @@ hagi
 |   `-- files list | preview
 |-- chat      list | get | messages | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages | answer
-|-- plan      list | get | create | update | enable | disable | delete | run
+|-- plan      list | get | create | update | enable | disable | delete | run | confirm | cancel-trigger
 |-- skills    local list | enable | disable
 |-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 `-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
@@ -595,7 +595,7 @@ hagi plan get --id "$PLAN_ID"
 hagi plan get --id "$PLAN_ID" --json | jq .plan
 ```
 
-`plan list` prints one row per plan with its schedule summary, and an explicit message when there are none. `--json` prints `{ "plans": [...] }`, where each entry carries `id`, `type`, `name`, `enabled`, `state`, `nextRunAt`, `schedule`, `agentPool` and `payload` exactly as the backend returns them. `plan get --json` prints `{ "plan": {...} }` with the same fields.
+`plan list` prints one row per plan with its schedule summary, and an explicit message when there are none. `--json` prints `{ "plans": [...] }`, where each entry carries `id`, `type`, `name`, `enabled`, `state`, `nextRunAt`, `schedule`, `agentPool` and `payload` exactly as the backend returns them, plus `preflight` when the plan has one. `plan get --json` prints `{ "plan": {...} }` with the same fields.
 
 ### Create a plan
 
@@ -618,7 +618,8 @@ hagi plan get --id "$PLAN_ID" --json | jq .plan
   "payload": {
     "projectId": "11111111-2222-3333-4444-555555555555",
     "presetTaskId": "nightly-review"
-  }
+  },
+  "preflight": { "runtime": "node", "file": "scripts/check.mjs", "timeoutSeconds": 120 }
 }
 ```
 
@@ -671,6 +672,14 @@ hagi plan create --input release-watch.json \
 That plan runs at 00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00 and 21:00 on 14 November, then completes. The `--input` document may leave out `schedule`; the flags build it. A document that already holds an interval schedule keeps it when no schedule flag is passed.
 
 On `update`, the flags change the plan's current interval schedule field by field. `--every 2h` alone keeps the window, first trigger and time zone. On a plan with another rule, all four interval flags are required and they replace the whole schedule. `plan list` and `plan get` show an interval plan as `interval 3h 2026-11-14 00:00..2026-11-14 23:59 first 2026-11-14 00:00 America/Los_Angeles`, with the window in the plan's time zone.
+
+### Preflight check
+
+A plan can carry a preflight check: a runtime, a script file relative to the project root and an optional timeout in seconds. The `nightly-review` document above sets one with `"preflight": { "runtime": "node", "file": "scripts/check.mjs", "timeoutSeconds": 120 }`, as a whole value.
+
+Leave `timeoutSeconds` out when the check needs no timeout. `plan get` shows the check as a `preflight` row, such as `node scripts/check.mjs timeout 120s` (without the timeout part when none is set), and `plan get --json` carries it as `preflight`. A plan without a preflight has no such row or key.
+
+`plan update`, `enable` and `disable` send the stored preflight back unchanged. On `plan update --input`, a `preflight` object replaces the stored one as a whole value, and `"preflight": null` removes it from the plan.
 
 ### Update, enable, disable and delete
 
@@ -730,6 +739,52 @@ hagi plan run --id "$PLAN_ID" --background --json
 ```
 
 A manual run does not change the plan's state or next run time. It works for disabled and completed plans, and the next automatic run still happens on the original schedule.
+
+### Quota-reset plans and pending triggers
+
+A plan whose schedule has `"mode": "quotaReset"` runs when a quota window resets, not at a clock time. Its condition sits under `schedule.quotaReset`. A quota-reset plan document for `plan create --input`:
+
+```json
+{
+  "type": "hagitask",
+  "name": "Quota-reset review",
+  "schedule": {
+    "mode": "quotaReset",
+    "quotaReset": {
+      "window": "claudeFiveHour",
+      "minRemainingPercent": 20,
+      "maxMinutesBeforeReset": 60,
+      "requireManualConfirmation": true,
+      "skipConfirmationDuringUnattendedHours": false
+    }
+  },
+  "agentPool": {
+    "strategy": "random",
+    "agents": [{ "heroId": "5de02573-0000-4000-8000-000000000002" }]
+  },
+  "payload": {
+    "title": "Quota-reset review",
+    "message": "Review the day",
+    "projectId": "project-1"
+  }
+}
+```
+
+`plan list` and `plan get` show the schedule on one line, such as `quotaReset claudeFiveHour >=20% <=60m manual`, with `manual` and `skip-unattended` only when those flags are set. `plan get` also shows the last reset the plan ran for (`lastTriggeredReset`) when it has one.
+
+When a trigger waits for manual confirmation, `plan list` marks the State cell as `scheduled (trigger pending)`, and `plan get` adds a `pendingTrigger` row with the time it was raised and the reset it belongs to, followed by the two commands that resolve it. Both take `--id`, and a missing or blank id exits with code `2` before any request:
+
+```bash
+hagi plan confirm --id "$PLAN_ID"
+hagi plan cancel-trigger --id "$PLAN_ID" --json
+```
+
+- `plan confirm` starts the waiting run and prints the accepted run. With `--json` it prints `{ "planId": "...", "accepted": true }`. When the trigger is no longer waiting (already answered, expired or never raised), the backend answers with a conflict and the command exits with code `29`, printing no accepted run.
+- `plan cancel-trigger` drops the waiting trigger without running it and prints the updated plan. With `--json` the plan is under a `plan` key. When nothing is pending, the cancel succeeds with no effect and exits with `0`.
+
+`plan get --json` and `plan list --json` carry `lastTriggeredResetAt` and `pendingQuotaTrigger` (`{ "raisedAt", "windowResetAt" }`), each `null` when absent. Both are server-owned: a reused `plan get --json` document sent with `--input` does not send them back.
+
+`plan update` keeps `schedule.quotaReset` when the schedule is not replaced, such as a plain update, `--name` or `--time-zone`. Passing any interval flag (`--window-start`, `--window-end`, `--first-at`, `--every`) replaces the whole schedule with an interval schedule, which drops `quotaReset`.
 
 ## Skills Commands
 
