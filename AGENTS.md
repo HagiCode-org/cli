@@ -6,7 +6,7 @@ Inherits all behavior from `/AGENTS.md` at the monorepo root. Local rules extend
 
 ## Project Context
 
-`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, AutoTask, scheduled plan, and skills management against a HagiCode backend over gRPC-Web (`<base-url>/grpc`). Also carries the canonical embedded Hagi skill under `skills/`.
+`@hagicode/cli` provides the published `hagi` command for project, proposal, vault, chat, HagiTask, scheduled plan, and skills management against a HagiCode backend over gRPC-Web (`<base-url>/grpc`). Also carries the canonical embedded Hagi skill under `skills/`.
 
 ## Working Directory
 
@@ -36,7 +36,7 @@ Requires Node.js 24+.
 ## Key Paths
 
 - `src/`: CLI source (bin entry: `dist/cli.js`)
-- `src/commands/`: one command family per file/dir (project, proposal, vault, chat, autotask, plan, skills)
+- `src/commands/`: one command family per file/dir (agent, chat, hagitask, hero, plan, project, proposal, saga, session, skills, usage, vault)
 - `src/formatters/`: human table and deterministic `--json` output
 - `src/runtime/`: API runtime, `HagiApi` facade (`hagiApi.ts`, one gRPC call per method), `grpc/` transport and proto-to-DTO mapper, error mapping (`ConnectError` to exit codes)
 - `src/generated/grpc/`: generated gRPC stubs (`buf generate`), committed; regenerate instead of hand-editing
