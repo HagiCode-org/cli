@@ -508,6 +508,39 @@ export function createBuiltInAvailabilityResult(slug: string, enabled: boolean, 
   };
 }
 
+/** A `self-evolution` inventory row. The inventory carries no skill content, only the status and the recorded version. */
+export function createSelfEvolutionInventoryItem(
+  overrides: Partial<{ name: string; enabled: boolean; status: string; version: string | null }> = {},
+) {
+  const name = overrides.name ?? 'evolved-skill';
+  return {
+    id: `self-evolution:${name}`,
+    name,
+    origin: 'self-evolution',
+    scope: 'self-evolution',
+    path: `/home/user/vault/self-evolution-skills/${name}`,
+    agents: [],
+    managedInstallMetadata: null,
+    selfEvolution: {
+      enabled: overrides.enabled ?? true,
+      status: overrides.status ?? 'ready',
+      version: overrides.version === undefined ? '3' : overrides.version,
+    },
+  };
+}
+
+export function createSelfEvolutionAvailabilityResult(slug: string, enabled: boolean, succeeded = true) {
+  return {
+    slug,
+    enabled,
+    succeeded,
+    userMessage: succeeded
+      ? `Self Evolution Skill ${slug} is now ${enabled ? 'enabled' : 'disabled'}.`
+      : `Unknown Self Evolution Skill: ${slug}.`,
+    diagnosticMessage: null,
+  };
+}
+
 export function createProposalOptimizationBundle(
   overrides: Partial<{ isValid: boolean; diagnostics: Array<{ code: string; message: string }> }> = {},
 ) {
@@ -594,6 +627,7 @@ export function createDependencies(apiOverrides: Partial<HagiApi> = {}) {
     archiveChat: vi.fn().mockResolvedValue({ message: 'Archived' }),
     listLocalSkills: vi.fn().mockResolvedValue(createLocalSkillInventory()),
     setBuiltInSkillAvailability: vi.fn().mockResolvedValue(createBuiltInAvailabilityResult('hagi', true)),
+    setSelfEvolutionSkillAvailability: vi.fn().mockResolvedValue(createSelfEvolutionAvailabilityResult('evolved-skill', true)),
     getMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
     saveMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument()),
     initializeMonoSpecsManagement: vi.fn().mockResolvedValue(createMonoSpecsDocument({ repositories: [] })),

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runCli } from '../../src/main';
 import { createGrpcHagiApi } from '../../src/runtime/hagiApi';
 import { EXIT_CODES } from '../../src/runtime/errors';
-import { createDependencies } from './testHelpers';
+import { createDependencies, createLocalSkillInventory, createSelfEvolutionInventoryItem } from './testHelpers';
 
 let tempDir: string;
 let restoreStdin: (() => void) | undefined;
@@ -71,6 +71,38 @@ describe('skills local commands', () => {
     expect(payload.items[1]).toMatchObject({
       origin: 'built-in',
       builtIn: { enabled: true, version: '1.4.0', source: 'built-in', repository: 'hagicode' },
+    });
+  });
+
+  it('lists a Self Evolution row with its status, enabled state and version, and keeps every field in JSON', async () => {
+    const row = createSelfEvolutionInventoryItem({ name: 'evolved-skill', enabled: false, status: 'conflict', version: null });
+    const base = createLocalSkillInventory();
+    const { dependencies, stdout } = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue({ ...base, items: [...base.items, row] }),
+    });
+
+    expect(await runCli(['node', 'hagi', 'skills', 'local', 'list'], dependencies)).toBe(0);
+    const rows = stdout.join('').split('\n');
+    const cellsFor = (name: string) => rows.find(line => line.startsWith(`${name} `))?.split(/\s{2,}/);
+    expect(cellsFor('evolved-skill')).toEqual([
+      'evolved-skill',
+      'self-evolution',
+      'no',
+      '-',
+      'conflict',
+      'self-evolution',
+      '-',
+      '/home/user/vault/self-evolution-skills/evolved-skill',
+    ]);
+
+    const json = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue({ ...base, items: [...base.items, row] }),
+    });
+    expect(await runCli(['node', 'hagi', 'skills', 'local', 'list', '--json'], json.dependencies)).toBe(0);
+    expect(JSON.parse(json.stdout.join('')).items[2]).toMatchObject({
+      name: 'evolved-skill',
+      origin: 'self-evolution',
+      selfEvolution: { enabled: false, status: 'conflict', version: null },
     });
   });
 

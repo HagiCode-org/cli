@@ -7,6 +7,9 @@ import { EXIT_CODES } from '../../src/runtime/errors';
 import {
   createBuiltInAvailabilityResult,
   createDependencies,
+  createLocalSkillInventory,
+  createSelfEvolutionAvailabilityResult,
+  createSelfEvolutionInventoryItem,
 } from './testHelpers';
 
 const skills = (...args: string[]) => ['node', 'hagi', 'skills', ...args];
@@ -29,7 +32,7 @@ describe('group registration', () => {
   it('makes no backend call while registering the local group', () => {
     const { api } = register(registerSkillsLocalCommands);
 
-    for (const method of ['listLocalSkills', 'setBuiltInSkillAvailability'] as const) {
+    for (const method of ['listLocalSkills', 'setBuiltInSkillAvailability', 'setSelfEvolutionSkillAvailability'] as const) {
       expect(api[method], method).not.toHaveBeenCalled();
     }
   });
@@ -98,5 +101,92 @@ describe('hagi skills local', () => {
 
     expect(await runCli(skills('local', 'list'), dependencies)).not.toBe(0);
     expect(stdout.join('')).toBe('');
+  });
+});
+
+/** The default inventory plus extra rows, so each test states only what it changes. */
+function inventoryWith(...rows: unknown[]) {
+  const base = createLocalSkillInventory();
+  return { ...base, items: [...base.items, ...rows] };
+}
+
+describe('hagi skills local for Self Evolution Skills', () => {
+  it.each([
+    ['enable', true],
+    ['disable', false],
+  ])('%s routes a Self Evolution row to one availability call with enabled %s', async (command, enabled) => {
+    const { dependencies, api, stdout } = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue(inventoryWith(createSelfEvolutionInventoryItem({ name: 'evolved-skill' }))),
+      setSelfEvolutionSkillAvailability: vi.fn().mockResolvedValue(createSelfEvolutionAvailabilityResult('evolved-skill', enabled)),
+    });
+
+    expect(await runCli(skills('local', command, '--skill-name', 'evolved-skill'), dependencies)).toBe(0);
+    expect(api.setSelfEvolutionSkillAvailability).toHaveBeenCalledExactlyOnceWith({ slug: 'evolved-skill', enabled });
+    expect(api.setBuiltInSkillAvailability).not.toHaveBeenCalled();
+    const output = stdout.join('');
+    expect(output).toMatch(/^skillName\s+evolved-skill$/m);
+    expect(output).toMatch(new RegExp(`^enabled\\s+${enabled ? 'yes' : 'no'}$`, 'm'));
+  });
+
+  it('emits the Self Evolution result fields in JSON output', async () => {
+    const { dependencies, stdout } = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue(inventoryWith(createSelfEvolutionInventoryItem({ name: 'evolved-skill' }))),
+    });
+
+    expect(await runCli(skills('local', 'disable', '--skill-name', 'evolved-skill', '--json'), dependencies)).toBe(0);
+    const payload = JSON.parse(stdout.join(''));
+    expect(Object.keys(payload).sort()).toEqual(['diagnosticMessage', 'enabled', 'slug', 'succeeded', 'userMessage']);
+    expect(payload).toMatchObject({ slug: 'evolved-skill', enabled: true, succeeded: true });
+  });
+
+  it('exits with the operation-failed code and the backend message when the change did not apply', async () => {
+    const { dependencies, api, stderr } = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue(inventoryWith(createSelfEvolutionInventoryItem({ name: 'evolved-skill' }))),
+      setSelfEvolutionSkillAvailability: vi
+        .fn()
+        .mockResolvedValue(createSelfEvolutionAvailabilityResult('evolved-skill', false, false)),
+    });
+
+    expect(await runCli(skills('local', 'disable', '--skill-name', 'evolved-skill'), dependencies)).toBe(EXIT_CODES.OPERATION_FAILED);
+    expect(api.setSelfEvolutionSkillAvailability).toHaveBeenCalledOnce();
+    expect(stderr.join('')).toContain('Unknown Self Evolution Skill: evolved-skill.');
+  });
+
+  it('keeps the built-in call for a built-in name, even when a Self Evolution row shares it', async () => {
+    const { dependencies, api, stdout } = createDependencies({
+      listLocalSkills: vi.fn().mockResolvedValue(inventoryWith(createSelfEvolutionInventoryItem({ name: 'hagi' }))),
+    });
+
+    expect(await runCli(skills('local', 'disable', '--skill-name', 'hagi'), dependencies)).toBe(0);
+    expect(api.setBuiltInSkillAvailability).toHaveBeenCalledExactlyOnceWith({ slug: 'hagi', enabled: false });
+    expect(api.setSelfEvolutionSkillAvailability).not.toHaveBeenCalled();
+    expect(stdout.join('')).toMatch(/in conflict/);
+  });
+
+  it('keeps the built-in call unchanged for a built-in name with no conflict note', async () => {
+    const { dependencies, api, stdout } = createDependencies();
+
+    expect(await runCli(skills('local', 'enable', '--skill-name', 'hagi'), dependencies)).toBe(0);
+    expect(api.setBuiltInSkillAvailability).toHaveBeenCalledExactlyOnceWith({ slug: 'hagi', enabled: true });
+    expect(api.setSelfEvolutionSkillAvailability).not.toHaveBeenCalled();
+    expect(stdout.join('')).not.toMatch(/in conflict/);
+  });
+
+  it('sends an unknown name to the built-in call so the backend refusal is shown', async () => {
+    const { dependencies, api, stderr } = createDependencies({
+      setBuiltInSkillAvailability: vi.fn().mockResolvedValue(createBuiltInAvailabilityResult('nope', true, false)),
+    });
+
+    expect(await runCli(skills('local', 'enable', '--skill-name', 'nope'), dependencies)).toBe(EXIT_CODES.OPERATION_FAILED);
+    expect(api.setBuiltInSkillAvailability).toHaveBeenCalledExactlyOnceWith({ slug: 'nope', enabled: true });
+    expect(api.setSelfEvolutionSkillAvailability).not.toHaveBeenCalled();
+    expect(stderr.join('')).toContain('Unknown built-in skill: nope.');
+  });
+
+  it('lists a backend inventory with no Self Evolution row as before', async () => {
+    const { dependencies, stdout } = createDependencies();
+
+    expect(await runCli(skills('local', 'list'), dependencies)).toBe(0);
+    expect(stdout.join('').split('\n')[1]).toMatch(/^Name\s+Origin\s+Enabled\s+Version\s+Scope\s+Agents\s+Path$/);
   });
 });

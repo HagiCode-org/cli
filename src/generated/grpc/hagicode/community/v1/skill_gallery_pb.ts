@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file hagicode/community/v1/skill_gallery.proto.
  */
 export const file_hagicode_community_v1_skill_gallery: GenFile = /*@__PURE__*/
-  fileDesc("CiloYWdpY29kZS9jb21tdW5pdHkvdjEvc2tpbGxfZ2FsbGVyeS5wcm90bxIVaGFnaWNvZGUuY29tbXVuaXR5LnYxIhcKFUdldExvY2FsU2tpbGxzUmVxdWVzdCJfChZHZXRMb2NhbFNraWxsc1Jlc3BvbnNlEkUKBnJlc3VsdBgBIAEoCzI1LmhhZ2ljb2RlLmNvbW11bml0eS52MS5Mb2NhbFNraWxsSW52ZW50b3J5UmVzcG9uc2VEdG8iLAocR2V0QnVpbHRJblNraWxsRGV0YWlsUmVxdWVzdBIMCgRzbHVnGAEgASgJIl0KHUdldEJ1aWx0SW5Ta2lsbERldGFpbFJlc3BvbnNlEjwKBnJlc3VsdBgBIAEoCzIsLmhhZ2ljb2RlLmNvbW11bml0eS52MS5CdWlsdEluU2tpbGxEZXRhaWxEdG8icAoiU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVxdWVzdBJKCgRib2R5GAEgASgLMjwuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3REdG8icgojU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVzcG9uc2USSwoGcmVzdWx0GAEgASgLMjsuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlc3VsdER0byL3AQoYTG9jYWxTa2lsbEJ1aWx0SW5JbmZvRHRvEg8KB2VuYWJsZWQYASABKAgSFAoHdmVyc2lvbhgCIAEoCUgAiAEBEhMKBnNvdXJjZRgDIAEoCUgBiAEBEhcKCnJlcG9zaXRvcnkYBCABKAlIAogBARIQCgNyZWYYBSABKAlIA4gBARIRCgRwYXRoGAYgASgJSASIAQESGQoMY29udGVudF9oYXNoGAcgASgJSAWIAQFCCgoIX3ZlcnNpb25CCQoHX3NvdXJjZUINCgtfcmVwb3NpdG9yeUIGCgRfcmVmQgcKBV9wYXRoQg8KDV9jb250ZW50X2hhc2givAIKI0xvY2FsU2tpbGxNYW5hZ2VkSW5zdGFsbE1ldGFkYXRhRHRvEhYKDnNjaGVtYV92ZXJzaW9uGAEgASgFEhAKCHNraWxsX2lkGAIgASgJEg4KBnNvdXJjZRgDIAEoCRISCgpza2lsbF9zbHVnGAQgASgJEhQKB3ZlcnNpb24YBSABKAlIAIgBARIhChRub3JtYWxpemVkX3NraWxsX2tleRgGIAEoCUgBiAEBEh4KEWluc3RhbGxfcmVmZXJlbmNlGAcgASgJSAKIAQESMwoPcmVjb3JkZWRfYXRfdXRjGAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIKCghfdmVyc2lvbkIXChVfbm9ybWFsaXplZF9za2lsbF9rZXlCFAoSX2luc3RhbGxfcmVmZXJlbmNlIosCChFMb2NhbFNraWxsSXRlbUR0bxIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg0KBXNjb3BlGAMgASgJEgwKBHBhdGgYBCABKAkSDgoGYWdlbnRzGAUgAygJElwKGG1hbmFnZWRfaW5zdGFsbF9tZXRhZGF0YRgGIAEoCzI6LmhhZ2ljb2RlLmNvbW11bml0eS52MS5Mb2NhbFNraWxsTWFuYWdlZEluc3RhbGxNZXRhZGF0YUR0bxIOCgZvcmlnaW4YByABKAkSQQoIYnVpbHRfaW4YCCABKAsyLy5oYWdpY29kZS5jb21tdW5pdHkudjEuTG9jYWxTa2lsbEJ1aWx0SW5JbmZvRHRvIo8BCh5Mb2NhbFNraWxsSW52ZW50b3J5UmVzcG9uc2VEdG8SNAoQZ2VuZXJhdGVkX2F0X3V0YxgBIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoFaXRlbXMYAiADKAsyKC5oYWdpY29kZS5jb21tdW5pdHkudjEuTG9jYWxTa2lsbEl0ZW1EdG8isQEKG0J1aWx0SW5Ta2lsbERldGFpbFNvdXJjZUR0bxIRCgR0eXBlGAEgASgJSACIAQESFwoKcmVwb3NpdG9yeRgCIAEoCUgBiAEBEhAKA3JlZhgDIAEoCUgCiAEBEhEKBHBhdGgYBCABKAlIA4gBARIQCgN1cmwYBSABKAlIBIgBAUIHCgVfdHlwZUINCgtfcmVwb3NpdG9yeUIGCgRfcmVmQgcKBV9wYXRoQgYKBF91cmwiPAoYQnVpbHRJblNraWxsRmlsZUVudHJ5RHRvEgwKBHBhdGgYASABKAkSEgoKc2l6ZV9ieXRlcxgCIAEoAyI5ChtCdWlsdEluU2tpbGxNZXRhZGF0YVBhaXJEdG8SCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJIo4EChVCdWlsdEluU2tpbGxEZXRhaWxEdG8SDAoEc2x1ZxgBIAEoCRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhQKB3ZlcnNpb24YBCABKAlIAIgBARIPCgdlbmFibGVkGAUgASgIEkQKCG1ldGFkYXRhGAYgAygLMjIuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkJ1aWx0SW5Ta2lsbE1ldGFkYXRhUGFpckR0bxJCCgZzb3VyY2UYByABKAsyMi5oYWdpY29kZS5jb21tdW5pdHkudjEuQnVpbHRJblNraWxsRGV0YWlsU291cmNlRHRvEhkKDGNvbnRlbnRfaGFzaBgIIAEoCUgBiAEBEj4KBWZpbGVzGAkgAygLMi8uaGFnaWNvZGUuY29tbXVuaXR5LnYxLkJ1aWx0SW5Ta2lsbEZpbGVFbnRyeUR0bxISCgpmaWxlX2NvdW50GAogASgFEhgKEHRvdGFsX3NpemVfYnl0ZXMYCyABKAMSFwoPZmlsZXNfdHJ1bmNhdGVkGAwgASgIEhUKDWxpY2Vuc2VfZmlsZXMYDSADKAkSDAoEYm9keRgOIAEoCRIWCg5ib2R5X3RydW5jYXRlZBgPIAEoCBIXCg9ib2R5X3NpemVfYnl0ZXMYECABKANCCgoIX3ZlcnNpb25CDwoNX2NvbnRlbnRfaGFzaCK8AQokU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVzdWx0RHRvEgwKBHNsdWcYASABKAkSDwoHZW5hYmxlZBgCIAEoCBIRCglzdWNjZWVkZWQYAyABKAgSGQoMdXNlcl9tZXNzYWdlGAQgASgJSACIAQESHwoSZGlhZ25vc3RpY19tZXNzYWdlGAUgASgJSAGIAQFCDwoNX3VzZXJfbWVzc2FnZUIVChNfZGlhZ25vc3RpY19tZXNzYWdlIkYKJVNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3REdG8SDAoEc2x1ZxgBIAEoCRIPCgdlbmFibGVkGAIgASgIIhsKGUxpc3RVc2VyU2tpbGxCYXNlc1JlcXVlc3QiXwoaTGlzdFVzZXJTa2lsbEJhc2VzUmVzcG9uc2USQQoGcmVzdWx0GAEgASgLMjEuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VMaXN0UmVzdWx0RHRvIloKF0FkZFVzZXJTa2lsbEJhc2VSZXF1ZXN0Ej8KBGJvZHkYASABKAsyMS5oYWdpY29kZS5jb21tdW5pdHkudjEuQWRkVXNlclNraWxsQmFzZVJlcXVlc3REdG8iWQoYQWRkVXNlclNraWxsQmFzZVJlc3BvbnNlEj0KBnJlc3VsdBgBIAEoCzItLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxCYXNlUmVzdWx0RHRvIi0KGlJlbW92ZVVzZXJTa2lsbEJhc2VSZXF1ZXN0Eg8KB2Jhc2VfaWQYASABKAkiYgobUmVtb3ZlVXNlclNraWxsQmFzZVJlc3BvbnNlEkMKBnJlc3VsdBgBIAEoCzIzLmhhZ2ljb2RlLmNvbW11bml0eS52MS5SZW1vdmVVc2VyU2tpbGxCYXNlUmVzdWx0RHRvIi0KGlJlc2NhblVzZXJTa2lsbEJhc2VSZXF1ZXN0Eg8KB2Jhc2VfaWQYASABKAkiXAobUmVzY2FuVXNlclNraWxsQmFzZVJlc3BvbnNlEj0KBnJlc3VsdBgBIAEoCzItLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxCYXNlUmVzdWx0RHRvIngKJlNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXF1ZXN0Ek4KBGJvZHkYASABKAsyQC5oYWdpY29kZS5jb21tdW5pdHkudjEuU2V0VXNlclNraWxsQmFzZUV4Y2x1ZGVkRm9sZGVyc1JlcXVlc3REdG8iaAonU2V0VXNlclNraWxsQmFzZUV4Y2x1ZGVkRm9sZGVyc1Jlc3BvbnNlEj0KBnJlc3VsdBgBIAEoCzItLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxCYXNlUmVzdWx0RHRvImAKGlNldFVzZXJTa2lsbEVuYWJsZWRSZXF1ZXN0EkIKBGJvZHkYASABKAsyNC5oYWdpY29kZS5jb21tdW5pdHkudjEuU2V0VXNlclNraWxsRW5hYmxlZFJlcXVlc3REdG8iYgobU2V0VXNlclNraWxsRW5hYmxlZFJlc3BvbnNlEkMKBnJlc3VsdBgBIAEoCzIzLmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRVc2VyU2tpbGxFbmFibGVkUmVzdWx0RHRvIpwDChBVc2VyU2tpbGxCYXNlRHRvEgoKAmlkGAEgASgJEg0KBWxhYmVsGAIgASgJEgwKBHBhdGgYAyABKAkSDgoGc3RhdHVzGAQgASgJEhoKDXN0YXR1c19yZWFzb24YBSABKAlIAIgBARIbCg5zdGF0dXNfbWVzc2FnZRgGIAEoCUgBiAEBEjMKBnNraWxscxgHIAMoCzIjLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxEdG8SGAoQc2tpbGxzX3RydW5jYXRlZBgIIAEoCBIYChBleGNsdWRlZF9mb2xkZXJzGAkgAygJEhQKDHRvdGFsX3NraWxscxgKIAEoBRIUCgxyZWFkeV9za2lsbHMYCyABKAUSFQoNZmFpbGVkX3NraWxscxgMIAEoBRJFCgtzY2FuX2lzc3VlcxgNIAMoCzIwLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxCYXNlU2Nhbklzc3VlRHRvQhAKDl9zdGF0dXNfcmVhc29uQhEKD19zdGF0dXNfbWVzc2FnZSI3ChlVc2VyU2tpbGxCYXNlU2Nhbklzc3VlRHRvEgwKBHBhdGgYASABKAkSDAoEY29kZRgCIAEoCSL9AQoMVXNlclNraWxsRHRvEgwKBHNsdWcYASABKAkSDAoEbmFtZRgCIAEoCRIYCgtkZXNjcmlwdGlvbhgDIAEoCUgAiAEBEg8KB2VuYWJsZWQYBCABKAgSDgoGc3RhdHVzGAUgASgJEhsKDmNvbmZsaWN0c193aXRoGAYgASgJSAGIAQESPAoIcHJvYmxlbXMYByADKAsyKi5oYWdpY29kZS5jb21tdW5pdHkudjEuVXNlclNraWxsUHJvYmxlbUR0bxIKCgJpZBgIIAEoCRIMCgRwYXRoGAkgASgJQg4KDF9kZXNjcmlwdGlvbkIRCg9fY29uZmxpY3RzX3dpdGgiNAoTVXNlclNraWxsUHJvYmxlbUR0bxIMCgRjb2RlGAEgASgJEg8KB21lc3NhZ2UYAiABKAkiSAoaQWRkVXNlclNraWxsQmFzZVJlcXVlc3REdG8SDAoEcGF0aBgBIAEoCRISCgVsYWJlbBgCIAEoCUgAiAEBQggKBl9sYWJlbCKTAQoaVXNlclNraWxsQmFzZUxpc3RSZXN1bHREdG8SEQoJc3VjY2VlZGVkGAEgASgIEhkKDHVzZXJfbWVzc2FnZRgCIAEoCUgAiAEBEjYKBWJhc2VzGAMgAygLMicuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VEdG9CDwoNX3VzZXJfbWVzc2FnZSKOAQoWVXNlclNraWxsQmFzZVJlc3VsdER0bxIRCglzdWNjZWVkZWQYASABKAgSGQoMdXNlcl9tZXNzYWdlGAIgASgJSACIAQESNQoEYmFzZRgDIAEoCzInLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxCYXNlRHRvQg8KDV91c2VyX21lc3NhZ2UibgocUmVtb3ZlVXNlclNraWxsQmFzZVJlc3VsdER0bxIRCglzdWNjZWVkZWQYASABKAgSGQoMdXNlcl9tZXNzYWdlGAIgASgJSACIAQESDwoHYmFzZV9pZBgDIAEoCUIPCg1fdXNlcl9tZXNzYWdlIk0KKVNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXF1ZXN0RHRvEg8KB2Jhc2VfaWQYASABKAkSDwoHZm9sZGVycxgCIAMoCSJVCh1TZXRVc2VyU2tpbGxFbmFibGVkUmVxdWVzdER0bxIPCgdiYXNlX2lkGAEgASgJEhIKCnNraWxsX3NsdWcYAiABKAkSDwoHZW5hYmxlZBgDIAEoCCKTAQocU2V0VXNlclNraWxsRW5hYmxlZFJlc3VsdER0bxIRCglzdWNjZWVkZWQYASABKAgSGQoMdXNlcl9tZXNzYWdlGAIgASgJSACIAQESDwoHYmFzZV9pZBgDIAEoCRISCgpza2lsbF9zbHVnGAQgASgJEg8KB2VuYWJsZWQYBSABKAhCDwoNX3VzZXJfbWVzc2FnZTKtCQoTU2tpbGxHYWxsZXJ5U2VydmljZRJtCg5HZXRMb2NhbFNraWxscxIsLmhhZ2ljb2RlLmNvbW11bml0eS52MS5HZXRMb2NhbFNraWxsc1JlcXVlc3QaLS5oYWdpY29kZS5jb21tdW5pdHkudjEuR2V0TG9jYWxTa2lsbHNSZXNwb25zZRKCAQoVR2V0QnVpbHRJblNraWxsRGV0YWlsEjMuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkdldEJ1aWx0SW5Ta2lsbERldGFpbFJlcXVlc3QaNC5oYWdpY29kZS5jb21tdW5pdHkudjEuR2V0QnVpbHRJblNraWxsRGV0YWlsUmVzcG9uc2USlAEKG1NldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eRI5LmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRCdWlsdEluU2tpbGxBdmFpbGFiaWxpdHlSZXF1ZXN0GjouaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlc3BvbnNlEnkKEkxpc3RVc2VyU2tpbGxCYXNlcxIwLmhhZ2ljb2RlLmNvbW11bml0eS52MS5MaXN0VXNlclNraWxsQmFzZXNSZXF1ZXN0GjEuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkxpc3RVc2VyU2tpbGxCYXNlc1Jlc3BvbnNlEnMKEEFkZFVzZXJTa2lsbEJhc2USLi5oYWdpY29kZS5jb21tdW5pdHkudjEuQWRkVXNlclNraWxsQmFzZVJlcXVlc3QaLy5oYWdpY29kZS5jb21tdW5pdHkudjEuQWRkVXNlclNraWxsQmFzZVJlc3BvbnNlEnwKE1JlbW92ZVVzZXJTa2lsbEJhc2USMS5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVtb3ZlVXNlclNraWxsQmFzZVJlcXVlc3QaMi5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVtb3ZlVXNlclNraWxsQmFzZVJlc3BvbnNlEnwKE1Jlc2NhblVzZXJTa2lsbEJhc2USMS5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVzY2FuVXNlclNraWxsQmFzZVJlcXVlc3QaMi5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVzY2FuVXNlclNraWxsQmFzZVJlc3BvbnNlEqABCh9TZXRVc2VyU2tpbGxCYXNlRXhjbHVkZWRGb2xkZXJzEj0uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXF1ZXN0Gj4uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXNwb25zZRJ8ChNTZXRVc2VyU2tpbGxFbmFibGVkEjEuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEVuYWJsZWRSZXF1ZXN0GjIuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEVuYWJsZWRSZXNwb25zZUIrqgIoUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLkNvbW11bml0eS5WMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("CiloYWdpY29kZS9jb21tdW5pdHkvdjEvc2tpbGxfZ2FsbGVyeS5wcm90bxIVaGFnaWNvZGUuY29tbXVuaXR5LnYxIhcKFUdldExvY2FsU2tpbGxzUmVxdWVzdCJfChZHZXRMb2NhbFNraWxsc1Jlc3BvbnNlEkUKBnJlc3VsdBgBIAEoCzI1LmhhZ2ljb2RlLmNvbW11bml0eS52MS5Mb2NhbFNraWxsSW52ZW50b3J5UmVzcG9uc2VEdG8iLAocR2V0QnVpbHRJblNraWxsRGV0YWlsUmVxdWVzdBIMCgRzbHVnGAEgASgJIl0KHUdldEJ1aWx0SW5Ta2lsbERldGFpbFJlc3BvbnNlEjwKBnJlc3VsdBgBIAEoCzIsLmhhZ2ljb2RlLmNvbW11bml0eS52MS5CdWlsdEluU2tpbGxEZXRhaWxEdG8icAoiU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVxdWVzdBJKCgRib2R5GAEgASgLMjwuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3REdG8icgojU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVzcG9uc2USSwoGcmVzdWx0GAEgASgLMjsuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlc3VsdER0byL3AQoYTG9jYWxTa2lsbEJ1aWx0SW5JbmZvRHRvEg8KB2VuYWJsZWQYASABKAgSFAoHdmVyc2lvbhgCIAEoCUgAiAEBEhMKBnNvdXJjZRgDIAEoCUgBiAEBEhcKCnJlcG9zaXRvcnkYBCABKAlIAogBARIQCgNyZWYYBSABKAlIA4gBARIRCgRwYXRoGAYgASgJSASIAQESGQoMY29udGVudF9oYXNoGAcgASgJSAWIAQFCCgoIX3ZlcnNpb25CCQoHX3NvdXJjZUINCgtfcmVwb3NpdG9yeUIGCgRfcmVmQgcKBV9wYXRoQg8KDV9jb250ZW50X2hhc2givAIKI0xvY2FsU2tpbGxNYW5hZ2VkSW5zdGFsbE1ldGFkYXRhRHRvEhYKDnNjaGVtYV92ZXJzaW9uGAEgASgFEhAKCHNraWxsX2lkGAIgASgJEg4KBnNvdXJjZRgDIAEoCRISCgpza2lsbF9zbHVnGAQgASgJEhQKB3ZlcnNpb24YBSABKAlIAIgBARIhChRub3JtYWxpemVkX3NraWxsX2tleRgGIAEoCUgBiAEBEh4KEWluc3RhbGxfcmVmZXJlbmNlGAcgASgJSAKIAQESMwoPcmVjb3JkZWRfYXRfdXRjGAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIKCghfdmVyc2lvbkIXChVfbm9ybWFsaXplZF9za2lsbF9rZXlCFAoSX2luc3RhbGxfcmVmZXJlbmNlItoCChFMb2NhbFNraWxsSXRlbUR0bxIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEg0KBXNjb3BlGAMgASgJEgwKBHBhdGgYBCABKAkSDgoGYWdlbnRzGAUgAygJElwKGG1hbmFnZWRfaW5zdGFsbF9tZXRhZGF0YRgGIAEoCzI6LmhhZ2ljb2RlLmNvbW11bml0eS52MS5Mb2NhbFNraWxsTWFuYWdlZEluc3RhbGxNZXRhZGF0YUR0bxIOCgZvcmlnaW4YByABKAkSQQoIYnVpbHRfaW4YCCABKAsyLy5oYWdpY29kZS5jb21tdW5pdHkudjEuTG9jYWxTa2lsbEJ1aWx0SW5JbmZvRHRvEk0KDnNlbGZfZXZvbHV0aW9uGAkgASgLMjUuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkxvY2FsU2tpbGxTZWxmRXZvbHV0aW9uSW5mb0R0byJjCh5Mb2NhbFNraWxsU2VsZkV2b2x1dGlvbkluZm9EdG8SDwoHZW5hYmxlZBgBIAEoCBIOCgZzdGF0dXMYAiABKAkSFAoHdmVyc2lvbhgDIAEoCUgAiAEBQgoKCF92ZXJzaW9uIo8BCh5Mb2NhbFNraWxsSW52ZW50b3J5UmVzcG9uc2VEdG8SNAoQZ2VuZXJhdGVkX2F0X3V0YxgBIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoFaXRlbXMYAiADKAsyKC5oYWdpY29kZS5jb21tdW5pdHkudjEuTG9jYWxTa2lsbEl0ZW1EdG8isQEKG0J1aWx0SW5Ta2lsbERldGFpbFNvdXJjZUR0bxIRCgR0eXBlGAEgASgJSACIAQESFwoKcmVwb3NpdG9yeRgCIAEoCUgBiAEBEhAKA3JlZhgDIAEoCUgCiAEBEhEKBHBhdGgYBCABKAlIA4gBARIQCgN1cmwYBSABKAlIBIgBAUIHCgVfdHlwZUINCgtfcmVwb3NpdG9yeUIGCgRfcmVmQgcKBV9wYXRoQgYKBF91cmwiPAoYQnVpbHRJblNraWxsRmlsZUVudHJ5RHRvEgwKBHBhdGgYASABKAkSEgoKc2l6ZV9ieXRlcxgCIAEoAyI5ChtCdWlsdEluU2tpbGxNZXRhZGF0YVBhaXJEdG8SCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJIo4EChVCdWlsdEluU2tpbGxEZXRhaWxEdG8SDAoEc2x1ZxgBIAEoCRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhQKB3ZlcnNpb24YBCABKAlIAIgBARIPCgdlbmFibGVkGAUgASgIEkQKCG1ldGFkYXRhGAYgAygLMjIuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkJ1aWx0SW5Ta2lsbE1ldGFkYXRhUGFpckR0bxJCCgZzb3VyY2UYByABKAsyMi5oYWdpY29kZS5jb21tdW5pdHkudjEuQnVpbHRJblNraWxsRGV0YWlsU291cmNlRHRvEhkKDGNvbnRlbnRfaGFzaBgIIAEoCUgBiAEBEj4KBWZpbGVzGAkgAygLMi8uaGFnaWNvZGUuY29tbXVuaXR5LnYxLkJ1aWx0SW5Ta2lsbEZpbGVFbnRyeUR0bxISCgpmaWxlX2NvdW50GAogASgFEhgKEHRvdGFsX3NpemVfYnl0ZXMYCyABKAMSFwoPZmlsZXNfdHJ1bmNhdGVkGAwgASgIEhUKDWxpY2Vuc2VfZmlsZXMYDSADKAkSDAoEYm9keRgOIAEoCRIWCg5ib2R5X3RydW5jYXRlZBgPIAEoCBIXCg9ib2R5X3NpemVfYnl0ZXMYECABKANCCgoIX3ZlcnNpb25CDwoNX2NvbnRlbnRfaGFzaCK8AQokU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVzdWx0RHRvEgwKBHNsdWcYASABKAkSDwoHZW5hYmxlZBgCIAEoCBIRCglzdWNjZWVkZWQYAyABKAgSGQoMdXNlcl9tZXNzYWdlGAQgASgJSACIAQESHwoSZGlhZ25vc3RpY19tZXNzYWdlGAUgASgJSAGIAQFCDwoNX3VzZXJfbWVzc2FnZUIVChNfZGlhZ25vc3RpY19tZXNzYWdlIkYKJVNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3REdG8SDAoEc2x1ZxgBIAEoCRIPCgdlbmFibGVkGAIgASgIInwKKFNldFNlbGZFdm9sdXRpb25Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3QSUAoEYm9keRgBIAEoCzJCLmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRTZWxmRXZvbHV0aW9uU2tpbGxBdmFpbGFiaWxpdHlSZXF1ZXN0RHRvIn4KKVNldFNlbGZFdm9sdXRpb25Ta2lsbEF2YWlsYWJpbGl0eVJlc3BvbnNlElEKBnJlc3VsdBgBIAEoCzJBLmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRTZWxmRXZvbHV0aW9uU2tpbGxBdmFpbGFiaWxpdHlSZXN1bHREdG8iTAorU2V0U2VsZkV2b2x1dGlvblNraWxsQXZhaWxhYmlsaXR5UmVxdWVzdER0bxIMCgRzbHVnGAEgASgJEg8KB2VuYWJsZWQYAiABKAgiigEKKlNldFNlbGZFdm9sdXRpb25Ta2lsbEF2YWlsYWJpbGl0eVJlc3VsdER0bxIMCgRzbHVnGAEgASgJEg8KB2VuYWJsZWQYAiABKAgSEQoJc3VjY2VlZGVkGAMgASgIEhkKDHVzZXJfbWVzc2FnZRgEIAEoCUgAiAEBQg8KDV91c2VyX21lc3NhZ2UiGwoZTGlzdFVzZXJTa2lsbEJhc2VzUmVxdWVzdCJfChpMaXN0VXNlclNraWxsQmFzZXNSZXNwb25zZRJBCgZyZXN1bHQYASABKAsyMS5oYWdpY29kZS5jb21tdW5pdHkudjEuVXNlclNraWxsQmFzZUxpc3RSZXN1bHREdG8iWgoXQWRkVXNlclNraWxsQmFzZVJlcXVlc3QSPwoEYm9keRgBIAEoCzIxLmhhZ2ljb2RlLmNvbW11bml0eS52MS5BZGRVc2VyU2tpbGxCYXNlUmVxdWVzdER0byJZChhBZGRVc2VyU2tpbGxCYXNlUmVzcG9uc2USPQoGcmVzdWx0GAEgASgLMi0uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VSZXN1bHREdG8iLQoaUmVtb3ZlVXNlclNraWxsQmFzZVJlcXVlc3QSDwoHYmFzZV9pZBgBIAEoCSJiChtSZW1vdmVVc2VyU2tpbGxCYXNlUmVzcG9uc2USQwoGcmVzdWx0GAEgASgLMjMuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlJlbW92ZVVzZXJTa2lsbEJhc2VSZXN1bHREdG8iLQoaUmVzY2FuVXNlclNraWxsQmFzZVJlcXVlc3QSDwoHYmFzZV9pZBgBIAEoCSJcChtSZXNjYW5Vc2VyU2tpbGxCYXNlUmVzcG9uc2USPQoGcmVzdWx0GAEgASgLMi0uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VSZXN1bHREdG8ieAomU2V0VXNlclNraWxsQmFzZUV4Y2x1ZGVkRm9sZGVyc1JlcXVlc3QSTgoEYm9keRgBIAEoCzJALmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRVc2VyU2tpbGxCYXNlRXhjbHVkZWRGb2xkZXJzUmVxdWVzdER0byJoCidTZXRVc2VyU2tpbGxCYXNlRXhjbHVkZWRGb2xkZXJzUmVzcG9uc2USPQoGcmVzdWx0GAEgASgLMi0uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VSZXN1bHREdG8iYAoaU2V0VXNlclNraWxsRW5hYmxlZFJlcXVlc3QSQgoEYm9keRgBIAEoCzI0LmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRVc2VyU2tpbGxFbmFibGVkUmVxdWVzdER0byJiChtTZXRVc2VyU2tpbGxFbmFibGVkUmVzcG9uc2USQwoGcmVzdWx0GAEgASgLMjMuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEVuYWJsZWRSZXN1bHREdG8inAMKEFVzZXJTa2lsbEJhc2VEdG8SCgoCaWQYASABKAkSDQoFbGFiZWwYAiABKAkSDAoEcGF0aBgDIAEoCRIOCgZzdGF0dXMYBCABKAkSGgoNc3RhdHVzX3JlYXNvbhgFIAEoCUgAiAEBEhsKDnN0YXR1c19tZXNzYWdlGAYgASgJSAGIAQESMwoGc2tpbGxzGAcgAygLMiMuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbER0bxIYChBza2lsbHNfdHJ1bmNhdGVkGAggASgIEhgKEGV4Y2x1ZGVkX2ZvbGRlcnMYCSADKAkSFAoMdG90YWxfc2tpbGxzGAogASgFEhQKDHJlYWR5X3NraWxscxgLIAEoBRIVCg1mYWlsZWRfc2tpbGxzGAwgASgFEkUKC3NjYW5faXNzdWVzGA0gAygLMjAuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VTY2FuSXNzdWVEdG9CEAoOX3N0YXR1c19yZWFzb25CEQoPX3N0YXR1c19tZXNzYWdlIjcKGVVzZXJTa2lsbEJhc2VTY2FuSXNzdWVEdG8SDAoEcGF0aBgBIAEoCRIMCgRjb2RlGAIgASgJIv0BCgxVc2VyU2tpbGxEdG8SDAoEc2x1ZxgBIAEoCRIMCgRuYW1lGAIgASgJEhgKC2Rlc2NyaXB0aW9uGAMgASgJSACIAQESDwoHZW5hYmxlZBgEIAEoCBIOCgZzdGF0dXMYBSABKAkSGwoOY29uZmxpY3RzX3dpdGgYBiABKAlIAYgBARI8Cghwcm9ibGVtcxgHIAMoCzIqLmhhZ2ljb2RlLmNvbW11bml0eS52MS5Vc2VyU2tpbGxQcm9ibGVtRHRvEgoKAmlkGAggASgJEgwKBHBhdGgYCSABKAlCDgoMX2Rlc2NyaXB0aW9uQhEKD19jb25mbGljdHNfd2l0aCI0ChNVc2VyU2tpbGxQcm9ibGVtRHRvEgwKBGNvZGUYASABKAkSDwoHbWVzc2FnZRgCIAEoCSJIChpBZGRVc2VyU2tpbGxCYXNlUmVxdWVzdER0bxIMCgRwYXRoGAEgASgJEhIKBWxhYmVsGAIgASgJSACIAQFCCAoGX2xhYmVsIpMBChpVc2VyU2tpbGxCYXNlTGlzdFJlc3VsdER0bxIRCglzdWNjZWVkZWQYASABKAgSGQoMdXNlcl9tZXNzYWdlGAIgASgJSACIAQESNgoFYmFzZXMYAyADKAsyJy5oYWdpY29kZS5jb21tdW5pdHkudjEuVXNlclNraWxsQmFzZUR0b0IPCg1fdXNlcl9tZXNzYWdlIo4BChZVc2VyU2tpbGxCYXNlUmVzdWx0RHRvEhEKCXN1Y2NlZWRlZBgBIAEoCBIZCgx1c2VyX21lc3NhZ2UYAiABKAlIAIgBARI1CgRiYXNlGAMgASgLMicuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlVzZXJTa2lsbEJhc2VEdG9CDwoNX3VzZXJfbWVzc2FnZSJuChxSZW1vdmVVc2VyU2tpbGxCYXNlUmVzdWx0RHRvEhEKCXN1Y2NlZWRlZBgBIAEoCBIZCgx1c2VyX21lc3NhZ2UYAiABKAlIAIgBARIPCgdiYXNlX2lkGAMgASgJQg8KDV91c2VyX21lc3NhZ2UiTQopU2V0VXNlclNraWxsQmFzZUV4Y2x1ZGVkRm9sZGVyc1JlcXVlc3REdG8SDwoHYmFzZV9pZBgBIAEoCRIPCgdmb2xkZXJzGAIgAygJIlUKHVNldFVzZXJTa2lsbEVuYWJsZWRSZXF1ZXN0RHRvEg8KB2Jhc2VfaWQYASABKAkSEgoKc2tpbGxfc2x1ZxgCIAEoCRIPCgdlbmFibGVkGAMgASgIIpMBChxTZXRVc2VyU2tpbGxFbmFibGVkUmVzdWx0RHRvEhEKCXN1Y2NlZWRlZBgBIAEoCBIZCgx1c2VyX21lc3NhZ2UYAiABKAlIAIgBARIPCgdiYXNlX2lkGAMgASgJEhIKCnNraWxsX3NsdWcYBCABKAkSDwoHZW5hYmxlZBgFIAEoCEIPCg1fdXNlcl9tZXNzYWdlMtYKChNTa2lsbEdhbGxlcnlTZXJ2aWNlEm0KDkdldExvY2FsU2tpbGxzEiwuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkdldExvY2FsU2tpbGxzUmVxdWVzdBotLmhhZ2ljb2RlLmNvbW11bml0eS52MS5HZXRMb2NhbFNraWxsc1Jlc3BvbnNlEoIBChVHZXRCdWlsdEluU2tpbGxEZXRhaWwSMy5oYWdpY29kZS5jb21tdW5pdHkudjEuR2V0QnVpbHRJblNraWxsRGV0YWlsUmVxdWVzdBo0LmhhZ2ljb2RlLmNvbW11bml0eS52MS5HZXRCdWlsdEluU2tpbGxEZXRhaWxSZXNwb25zZRKUAQobU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5EjkuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldEJ1aWx0SW5Ta2lsbEF2YWlsYWJpbGl0eVJlcXVlc3QaOi5oYWdpY29kZS5jb21tdW5pdHkudjEuU2V0QnVpbHRJblNraWxsQXZhaWxhYmlsaXR5UmVzcG9uc2USpgEKIVNldFNlbGZFdm9sdXRpb25Ta2lsbEF2YWlsYWJpbGl0eRI/LmhhZ2ljb2RlLmNvbW11bml0eS52MS5TZXRTZWxmRXZvbHV0aW9uU2tpbGxBdmFpbGFiaWxpdHlSZXF1ZXN0GkAuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFNlbGZFdm9sdXRpb25Ta2lsbEF2YWlsYWJpbGl0eVJlc3BvbnNlEnkKEkxpc3RVc2VyU2tpbGxCYXNlcxIwLmhhZ2ljb2RlLmNvbW11bml0eS52MS5MaXN0VXNlclNraWxsQmFzZXNSZXF1ZXN0GjEuaGFnaWNvZGUuY29tbXVuaXR5LnYxLkxpc3RVc2VyU2tpbGxCYXNlc1Jlc3BvbnNlEnMKEEFkZFVzZXJTa2lsbEJhc2USLi5oYWdpY29kZS5jb21tdW5pdHkudjEuQWRkVXNlclNraWxsQmFzZVJlcXVlc3QaLy5oYWdpY29kZS5jb21tdW5pdHkudjEuQWRkVXNlclNraWxsQmFzZVJlc3BvbnNlEnwKE1JlbW92ZVVzZXJTa2lsbEJhc2USMS5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVtb3ZlVXNlclNraWxsQmFzZVJlcXVlc3QaMi5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVtb3ZlVXNlclNraWxsQmFzZVJlc3BvbnNlEnwKE1Jlc2NhblVzZXJTa2lsbEJhc2USMS5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVzY2FuVXNlclNraWxsQmFzZVJlcXVlc3QaMi5oYWdpY29kZS5jb21tdW5pdHkudjEuUmVzY2FuVXNlclNraWxsQmFzZVJlc3BvbnNlEqABCh9TZXRVc2VyU2tpbGxCYXNlRXhjbHVkZWRGb2xkZXJzEj0uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXF1ZXN0Gj4uaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEJhc2VFeGNsdWRlZEZvbGRlcnNSZXNwb25zZRJ8ChNTZXRVc2VyU2tpbGxFbmFibGVkEjEuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEVuYWJsZWRSZXF1ZXN0GjIuaGFnaWNvZGUuY29tbXVuaXR5LnYxLlNldFVzZXJTa2lsbEVuYWJsZWRSZXNwb25zZUIrqgIoUENvZGUuSHR0cEFwaS5HcnBjQ29udHJhY3RzLkNvbW11bml0eS5WMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message hagicode.community.v1.GetLocalSkillsRequest
@@ -254,6 +254,11 @@ export type LocalSkillItemDto = Message<"hagicode.community.v1.LocalSkillItemDto
    * @generated from field: hagicode.community.v1.LocalSkillBuiltInInfoDto built_in = 8;
    */
   builtIn?: LocalSkillBuiltInInfoDto | undefined;
+
+  /**
+   * @generated from field: hagicode.community.v1.LocalSkillSelfEvolutionInfoDto self_evolution = 9;
+   */
+  selfEvolution?: LocalSkillSelfEvolutionInfoDto | undefined;
 };
 
 /**
@@ -262,6 +267,33 @@ export type LocalSkillItemDto = Message<"hagicode.community.v1.LocalSkillItemDto
  */
 export const LocalSkillItemDtoSchema: GenMessage<LocalSkillItemDto> = /*@__PURE__*/
   messageDesc(file_hagicode_community_v1_skill_gallery, 8);
+
+/**
+ * @generated from message hagicode.community.v1.LocalSkillSelfEvolutionInfoDto
+ */
+export type LocalSkillSelfEvolutionInfoDto = Message<"hagicode.community.v1.LocalSkillSelfEvolutionInfoDto"> & {
+  /**
+   * @generated from field: bool enabled = 1;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: string status = 2;
+   */
+  status: string;
+
+  /**
+   * @generated from field: optional string version = 3;
+   */
+  version?: string | undefined;
+};
+
+/**
+ * Describes the message hagicode.community.v1.LocalSkillSelfEvolutionInfoDto.
+ * Use `create(LocalSkillSelfEvolutionInfoDtoSchema)` to create a new message.
+ */
+export const LocalSkillSelfEvolutionInfoDtoSchema: GenMessage<LocalSkillSelfEvolutionInfoDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_community_v1_skill_gallery, 9);
 
 /**
  * @generated from message hagicode.community.v1.LocalSkillInventoryResponseDto
@@ -283,7 +315,7 @@ export type LocalSkillInventoryResponseDto = Message<"hagicode.community.v1.Loca
  * Use `create(LocalSkillInventoryResponseDtoSchema)` to create a new message.
  */
 export const LocalSkillInventoryResponseDtoSchema: GenMessage<LocalSkillInventoryResponseDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 9);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 10);
 
 /**
  * @generated from message hagicode.community.v1.BuiltInSkillDetailSourceDto
@@ -320,7 +352,7 @@ export type BuiltInSkillDetailSourceDto = Message<"hagicode.community.v1.BuiltIn
  * Use `create(BuiltInSkillDetailSourceDtoSchema)` to create a new message.
  */
 export const BuiltInSkillDetailSourceDtoSchema: GenMessage<BuiltInSkillDetailSourceDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 10);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 11);
 
 /**
  * @generated from message hagicode.community.v1.BuiltInSkillFileEntryDto
@@ -342,7 +374,7 @@ export type BuiltInSkillFileEntryDto = Message<"hagicode.community.v1.BuiltInSki
  * Use `create(BuiltInSkillFileEntryDtoSchema)` to create a new message.
  */
 export const BuiltInSkillFileEntryDtoSchema: GenMessage<BuiltInSkillFileEntryDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 11);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 12);
 
 /**
  * @generated from message hagicode.community.v1.BuiltInSkillMetadataPairDto
@@ -364,7 +396,7 @@ export type BuiltInSkillMetadataPairDto = Message<"hagicode.community.v1.BuiltIn
  * Use `create(BuiltInSkillMetadataPairDtoSchema)` to create a new message.
  */
 export const BuiltInSkillMetadataPairDtoSchema: GenMessage<BuiltInSkillMetadataPairDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 12);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 13);
 
 /**
  * @generated from message hagicode.community.v1.BuiltInSkillDetailDto
@@ -456,7 +488,7 @@ export type BuiltInSkillDetailDto = Message<"hagicode.community.v1.BuiltInSkillD
  * Use `create(BuiltInSkillDetailDtoSchema)` to create a new message.
  */
 export const BuiltInSkillDetailDtoSchema: GenMessage<BuiltInSkillDetailDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 13);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 14);
 
 /**
  * @generated from message hagicode.community.v1.SetBuiltInSkillAvailabilityResultDto
@@ -493,7 +525,7 @@ export type SetBuiltInSkillAvailabilityResultDto = Message<"hagicode.community.v
  * Use `create(SetBuiltInSkillAvailabilityResultDtoSchema)` to create a new message.
  */
 export const SetBuiltInSkillAvailabilityResultDtoSchema: GenMessage<SetBuiltInSkillAvailabilityResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 14);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 15);
 
 /**
  * @generated from message hagicode.community.v1.SetBuiltInSkillAvailabilityRequestDto
@@ -515,7 +547,95 @@ export type SetBuiltInSkillAvailabilityRequestDto = Message<"hagicode.community.
  * Use `create(SetBuiltInSkillAvailabilityRequestDtoSchema)` to create a new message.
  */
 export const SetBuiltInSkillAvailabilityRequestDtoSchema: GenMessage<SetBuiltInSkillAvailabilityRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 15);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 16);
+
+/**
+ * @generated from message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequest
+ */
+export type SetSelfEvolutionSkillAvailabilityRequest = Message<"hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequest"> & {
+  /**
+   * @generated from field: hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequestDto body = 1;
+   */
+  body?: SetSelfEvolutionSkillAvailabilityRequestDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequest.
+ * Use `create(SetSelfEvolutionSkillAvailabilityRequestSchema)` to create a new message.
+ */
+export const SetSelfEvolutionSkillAvailabilityRequestSchema: GenMessage<SetSelfEvolutionSkillAvailabilityRequest> = /*@__PURE__*/
+  messageDesc(file_hagicode_community_v1_skill_gallery, 17);
+
+/**
+ * @generated from message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResponse
+ */
+export type SetSelfEvolutionSkillAvailabilityResponse = Message<"hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResponse"> & {
+  /**
+   * @generated from field: hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResultDto result = 1;
+   */
+  result?: SetSelfEvolutionSkillAvailabilityResultDto | undefined;
+};
+
+/**
+ * Describes the message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResponse.
+ * Use `create(SetSelfEvolutionSkillAvailabilityResponseSchema)` to create a new message.
+ */
+export const SetSelfEvolutionSkillAvailabilityResponseSchema: GenMessage<SetSelfEvolutionSkillAvailabilityResponse> = /*@__PURE__*/
+  messageDesc(file_hagicode_community_v1_skill_gallery, 18);
+
+/**
+ * @generated from message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequestDto
+ */
+export type SetSelfEvolutionSkillAvailabilityRequestDto = Message<"hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequestDto"> & {
+  /**
+   * @generated from field: string slug = 1;
+   */
+  slug: string;
+
+  /**
+   * @generated from field: bool enabled = 2;
+   */
+  enabled: boolean;
+};
+
+/**
+ * Describes the message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityRequestDto.
+ * Use `create(SetSelfEvolutionSkillAvailabilityRequestDtoSchema)` to create a new message.
+ */
+export const SetSelfEvolutionSkillAvailabilityRequestDtoSchema: GenMessage<SetSelfEvolutionSkillAvailabilityRequestDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_community_v1_skill_gallery, 19);
+
+/**
+ * @generated from message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResultDto
+ */
+export type SetSelfEvolutionSkillAvailabilityResultDto = Message<"hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResultDto"> & {
+  /**
+   * @generated from field: string slug = 1;
+   */
+  slug: string;
+
+  /**
+   * @generated from field: bool enabled = 2;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: bool succeeded = 3;
+   */
+  succeeded: boolean;
+
+  /**
+   * @generated from field: optional string user_message = 4;
+   */
+  userMessage?: string | undefined;
+};
+
+/**
+ * Describes the message hagicode.community.v1.SetSelfEvolutionSkillAvailabilityResultDto.
+ * Use `create(SetSelfEvolutionSkillAvailabilityResultDtoSchema)` to create a new message.
+ */
+export const SetSelfEvolutionSkillAvailabilityResultDtoSchema: GenMessage<SetSelfEvolutionSkillAvailabilityResultDto> = /*@__PURE__*/
+  messageDesc(file_hagicode_community_v1_skill_gallery, 20);
 
 /**
  * @generated from message hagicode.community.v1.ListUserSkillBasesRequest
@@ -528,7 +648,7 @@ export type ListUserSkillBasesRequest = Message<"hagicode.community.v1.ListUserS
  * Use `create(ListUserSkillBasesRequestSchema)` to create a new message.
  */
 export const ListUserSkillBasesRequestSchema: GenMessage<ListUserSkillBasesRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 16);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 21);
 
 /**
  * @generated from message hagicode.community.v1.ListUserSkillBasesResponse
@@ -545,7 +665,7 @@ export type ListUserSkillBasesResponse = Message<"hagicode.community.v1.ListUser
  * Use `create(ListUserSkillBasesResponseSchema)` to create a new message.
  */
 export const ListUserSkillBasesResponseSchema: GenMessage<ListUserSkillBasesResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 17);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 22);
 
 /**
  * @generated from message hagicode.community.v1.AddUserSkillBaseRequest
@@ -562,7 +682,7 @@ export type AddUserSkillBaseRequest = Message<"hagicode.community.v1.AddUserSkil
  * Use `create(AddUserSkillBaseRequestSchema)` to create a new message.
  */
 export const AddUserSkillBaseRequestSchema: GenMessage<AddUserSkillBaseRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 18);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 23);
 
 /**
  * @generated from message hagicode.community.v1.AddUserSkillBaseResponse
@@ -579,7 +699,7 @@ export type AddUserSkillBaseResponse = Message<"hagicode.community.v1.AddUserSki
  * Use `create(AddUserSkillBaseResponseSchema)` to create a new message.
  */
 export const AddUserSkillBaseResponseSchema: GenMessage<AddUserSkillBaseResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 19);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 24);
 
 /**
  * @generated from message hagicode.community.v1.RemoveUserSkillBaseRequest
@@ -596,7 +716,7 @@ export type RemoveUserSkillBaseRequest = Message<"hagicode.community.v1.RemoveUs
  * Use `create(RemoveUserSkillBaseRequestSchema)` to create a new message.
  */
 export const RemoveUserSkillBaseRequestSchema: GenMessage<RemoveUserSkillBaseRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 20);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 25);
 
 /**
  * @generated from message hagicode.community.v1.RemoveUserSkillBaseResponse
@@ -613,7 +733,7 @@ export type RemoveUserSkillBaseResponse = Message<"hagicode.community.v1.RemoveU
  * Use `create(RemoveUserSkillBaseResponseSchema)` to create a new message.
  */
 export const RemoveUserSkillBaseResponseSchema: GenMessage<RemoveUserSkillBaseResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 21);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 26);
 
 /**
  * @generated from message hagicode.community.v1.RescanUserSkillBaseRequest
@@ -630,7 +750,7 @@ export type RescanUserSkillBaseRequest = Message<"hagicode.community.v1.RescanUs
  * Use `create(RescanUserSkillBaseRequestSchema)` to create a new message.
  */
 export const RescanUserSkillBaseRequestSchema: GenMessage<RescanUserSkillBaseRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 22);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 27);
 
 /**
  * @generated from message hagicode.community.v1.RescanUserSkillBaseResponse
@@ -647,7 +767,7 @@ export type RescanUserSkillBaseResponse = Message<"hagicode.community.v1.RescanU
  * Use `create(RescanUserSkillBaseResponseSchema)` to create a new message.
  */
 export const RescanUserSkillBaseResponseSchema: GenMessage<RescanUserSkillBaseResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 23);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 28);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillBaseExcludedFoldersRequest
@@ -664,7 +784,7 @@ export type SetUserSkillBaseExcludedFoldersRequest = Message<"hagicode.community
  * Use `create(SetUserSkillBaseExcludedFoldersRequestSchema)` to create a new message.
  */
 export const SetUserSkillBaseExcludedFoldersRequestSchema: GenMessage<SetUserSkillBaseExcludedFoldersRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 24);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 29);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillBaseExcludedFoldersResponse
@@ -681,7 +801,7 @@ export type SetUserSkillBaseExcludedFoldersResponse = Message<"hagicode.communit
  * Use `create(SetUserSkillBaseExcludedFoldersResponseSchema)` to create a new message.
  */
 export const SetUserSkillBaseExcludedFoldersResponseSchema: GenMessage<SetUserSkillBaseExcludedFoldersResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 25);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 30);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillEnabledRequest
@@ -698,7 +818,7 @@ export type SetUserSkillEnabledRequest = Message<"hagicode.community.v1.SetUserS
  * Use `create(SetUserSkillEnabledRequestSchema)` to create a new message.
  */
 export const SetUserSkillEnabledRequestSchema: GenMessage<SetUserSkillEnabledRequest> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 26);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 31);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillEnabledResponse
@@ -715,7 +835,7 @@ export type SetUserSkillEnabledResponse = Message<"hagicode.community.v1.SetUser
  * Use `create(SetUserSkillEnabledResponseSchema)` to create a new message.
  */
 export const SetUserSkillEnabledResponseSchema: GenMessage<SetUserSkillEnabledResponse> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 27);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 32);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillBaseDto
@@ -792,7 +912,7 @@ export type UserSkillBaseDto = Message<"hagicode.community.v1.UserSkillBaseDto">
  * Use `create(UserSkillBaseDtoSchema)` to create a new message.
  */
 export const UserSkillBaseDtoSchema: GenMessage<UserSkillBaseDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 28);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 33);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillBaseScanIssueDto
@@ -814,7 +934,7 @@ export type UserSkillBaseScanIssueDto = Message<"hagicode.community.v1.UserSkill
  * Use `create(UserSkillBaseScanIssueDtoSchema)` to create a new message.
  */
 export const UserSkillBaseScanIssueDtoSchema: GenMessage<UserSkillBaseScanIssueDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 29);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 34);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillDto
@@ -871,7 +991,7 @@ export type UserSkillDto = Message<"hagicode.community.v1.UserSkillDto"> & {
  * Use `create(UserSkillDtoSchema)` to create a new message.
  */
 export const UserSkillDtoSchema: GenMessage<UserSkillDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 30);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 35);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillProblemDto
@@ -893,7 +1013,7 @@ export type UserSkillProblemDto = Message<"hagicode.community.v1.UserSkillProble
  * Use `create(UserSkillProblemDtoSchema)` to create a new message.
  */
 export const UserSkillProblemDtoSchema: GenMessage<UserSkillProblemDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 31);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 36);
 
 /**
  * @generated from message hagicode.community.v1.AddUserSkillBaseRequestDto
@@ -915,7 +1035,7 @@ export type AddUserSkillBaseRequestDto = Message<"hagicode.community.v1.AddUserS
  * Use `create(AddUserSkillBaseRequestDtoSchema)` to create a new message.
  */
 export const AddUserSkillBaseRequestDtoSchema: GenMessage<AddUserSkillBaseRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 32);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 37);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillBaseListResultDto
@@ -942,7 +1062,7 @@ export type UserSkillBaseListResultDto = Message<"hagicode.community.v1.UserSkil
  * Use `create(UserSkillBaseListResultDtoSchema)` to create a new message.
  */
 export const UserSkillBaseListResultDtoSchema: GenMessage<UserSkillBaseListResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 33);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 38);
 
 /**
  * @generated from message hagicode.community.v1.UserSkillBaseResultDto
@@ -969,7 +1089,7 @@ export type UserSkillBaseResultDto = Message<"hagicode.community.v1.UserSkillBas
  * Use `create(UserSkillBaseResultDtoSchema)` to create a new message.
  */
 export const UserSkillBaseResultDtoSchema: GenMessage<UserSkillBaseResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 34);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 39);
 
 /**
  * @generated from message hagicode.community.v1.RemoveUserSkillBaseResultDto
@@ -996,7 +1116,7 @@ export type RemoveUserSkillBaseResultDto = Message<"hagicode.community.v1.Remove
  * Use `create(RemoveUserSkillBaseResultDtoSchema)` to create a new message.
  */
 export const RemoveUserSkillBaseResultDtoSchema: GenMessage<RemoveUserSkillBaseResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 35);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 40);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillBaseExcludedFoldersRequestDto
@@ -1018,7 +1138,7 @@ export type SetUserSkillBaseExcludedFoldersRequestDto = Message<"hagicode.commun
  * Use `create(SetUserSkillBaseExcludedFoldersRequestDtoSchema)` to create a new message.
  */
 export const SetUserSkillBaseExcludedFoldersRequestDtoSchema: GenMessage<SetUserSkillBaseExcludedFoldersRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 36);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 41);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillEnabledRequestDto
@@ -1045,7 +1165,7 @@ export type SetUserSkillEnabledRequestDto = Message<"hagicode.community.v1.SetUs
  * Use `create(SetUserSkillEnabledRequestDtoSchema)` to create a new message.
  */
 export const SetUserSkillEnabledRequestDtoSchema: GenMessage<SetUserSkillEnabledRequestDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 37);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 42);
 
 /**
  * @generated from message hagicode.community.v1.SetUserSkillEnabledResultDto
@@ -1082,7 +1202,7 @@ export type SetUserSkillEnabledResultDto = Message<"hagicode.community.v1.SetUse
  * Use `create(SetUserSkillEnabledResultDtoSchema)` to create a new message.
  */
 export const SetUserSkillEnabledResultDtoSchema: GenMessage<SetUserSkillEnabledResultDto> = /*@__PURE__*/
-  messageDesc(file_hagicode_community_v1_skill_gallery, 38);
+  messageDesc(file_hagicode_community_v1_skill_gallery, 43);
 
 /**
  * @generated from service hagicode.community.v1.SkillGalleryService
@@ -1111,6 +1231,14 @@ export const SkillGalleryService: GenService<{
     methodKind: "unary";
     input: typeof SetBuiltInSkillAvailabilityRequestSchema;
     output: typeof SetBuiltInSkillAvailabilityResponseSchema;
+  },
+  /**
+   * @generated from rpc hagicode.community.v1.SkillGalleryService.SetSelfEvolutionSkillAvailability
+   */
+  setSelfEvolutionSkillAvailability: {
+    methodKind: "unary";
+    input: typeof SetSelfEvolutionSkillAvailabilityRequestSchema;
+    output: typeof SetSelfEvolutionSkillAvailabilityResponseSchema;
   },
   /**
    * @generated from rpc hagicode.community.v1.SkillGalleryService.ListUserSkillBases

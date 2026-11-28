@@ -373,6 +373,38 @@ describe('request paths for skills commands', () => {
     expect(recorded.map(rpcName)).toEqual(['SkillGalleryService/GetLocalSkills']);
   });
 
+  it('skills local disable on a Self Evolution row looks the row up, then calls the self-evolution availability RPC', async () => {
+    RESPONSES.GetLocalSkills = {
+      result: {
+        items: [
+          {
+            id: 'self-evolution:evolved-skill',
+            name: 'evolved-skill',
+            scope: 'self-evolution',
+            origin: 'self-evolution',
+            selfEvolution: { enabled: true, status: 'ready', version: '3' },
+          },
+        ],
+      },
+    };
+    RESPONSES.SetSelfEvolutionSkillAvailability = {
+      result: { slug: 'evolved-skill', enabled: false, succeeded: true, userMessage: 'Self Evolution Skill evolved-skill is now disabled.' },
+    };
+    try {
+      const outcome = await run(['skills', 'local', 'disable', '--skill-name', 'evolved-skill', '--json']);
+      expect(outcome.exitCode).toBe(0);
+      expect(JSON.parse(outcome.stdout)).toMatchObject({ slug: 'evolved-skill', enabled: false, succeeded: true });
+    } finally {
+      delete RESPONSES.GetLocalSkills;
+      delete RESPONSES.SetSelfEvolutionSkillAvailability;
+    }
+    expect(recorded.map(rpcName)).toEqual([
+      'SkillGalleryService/GetLocalSkills',
+      'SkillGalleryService/SetSelfEvolutionSkillAvailability',
+    ]);
+    expect(recorded[1].request).toMatchObject({ body: { slug: 'evolved-skill', enabled: false } });
+  });
+
 
 });
 

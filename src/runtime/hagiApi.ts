@@ -52,6 +52,8 @@ import {
   GetLocalSkillsResponseSchema,
   SetBuiltInSkillAvailabilityRequestDtoSchema,
   SetBuiltInSkillAvailabilityResponseSchema,
+  SetSelfEvolutionSkillAvailabilityRequestDtoSchema,
+  SetSelfEvolutionSkillAvailabilityResponseSchema,
   SkillGalleryService,
 } from '../generated/grpc/hagicode/community/v1/skill_gallery_pb';
 import {
@@ -155,6 +157,7 @@ import type { PCode_Web_Controllers_ScheduledPlanRunAcceptedDto } from '../gener
 import type { PCode_Web_Controllers_ScheduledPlanSaveRequest } from '../generated/api/models/PCode_Web_Controllers_ScheduledPlanSaveRequest';
 import type { PCode_Web_Controllers_UpdateSessionRequest } from '../generated/api/models/PCode_Web_Controllers_UpdateSessionRequest';
 import type { PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto } from '../generated/api/models/PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto';
+import type { PCode_Application_Contracts_Dto_LocalSkillItemDto } from '../generated/api/models/PCode_Application_Contracts_Dto_LocalSkillItemDto';
 
 export type ListSessionsInput = {
   type?: PCode_Models_SessionType;
@@ -332,6 +335,36 @@ export function mapLockList(message: ListLocksResponse): LockSummaryDto[] {
   return message.locks.map(mapLockSummary);
 }
 
+/** The Self Evolution block of a `self-evolution` inventory row; built-in and user rows leave it out. */
+export type LocalSkillSelfEvolutionDto = {
+  enabled?: boolean;
+  /** ready | invalid | conflict | flagged */
+  status?: string | null;
+  version?: string | null;
+};
+
+export type LocalSkillItemDto = PCode_Application_Contracts_Dto_LocalSkillItemDto & {
+  selfEvolution?: LocalSkillSelfEvolutionDto | null;
+};
+
+export type LocalSkillInventoryDto = Omit<PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto, 'items'> & {
+  items?: Array<LocalSkillItemDto> | null;
+};
+
+export type SelfEvolutionSkillAvailabilityRequestDto = {
+  slug: string;
+  enabled: boolean;
+};
+
+/** The proto result has no diagnostic text, so `diagnosticMessage` is always null. */
+export type SelfEvolutionSkillAvailabilityResultDto = {
+  slug?: string | null;
+  enabled?: boolean;
+  succeeded?: boolean;
+  userMessage?: string | null;
+  diagnosticMessage?: string | null;
+};
+
 /** One limit window of a provider as the backend reports it. Percentages are 0-100; times are RFC 3339 UTC strings. */
 export type TokenMonitorLimitWindow = {
   kind: string;
@@ -473,11 +506,13 @@ export interface HagiApi {
   listVaultFiles(id: string, path?: string): Promise<PCode_Application_Contracts_Dto_VaultFileListResponseDto>;
   previewVaultFile(id: string, path: string): Promise<PCode_Application_Contracts_Dto_VaultFilePreviewResponseDto>;
   archiveChat(sessionId: string): Promise<PCode_Application_Contracts_Dto_SimpleMessageResponseDto>;
-  listLocalSkills(): Promise<PCode_Application_Contracts_Dto_LocalSkillInventoryResponseDto>;
+  listLocalSkills(): Promise<LocalSkillInventoryDto>;
   /** Turns one built-in skill on or off. A failed result (for example an unknown slug) is returned with `succeeded` false. */
   setBuiltInSkillAvailability(
     requestBody: PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityRequestDto,
   ): Promise<PCode_Application_Contracts_Dto_SetBuiltInSkillAvailabilityResultDto>;
+  /** Turns one Self Evolution Skill on or off by slug. A failed result is returned with `succeeded` false. */
+  setSelfEvolutionSkillAvailability(requestBody: SelfEvolutionSkillAvailabilityRequestDto): Promise<SelfEvolutionSkillAvailabilityResultDto>;
   /** Takes a free lock or joins the queue. A repeated acquire by the holder changes nothing. */
   acquireLock(input: AcquireLockInput): Promise<LockStatusDto>;
   /** Reads the owner's lock state; `waitSeconds` long-polls. `signal` cancels the call. */
@@ -697,6 +732,19 @@ export function createGrpcHagiApi(): HagiApi {
         SetBuiltInSkillAvailabilityResponseSchema,
         skills().setBuiltInSkillAvailability({ body: dtoToProto(SetBuiltInSkillAvailabilityRequestDtoSchema, requestBody) }),
       ),
+    setSelfEvolutionSkillAvailability: async requestBody => {
+      const response = await result<SelfEvolutionSkillAvailabilityResultDto>(
+        SetSelfEvolutionSkillAvailabilityResponseSchema,
+        skills().setSelfEvolutionSkillAvailability({ body: dtoToProto(SetSelfEvolutionSkillAvailabilityRequestDtoSchema, requestBody) }),
+      );
+      return {
+        slug: response.slug,
+        enabled: response.enabled,
+        succeeded: response.succeeded,
+        userMessage: response.userMessage ?? null,
+        diagnosticMessage: null,
+      };
+    },
     acquireLock: async input => {
       const response = await resourceLocks().acquireLock({
         lockId: input.lockId,

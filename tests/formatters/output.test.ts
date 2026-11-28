@@ -28,6 +28,7 @@ import {
 import {
   formatBuiltInAvailabilityResultHuman,
   formatLocalSkillsHuman,
+  formatSelfEvolutionAvailabilityResultHuman,
 } from '../../src/formatters/skills';
 import { PCode_Models_SessionStatus } from '../../src/generated/api/models/PCode_Models_SessionStatus';
 import { PCode_Models_SessionType } from '../../src/generated/api/models/PCode_Models_SessionType';
@@ -352,6 +353,55 @@ describe('skills local formatters', () => {
     expect(cellsFor(output, 'demo-skill')).toEqual(['demo-skill', 'user', '-', '1.2.0', 'global', 'codex', '/home/user/.agents/skills/demo-skill']);
   });
 
+  it('adds a status column for Self Evolution rows and shows only status, enabled state and version for them', () => {
+    const selfEvolutionReady = {
+      id: 'self-evolution:evolved-ready',
+      name: 'evolved-ready',
+      origin: 'self-evolution',
+      scope: 'self-evolution',
+      agents: [],
+      path: '/home/user/vault/self-evolution-skills/evolved-ready',
+      selfEvolution: { enabled: true, status: 'ready', version: '2' },
+    };
+    const selfEvolutionInvalid = {
+      id: 'self-evolution:evolved-broken',
+      name: 'evolved-broken',
+      origin: 'self-evolution',
+      scope: 'self-evolution',
+      agents: [],
+      path: '/home/user/vault/self-evolution-skills/evolved-broken',
+      selfEvolution: { enabled: false, status: 'invalid', version: null },
+    };
+    const output = formatLocalSkillsHuman({
+      generatedAtUtc: '2026-10-16T00:00:00Z',
+      items: [builtInEnabled, selfEvolutionReady, selfEvolutionInvalid, userWithMetadata],
+    } as never);
+
+    expect(output.split('\n')[1]).toMatch(/^Name\s+Origin\s+Enabled\s+Version\s+Status\s+Scope\s+Agents\s+Path$/);
+    expect(cellsFor(output, 'evolved-ready')).toEqual([
+      'evolved-ready',
+      'self-evolution',
+      'yes',
+      '2',
+      'ready',
+      'self-evolution',
+      '-',
+      '/home/user/vault/self-evolution-skills/evolved-ready',
+    ]);
+    expect(cellsFor(output, 'evolved-broken')).toEqual([
+      'evolved-broken',
+      'self-evolution',
+      'no',
+      '-',
+      'invalid',
+      'self-evolution',
+      '-',
+      '/home/user/vault/self-evolution-skills/evolved-broken',
+    ]);
+    expect(cellsFor(output, 'hagi')).toEqual(['hagi', 'built-in', 'yes', '1.4.0', '-', 'global', 'claude-code', '/home/user/.hagi/skills/hagi']);
+    expect(cellsFor(output, 'demo-skill')).toEqual(['demo-skill', 'user', '-', '1.2.0', '-', 'global', 'codex', '/home/user/.agents/skills/demo-skill']);
+  });
+
   it('treats a row with no origin as a user skill without an enabled state or version', () => {
     const output = formatLocalSkillsHuman({ generatedAtUtc: '2026-10-16T00:00:00Z', items: [legacyWithoutOrigin] } as never);
 
@@ -381,5 +431,33 @@ describe('skills local formatters', () => {
     expect(failed).toMatch(/^enabled\s+no$/m);
     expect(failed).toContain('Unknown built-in skill: nope.');
     expect(failed).toMatch(/^diagnostic\s+No built-in skill matches the slug\.$/m);
+  });
+
+  it('adds a conflict note to a built-in result only when a Self Evolution Skill shares the name', () => {
+    const result = {
+      slug: 'hagi',
+      enabled: false,
+      succeeded: true,
+      userMessage: 'Built-in skill hagi is now disabled.',
+      diagnosticMessage: null,
+    } as never;
+
+    expect(formatBuiltInAvailabilityResultHuman(result)).not.toContain('in conflict');
+    expect(formatBuiltInAvailabilityResultHuman(result, { selfEvolutionConflict: true })).toMatch(/^note\s+A Self Evolution Skill with this name is in conflict/m);
+  });
+
+  it('formats a Self Evolution availability result without a diagnostic line', () => {
+    const output = formatSelfEvolutionAvailabilityResultHuman({
+      slug: 'evolved-ready',
+      enabled: false,
+      succeeded: true,
+      userMessage: 'Self Evolution Skill evolved-ready is now disabled.',
+      diagnosticMessage: null,
+    } as never);
+
+    expect(output).toMatch(/^skillName\s+evolved-ready$/m);
+    expect(output).toMatch(/^enabled\s+no$/m);
+    expect(output).toContain('Self Evolution Skill evolved-ready is now disabled.');
+    expect(output).not.toContain('diagnostic');
   });
 });
