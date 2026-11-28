@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/%40hagicode%2Fcli?color=ffd43b)](https://www.npmjs.com/package/@hagicode/cli)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D24.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 
-`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), local Sagas, vaults and their files, chat sessions, HagiTasks, scheduled plans, and built-in skills (local list, enable and disable). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
+`@hagicode/cli` provides the published `hagi` command, which lets you drive a HagiCode backend from a terminal, scripts, or an AI agent without opening the app. Manage projects, proposals (generate, execute, archive, and send), local Sagas, vaults and their files, chat sessions, HagiTasks, scheduled plans, and built-in and Self Evolution skills (local list, enable and disable). Every command supports a shared `--json` output for scripting, and an embedded Hagi skill under [`skills/`](skills/) guides agent workflows.
 
 ## Requirements
 
@@ -788,14 +788,14 @@ hagi plan cancel-trigger --id "$PLAN_ID" --json
 
 ## Skills Commands
 
-List installed local skills. The table shows each skill's origin (`user` or `built-in`), whether a built-in skill is enabled, its version, scope, agents and path. A user skill shows `-` in the Enabled column, because availability does not apply to it:
+List installed local skills. The table shows each skill's origin (`user`, `built-in` or `self-evolution`), whether a built-in or Self Evolution skill is enabled, its version, scope, agents and path. A user skill shows `-` in the Enabled column, because availability does not apply to it. A Self Evolution skill also shows its status (`ready`, `invalid`, `conflict` or `flagged`) in a Status column, which appears only when at least one Self Evolution skill is installed:
 
 ```bash
 hagi skills local list
 hagi skills local list --json
 ```
 
-Turn a built-in skill on or off by name. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. A name that is not a built-in skill exits with code `30`, and the output carries the backend message:
+Turn one skill on or off by name, a built-in or a Self Evolution skill. A built-in skill with the same name is changed first, and the output then says the Self Evolution skill is in conflict. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. The commands never delete or edit skill files. A name that is neither exits with code `30`, and the output carries the backend message:
 
 ```bash
 hagi skills local enable --skill-name hagi
@@ -914,7 +914,7 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
-| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is neither a built-in nor a Self Evolution skill, an invalid MonoSpecs configuration from `project monospecs validate`, or a failed clone from `project monospecs clone` or `set --clone` |
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `35` | Answer refused: `proposal answer` or `hagitask answer` found the answer invalid, either by its own checks (unknown option, too many values, custom answer not allowed, too long) or by the backend (`invalid`, with its reason). Nothing was changed |
